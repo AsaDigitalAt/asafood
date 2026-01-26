@@ -7,13 +7,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { BarChart3, CheckCircle, Loader2, UploadCloud, UtensilsCrossed, ChevronDown } from "lucide-react";
+import { BarChart3, CheckCircle, Loader2, UploadCloud, UtensilsCrossed, ChevronDown, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import Image from 'next/image';
-import { useFormState } from "react-dom";
 import { generateDiagnosis, FormState } from "@/app/actions/generate-diagnosis";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useFirebase, useUser, useMemoFirebase } from "@/firebase";
+import { collection, addDoc, serverTimestamp, doc, updateDoc } from "firebase/firestore";
+import { useDoc } from "@/firebase/firestore/use-doc";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 // --- Schema ---
 const diagnosisSchema = z.object({
@@ -144,6 +147,16 @@ interface DiagnosisViewProps {
 
 export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisViewProps) {
   const { toast } = useToast();
+  const { firestore } = useFirebase();
+  const { user } = useUser();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc<{status: string}>(userDocRef);
+
+  const isSuspended = userProfile?.status === 'suspended';
 
   const form = useForm<z.infer<typeof diagnosisSchema>>({
     resolver: zodResolver(diagnosisSchema),
@@ -157,25 +170,75 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     },
   });
 
-  const action = async (formData: FormData) => {
-    onFormSubmitStart();
-    const result = await generateDiagnosis(formData);
-    onFormSubmitEnd(result);
-
-    if (result?.error) {
-        toast({
-            variant: "destructive",
-            title: "Erro na Análise",
-            description: result.error,
-        });
+  const onFormSubmit = async (data: FormData) => {
+    if (!user || !firestore) {
+        toast({ variant: "destructive", title: "Erro de Autenticação", description: "Usuário não encontrado." });
+        return;
     }
-  }
+     if (isSuspended) {
+        toast({ variant: "destructive", title: "Conta Suspensa", description: "Sua conta está suspensa. Contate o suporte." });
+        return;
+    }
+
+    onFormSubmitStart();
+
+    let usageEventId: string | null = null;
+    try {
+        const usageEventRef = await addDoc(collection(firestore, `users/${user.uid}/usageEvents`), {
+            userId: user.uid,
+            action: 'generate_diagnosis',
+            status: 'started',
+            timestamp: serverTimestamp(),
+            metadata: { restaurantName: data.get('restaurantName') }
+        });
+        usageEventId = usageEventRef.id;
+
+        const result = await generateDiagnosis(data);
+
+        if (usageEventId) {
+            await updateDoc(doc(firestore, `users/${user.uid}/usageEvents`, usageEventId), {
+                status: result.error ? 'failure' : 'success',
+                ...(result.error && { metadata: { error: result.error } })
+            });
+        }
+        
+        onFormSubmitEnd(result);
+
+        if (result?.error) {
+            toast({
+                variant: "destructive",
+                title: "Erro na Análise",
+                description: result.error,
+            });
+        }
+    } catch (e) {
+        console.error("An error occurred during diagnosis generation:", e);
+        const errorMessage = 'Ocorreu um erro ao gerar o diagnóstico. Tente novamente.';
+        if (usageEventId) {
+            await updateDoc(doc(firestore, `users/${user.uid}/usageEvents`, usageEventId), {
+                status: 'failure',
+                metadata: { error: errorMessage }
+            });
+        }
+        toast({ variant: "destructive", title: "Erro Inesperado", description: errorMessage });
+        onFormSubmitEnd({ error: errorMessage, nome: '', statusGeral: '', conversions: {}, discounts: {}, problems: [], actions: [], priorities: [], aiGeneratedPlan: null });
+    }
+  };
 
   return (
     <>
       <HeroSection />
       <Marquee />
       <section className="px-4 pb-24 md:pb-32 max-w-4xl mx-auto">
+        {isSuspended && (
+             <Alert variant="destructive" className="mb-12 danger-bg border-destructive/30 text-red-400">
+                <ShieldAlert className="h-5 w-5 !text-red-400" />
+                <AlertTitle className="font-bold">Conta Suspensa</AlertTitle>
+                <AlertDescription>
+                    Sua conta foi suspensa e você não pode mais gerar diagnósticos. Por favor, entre em contato com o suporte para mais informações.
+                </AlertDescription>
+            </Alert>
+        )}
         <div className="text-center mb-16 md:mb-20 opacity-0 animate-fade-up [animation-delay:500ms]">
           <h2 className="text-4xl md:text-5xl font-extrabold mb-5"><span className="text-gradient">LEVEL UP: ANÁLISE DE PERFORMANCE</span></h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">Complete os dados da missão abaixo para desbloquear seu plano de ação.</p>
@@ -183,7 +246,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
         </div>
 
         <Form {...form}>
-          <form action={action} className="space-y-12">
+          <form action={onFormSubmit} className="space-y-12">
             <div className="grid md:grid-cols-2 gap-8 md:gap-12">
                 <UploadCard 
                     name="funnelImage"
@@ -254,7 +317,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                           <FormControl>
                              <RadioGroupItem value="ifood" id="ifood" className="sr-only"/>
                           </FormControl>
-                          <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-black/20 border border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[input:checked]:bg-primary/10 has-[input:checked]:border-primary has-[input:checked]:text-white">
+                          <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-black/20 border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[input:checked]:bg-primary/10 has-[input:checked]:border-primary has-[input:checked]:text-white">
                             Entrega do iFood
                           </FormLabel>
                         </FormItem>
@@ -328,7 +391,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                   <Button 
                     type="submit" 
                     className="relative w-full h-16 rounded-full bg-slate-900 hover:bg-slate-800 text-lg font-bold uppercase tracking-widest transition-colors duration-300"
-                    disabled={form.formState.isSubmitting}
+                    disabled={form.formState.isSubmitting || isSuspended}
                   >
                     {form.formState.isSubmitting ? (
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />

@@ -1,168 +1,83 @@
-/**
- * Core Philosophy:
- * This ruleset implements a Role-Based Access Control (RBAC) model with a default
- * user-ownership security posture. There are two primary roles: 'user' and 'admin'.
- * A user's ability to interact with the application is gated by their 'status' field,
- * ensuring suspended users cannot perform actions.
- *
- * Data Structure:
- * - /users/{userId}: Stores public and private user profile information.
- * - /users/{userId}/usageEvents/{usageEventId}: A private subcollection for immutable audit logs.
- * - /roles_admin/{userId}: A separate, lookup-only collection where the existence of a
- *   document signifies that the user is an administrator.
- *
- * Key Security Decisions:
- * - Admin Status: Admin privileges are granted based on the existence of a document in the
- *   `/roles_admin` collection. This is a highly performant and secure method that avoids
- *   costly lookups in other collections within the rules.
- * - Suspended Users: Access for all non-admin users is conditional on their status being
- *   'active'. This is checked via a `get()` call to their own user document, which is a
- *   standard and secure exception to the "no cross-document reads" principle.
- * - Immutability: User-created audit logs (`usageEvents`) are immutable. Critical user
- *   fields like `createdAt` and `id` are also enforced as immutable after creation.
- * - User Deletion: Direct user document deletion is disallowed. Users should be marked as
- *   'suspended' by an administrator instead.
- * - User Listing: Only administrators are permitted to list the entire `/users` collection.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ------------------------------------------------------------------------
-    // Helper Functions
-    // ------------------------------------------------------------------------
-
-    /**
-     * Checks if a user is authenticated.
-     */
+    // --- Helper Functions ---
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Checks if the currently authenticated user's UID matches the provided userId.
-     * This is the foundation of the user-ownership model.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * Checks if the authenticated user has an admin role.
-     * This is determined by the existence of a document in the /roles_admin collection.
-     */
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    /**
-     * Checks if the requesting user's own account status is 'active'.
-     * This is used to gate actions for non-admin users.
-     */
     function isSelfActive() {
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
     }
 
-    // --- Create Operation Validation ---
-
-    /**
-     * Validates the payload when a user creates their own user document.
-     * Ensures the document ID matches the user's UID and sets secure defaults.
-     */
-    function isCreatingOwnUser(userId) {
+    // --- Validation Functions ---
+    function isCreatingOwnUser() {
       let data = request.resource.data;
-      return data.id == userId
+      return data.email == request.auth.token.email
           && data.role == 'user'
-          && data.status == 'active';
+          && data.status == 'active'
+          && data.createdAt == request.time
+          && data.lastLoginAt == request.time;
     }
 
-    /**
-     * Validates the payload for creating a new usage event.
-     * Ensures the event's internal userId matches the owner's UID in the path.
-     */
-    function isCreatingOwnUsageEvent(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    // --- Update Operation Validation ---
-
-    /**
-     * Validates updates a user makes to their own profile.
-     * Prevents a user from changing their own ID, creation date, role, or status.
-     */
     function isUpdatingOwnProfile() {
       let data = request.resource.data;
-      return resource != null
-          && data.id == resource.data.id
-          && data.createdAt == resource.data.createdAt
-          && data.role == resource.data.role
-          && data.status == resource.data.status;
+      // User can't change their own role or status.
+      return data.role == resource.data.role
+          && data.status == resource.data.status
+          && data.createdAt == resource.data.createdAt; // Immutable
     }
-
-    /**
-     * Validates updates an admin makes to any user's profile.
-     * Allows changes to role and status but preserves immutable fields.
-     */
+    
     function isAdminUpdatingUser() {
       let data = request.resource.data;
-      return resource != null
-          && data.id == resource.data.id
-          && data.createdAt == resource.data.createdAt;
+       // Admin can change role and status, but not immutable fields.
+      return data.createdAt == resource.data.createdAt;
     }
 
+    function isValidUsageEvent(userId) {
+      let data = request.resource.data;
+      return data.userId == userId
+          && data.timestamp <= request.time;
+    }
 
-    /**
-     * @description Defines access control for the admin roles collection. This collection
-     *              acts as a simple, high-performance lookup table. Client-side writes
-     *              are disallowed; it should be managed via the Firebase Console or a
-     *              trusted backend environment.
-     * @path        /roles_admin/{userId}
-     * @allow       (get) An admin reading another user's admin status document.
-     * @deny        (create) A regular user attempting to make themselves an admin.
-     * @principle   Enforces a secure, existence-based role system.
-     */
+    // --- Collection Rules ---
+
+    // Admin roles are managed via backend/console, not client.
+    // Admins can read this collection to check other users' admin status.
     match /roles_admin/{userId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
-    /**
-     * @description Secures user profile documents. Users can create their own document
-     *              and read/update their own data. Admins have full read access and can
-     *              update any user's role and status.
-     * @path        /users/{userId}
-     * @allow       (update) An admin changing a user's status from 'active' to 'suspended'.
-     * @deny        (update) A regular user trying to change their own role to 'admin'.
-     * @deny        (list) A regular user attempting to fetch a list of all application users.
-     * @principle   Restricts data access to the document owner or an administrator.
-     */
+    // User profiles can be read by owner or admin.
+    // Only admins can list all users.
+    // Users can create their own profile.
+    // Users can update their own profile (with restrictions).
+    // Admins can update any user's profile (role/status).
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isOwner(userId) && isCreatingOwnUser(userId);
-      allow update: if (isOwner(userId) && isSelfActive() && isUpdatingOwnProfile()) || (isAdmin() && isAdminUpdatingUser());
-      allow delete: if false;
+      allow create: if isOwner(userId) && isCreatingOwnUser();
+      allow update: if (isOwner(userId) && isUpdatingOwnProfile()) || (isAdmin() && isAdminUpdatingUser());
+      allow delete: if false; // Users should be suspended, not deleted.
     }
 
-    /**
-     * @description Secures the user's private audit log of usage events.
-     *              Events are write-once and immutable. Only the owner or an admin
-     *              can read them. Suspended users cannot create or read events.
-     * @path        /users/{userId}/usageEvents/{usageEventId}
-     * @allow       (create) An active user creating a new usage event log for their own account.
-     * @deny        (create) A suspended user attempting to create a new usage event.
-     * @deny        (update) Any user attempting to modify an existing, immutable event log.
-     * @principle   Enforces document ownership and immutability for audit trails.
-     */
+    // Usage events are private and immutable.
+    // Only active users can create events.
+    // Admins can read anyone's events for auditing.
     match /users/{userId}/usageEvents/{usageEventId} {
-      allow get: if (isOwner(userId) && isSelfActive()) || isAdmin();
-      allow list: if (isOwner(userId) && isSelfActive()) || isAdmin();
-      allow create: if isOwner(userId) && isSelfActive() && isCreatingOwnUsageEvent(userId);
-      allow update: if false;
-      allow delete: if false;
+      allow read: if (isOwner(userId) && isSelfActive()) || isAdmin();
+      allow create: if isOwner(userId) && isSelfActive() && isValidUsageEvent(userId);
+      allow update, delete: if false;
     }
   }
 }

@@ -6,10 +6,6 @@
       "type": "object",
       "description": "Represents a user in the application, storing their profile information and Firebase Auth metadata.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the user (Firebase UID)."
-        },
         "email": {
           "type": "string",
           "description": "User's email address.",
@@ -28,16 +24,15 @@
         "role": {
           "type": "string",
           "description": "User's role within the application (e.g., 'admin', 'user').",
-          "format": "string"
+          "enum": ["user", "admin"]
         },
         "status": {
           "type": "string",
           "description": "User's account status (e.g., 'active', 'suspended').",
-          "format": "string"
+          "enum": ["active", "suspended"]
         }
       },
       "required": [
-        "id",
         "email",
         "createdAt",
         "lastLoginAt",
@@ -51,13 +46,9 @@
       "type": "object",
       "description": "Represents a usage event within the application, for auditing and usage tracking.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the usage event."
-        },
         "userId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N UsageEvent)"
+          "description": "Reference to the User who performed the action."
         },
         "timestamp": {
           "type": "string",
@@ -66,22 +57,18 @@
         },
         "action": {
           "type": "string",
-          "description": "The action that was performed (e.g., 'login', 'generate_diagnosis').",
-          "format": "string"
+          "description": "The action that was performed (e.g., 'login', 'generate_diagnosis')."
         },
         "status": {
           "type": "string",
-          "description": "Status of the action (e.g., 'success', 'failure').",
-          "format": "string"
+          "description": "Status of the action (e.g., 'started', 'success', 'failure')."
         },
         "metadata": {
-          "type": "string",
-          "description": "Additional metadata related to the usage event (e.g., relevant IDs, values).",
-          "format": "string"
+          "type": "object",
+          "description": "Additional metadata related to the usage event."
         }
       },
       "required": [
-        "id",
         "userId",
         "timestamp",
         "action",
@@ -91,65 +78,21 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profile information. Includes 'id', 'email', 'createdAt', 'lastLoginAt', 'role', and 'status'.  User's id (UID) is used as document ID. Role and status are used to determine access rights within the app.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase UID of the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/usageEvents/{usageEventId}",
-        "definition": {
-          "entityName": "UsageEvent",
-          "schema": {
-            "$ref": "#/backend/entities/UsageEvent"
-          },
-          "description": "Stores usage events for each user.  Path-based ownership is used for simple security rules. Includes 'userId', 'timestamp', 'action', 'status', and 'metadata'.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase UID of the user."
-            },
-            {
-              "name": "usageEventId",
-              "description": "The unique ID of the usage event."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_admin/{userId}",
-        "definition": {
-          "entityName": "Role",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Collection to store admin roles. The existence of a document with a user's UID grants admin privileges.  Existence over content is used; the document content is irrelevant.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase UID of the user."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "This Firestore structure prioritizes security and scalability by adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and Rules are Not Filters (QAPs). Authorization Independence is achieved through denormalization, eliminating the need for `get()` calls in security rules, which simplifies rules and improves performance.  Structural Segregation is employed to ensure that each collection has a homogeneous security posture.  Access modeling follows consistent patterns, utilizing path-based ownership for private user data and existence-based global roles.\n\nThe structure uses `/users/{uid}` for user profiles, enabling easy access control based on the authenticated user's ID.  The `UsageEvents` are stored in a subcollection `/users/{uid}/usageEvents/{usageEventId}`, creating a parent/child ownership structure. This allows simple, scalable rules to be written for access control and data validation.\n\nAdmin role is managed via the `/roles_admin/{uid}` collection. The existence of a document under this path grants administrative privileges. This avoids reading data from the `users` collection in rules.\n\nThis design supports the required QAPs:\n*   **List Users (Admin Only):** The admin panel can `list` all users because the security rules on `/users/{uid}` only restrict *reading* specific documents, not listing the collection itself (provided the rule allows listing by admin).\n*   **Usage Events (User and Admin):** Users can `list` their own `usageEvents` due to the path-based ownership. Admins can `list` usage events for any user by checking their admin role in `/roles_admin/{uid}` and then querying the appropriate `/users/{uid}/usageEvents` subcollection.\n*   **Preventing Suspended Users:** Security Rules enforce that a user's `status` must be 'active' to access the tool, preventing suspended users from using it. The rules use `request.auth.uid` to associate the user with their document and verify their status."
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profile information. The document ID is the Firebase UID. Role and status are used for access control."
+    },
+    "/users/{userId}/usageEvents/{usageEventId}": {
+      "schema": { "$ref": "#/entities/UsageEvent" },
+      "description": "Stores immutable usage events for each user. Path-based ownership ensures users can only access their own events."
+    },
+    "/roles_admin/{userId}": {
+      "schema": { "type": "object", "properties": { "isAdmin": { "type": "boolean" } } },
+      "description": "Collection for admin role management. The existence of a document with a user's UID grants admin privileges. Document content is irrelevant; only existence matters."
+    }
   }
 }
