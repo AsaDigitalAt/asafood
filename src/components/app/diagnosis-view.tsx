@@ -488,7 +488,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                   <div className="absolute inset-[-150%] animate-border-spin bg-[conic-gradient(from_90deg_at_50%_50%,#38BDF8_0%,#0F172A_50%,#38BDF8_100%)]"/>
                   <Button 
                     type="submit" 
-                    className="relative w-full h-16 rounded-full bg-slate-900 hover:bg-slate-800 text-lg font-bold uppercase tracking-widest transition-colors duration-300"
+                    className="relative w-full h-16 rounded-full bg-slate-900 hover:bg-slate-800 text-primary text-lg font-bold uppercase tracking-widest transition-colors duration-300"
                     disabled={form.formState.isSubmitting || isSuspended}
                   >
                     {form.formState.isSubmitting ? (
