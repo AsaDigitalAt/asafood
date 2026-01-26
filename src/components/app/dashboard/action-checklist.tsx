@@ -13,11 +13,14 @@ export const ActionChecklist = ({ actions }: { actions: any[] }) => {
         );
     };
 
+    if (!actions || actions.length === 0) return null;
+
     return (
         <div className="glass-card rounded-2xl p-6 md:p-8">
             <h3 className="text-2xl font-bold text-center mb-8 text-gradient">⚡ Plano de Ação Completo</h3>
             <div className="space-y-4">
                 {actions.map((action, index) => {
+                    if (!action || !action.descricao) return null;
                     const isChecked = checkedItems.includes(index);
                     return (
                         <div 
@@ -36,8 +39,8 @@ export const ActionChecklist = ({ actions }: { actions: any[] }) => {
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                    <span className="py-0.5 px-2 bg-primary text-primary-foreground rounded-full text-xs font-bold">Prioridade {action.prioridade}</span>
-                                    <span className="py-0.5 px-2 bg-slate-700 text-slate-300 rounded-full text-xs font-bold uppercase">{action.categoria}</span>
+                                    {action.prioridade && <span className="py-0.5 px-2 bg-primary text-primary-foreground rounded-full text-xs font-bold">Prioridade {action.prioridade}</span>}
+                                    {action.categoria && <span className="py-0.5 px-2 bg-slate-700 text-slate-300 rounded-full text-xs font-bold uppercase">{action.categoria}</span>}
                                 </div>
                                 <p className={cn(
                                     "text-slate-200 transition-all",

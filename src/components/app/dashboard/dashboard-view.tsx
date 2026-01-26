@@ -16,7 +16,7 @@ interface DashboardViewProps {
 const getStatusClass = (status?: string) => {
     const s = status ? status.toLowerCase() : '';
     if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return 'danger-bg !text-red-400 border-red-500/30';
-    if (s.includes('atencao') || s.includes('medio')) return 'warning-bg !text-amber-400 border-amber-500/30';
+    if (s.includes('atenção') || s.includes('medio')) return 'warning-bg !text-amber-400 border-amber-500/30';
     if (s.includes('bom') || s.includes('otimo') || s.includes('ideal')) return 'success-bg !text-green-400 border-green-500/30';
     return 'warning-bg !text-amber-400 border-amber-500/30';
 };
@@ -30,9 +30,11 @@ export function DashboardView({ data }: DashboardViewProps) {
         <div className="max-w-5xl mx-auto px-4 py-24 md:py-32 opacity-0 animate-fade-up">
             <div className="glass-card rounded-3xl p-6 md:p-10 shadow-2xl">
                 <header className="text-center mb-12">
-                    <div className={`inline-block py-2 px-6 rounded-full font-bold text-sm uppercase tracking-widest mb-6 border ${getStatusClass(data.statusGeral)}`}>
-                        Status Geral: {data.statusGeral}
-                    </div>
+                    {data.statusGeral && (
+                        <div className={`inline-block py-2 px-6 rounded-full font-bold text-sm uppercase tracking-widest mb-6 border ${getStatusClass(data.statusGeral)}`}>
+                            Status Geral: {data.statusGeral}
+                        </div>
+                    )}
                     <h1 className="text-4xl md:text-5xl font-extrabold mb-3">
                         <span className="text-gradient">Diagnóstico de </span> 
                         <span className="text-primary">{data.nome}</span>
@@ -43,14 +45,14 @@ export function DashboardView({ data }: DashboardViewProps) {
                 <div className="space-y-12">
                     <FunnelMetrics conversions={data.conversions} />
                     <DiscountAnalysis discounts={data.discounts} />
-                    {data.problems?.length > 0 && <ProblemsList problems={data.problems} />}
-                    {data.priorities?.length > 0 && <PrioritiesList priorities={data.priorities} />}
-                    {data.actions?.length > 0 && <ActionChecklist actions={data.actions} />}
+                    <ProblemsList problems={data.problems} />
+                    <PrioritiesList priorities={data.priorities} />
+                    <ActionChecklist actions={data.actions} />
 
                     {data.aiGeneratedPlan && (
                          <div className="glass-card border border-primary/20 rounded-2xl p-6 md:p-8">
                             <h3 className="text-2xl font-bold text-center mb-6 text-gradient">Plano de Ação Detalhado (IA)</h3>
-                            <div className="prose prose-invert prose-p:text-muted-foreground prose-strong:text-white max-w-none">
+                            <div className="prose prose-invert prose-p:text-muted-foreground prose-strong:text-white max-w-none whitespace-pre-wrap">
                                 <p>{data.aiGeneratedPlan}</p>
                             </div>
                         </div>

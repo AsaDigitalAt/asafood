@@ -172,10 +172,10 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     defaultValues: {
       restaurantName: "",
       foodCategory: "",
-      currentMonthRevenue: undefined,
-      currentMonthDiscounts: undefined,
-      previousMonthRevenue: undefined,
-      previousMonthDiscounts: undefined,
+      currentMonthRevenue: 0,
+      currentMonthDiscounts: 0,
+      previousMonthRevenue: 0,
+      previousMonthDiscounts: 0,
     },
   });
 
@@ -204,8 +204,9 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
             const productImageURI = await fileToDataURI(productImage);
             requestPayload = { ...rest, funnelImage: funnelImageURI, productImage: productImageURI };
         } else {
-            const { funnelImage, productImage, ...rest } = rawFormData;
-            requestPayload = rest;
+            // Handle validation failure if necessary, maybe don't even proceed.
+            const errorMessages = validatedFields.error.issues.map(issue => issue.message).join(', ');
+            throw new Error(`Formulário inválido: ${errorMessages}`);
         }
 
         const usageEventsColRef = collection(firestore, `users/${user.uid}/usageEvents`);
@@ -363,11 +364,11 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                         className="grid grid-cols-1 md:grid-cols-2 gap-4"
                       >
                         <FormLabel htmlFor="propria" className="flex items-center justify-center gap-3 p-5 bg-black/20 border border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-white">
-                           <RadioGroupItem value="propria" id="propria" className="sr-only"/>
+                           <RadioGroupItem value="propria" id="propria" />
                            Entrega Própria
                         </FormLabel>
                         <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-black/20 border border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-white">
-                           <RadioGroupItem value="ifood" id="ifood" className="sr-only"/>
+                           <RadioGroupItem value="ifood" id="ifood" />
                            Entrega do iFood
                         </FormLabel>
                       </RadioGroup>
@@ -389,6 +390,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                             <FormControl>
                               <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 border-white/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
                             </FormControl>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -401,6 +403,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                             <FormControl>
                               <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 border-white/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
                             </FormControl>
+                             <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -416,6 +419,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                             <FormControl>
                               <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 border-white/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
                             </FormControl>
+                             <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -428,6 +432,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                             <FormControl>
                               <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 border-white/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
                             </FormControl>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />

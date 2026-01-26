@@ -5,15 +5,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 const getStatusClass = (status?: string) => {
     const s = status ? status.toLowerCase() : '';
     if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return '!border-red-500 danger-text';
-    if (s.includes('atencao') || s.includes('medio')) return '!border-amber-500 warning-text';
+    if (s.includes('atenção') || s.includes('medio')) return '!border-amber-500 warning-text';
     if (s.includes('bom') || s.includes('otimo') || s.includes('ideal')) return '!border-green-500 success-text';
     return '!border-amber-500 warning-text';
 };
 
+const getStatusLabel = (status?: string) => {
+    const s = status ? status.toLowerCase() : '';
+    if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return 'Crítico';
+    if (s.includes('atenção') || s.includes('medio')) return 'Atenção';
+    if (s.includes('bom') || s.includes('otimo') || s.includes('ideal')) return 'Bom';
+    return 'Em Análise';
+};
+
+
 const getChartColor = (status?: string) => {
     const s = status ? status.toLowerCase() : '';
     if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return '#EF4444';
-    if (s.includes('atencao') || s.includes('medio')) return '#F59E0B';
+    if (s.includes('atenção') || s.includes('medio')) return '#F59E0B';
     if (s.includes('bom') || s.includes('otimo') || s.includes('ideal')) return '#10B981';
     return '#38BDF8';
 }
@@ -39,7 +48,7 @@ const MetricCard = ({ label, metricData }: { label: string, metricData: any }) =
                 <h4 className="text-sm text-muted-foreground uppercase tracking-widest font-bold mb-1">{label}</h4>
                 <p className="text-xs text-muted-foreground mb-3">Meta: {metricData.referencia_minima || '-'}%</p>
                 <div className={`inline-block border text-xs font-bold uppercase py-1 px-3 rounded-full ${getStatusClass(metricData.status)}`}>
-                    {metricData.status}
+                    {getStatusLabel(metricData.status)}
                 </div>
                 <p className="text-sm text-slate-300 mt-4">{metricData.comentario || ''}</p>
             </div>
@@ -47,14 +56,18 @@ const MetricCard = ({ label, metricData }: { label: string, metricData: any }) =
     )
 }
 
-export const FunnelMetrics = ({ conversions }: { conversions: any }) => (
-    <div>
-        <h3 className="text-2xl font-bold text-center mb-8 text-gradient">Funil de Vendas</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <MetricCard label="Visitas → Visualização" metricData={conversions.view} />
-            <MetricCard label="Visitas → Sacola" metricData={conversions.cart} />
-            <MetricCard label="Visitas → Revisão" metricData={conversions.review} />
-            <MetricCard label="Taxa de Conversão" metricData={conversions.done} />
+export const FunnelMetrics = ({ conversions }: { conversions: any }) => {
+    if (!conversions) return null;
+
+    return (
+        <div>
+            <h3 className="text-2xl font-bold text-center mb-8 text-gradient">Funil de Vendas</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <MetricCard label="Visitas → Visualização" metricData={conversions.view} />
+                <MetricCard label="Visitas → Sacola" metricData={conversions.cart} />
+                <MetricCard label="Visitas → Revisão" metricData={conversions.review} />
+                <MetricCard label="Taxa de Conversão" metricData={conversions.done} />
+            </div>
         </div>
-    </div>
-)
+    )
+}
