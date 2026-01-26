@@ -31,7 +31,6 @@ const diagnosisSchema = z.object({
   previousMonthDiscounts: z.coerce.number().min(0, "O desconto deve ser positivo."),
   funnelImage: z.any().refine((file) => file instanceof File, "A imagem do funil é obrigatória."),
   productImage: z.any().refine((file) => file instanceof File, "A imagem do produto é obrigatória."),
-  whatsapp: z.string().min(10, "O número do WhatsApp é obrigatório."),
   email: z.string().email("O e-mail é obrigatório."),
 });
 
@@ -170,7 +169,6 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
       currentMonthDiscounts: 0,
       previousMonthRevenue: 0,
       previousMonthDiscounts: 0,
-      whatsapp: "",
       email: user?.email || "",
     },
   });
@@ -381,23 +379,6 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                            Entrega do iFood
                         </FormLabel>
                       </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="whatsapp"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">WhatsApp para Contato</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Phone className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input type="tel" placeholder="(00) 90000-0000" {...field} className="bg-black/20 border-white/10 rounded-full py-7 px-7 pl-14 text-base focus:bg-primary/5 focus:border-primary" />
-                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
