@@ -13,7 +13,7 @@ import Image from 'next/image';
 import { generateDiagnosis, FormState } from "@/app/actions/generate-diagnosis";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useFirebase, useUser, FirestorePermissionError, errorEmitter } from "@/firebase";
+import { useFirebase, useUser, useMemoFirebase, FirestorePermissionError, errorEmitter } from "@/firebase";
 import { collection, addDoc, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
