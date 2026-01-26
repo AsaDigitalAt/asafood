@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from 'react';
-import { useFirebase, useUser, useMemoFirebase } from "@/firebase";
+import { useFirebase, useUser, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { collection, doc, query, where, orderBy, updateDoc } from "firebase/firestore";
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { useDoc } from "@/firebase/firestore/use-doc";
@@ -10,7 +10,6 @@ import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from '@/hooks/use-toast';
 import { subDays } from 'date-fns';
 
 type UserData = {
@@ -36,7 +35,6 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ onBack }: AdminDashboardProps) {
     const { firestore } = useFirebase();
     const { user } = useUser();
-    const { toast } = useToast();
 
     const adminRoleRef = useMemoFirebase(() => {
         if (!user) return null;
@@ -91,27 +89,31 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
         );
     }
     
-    const handleStatusChange = async (userId: string, status: 'active' | 'suspended') => {
+    const handleStatusChange = (userId: string, status: 'active' | 'suspended') => {
         const userDocRef = doc(firestore, 'users', userId);
-        try {
-            await updateDoc(userDocRef, { status });
-            toast({ title: 'Sucesso', description: 'Status do usuário atualizado.'});
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível atualizar o status.'});
-        }
+        updateDoc(userDocRef, { status }).catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'update',
+                requestResourceData: { status },
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
     };
 
-    const handleRoleChange = async (userId: string, role: 'user' | 'admin') => {
+    const handleRoleChange = (userId: string, role: 'user' | 'admin') => {
         const userDocRef = doc(firestore, 'users', userId);
-        try {
-            await updateDoc(userDocRef, { role });
-            // Note: For admin role, you'd also need to manage the `roles_admin` collection,
-            // which requires backend logic (e.g., a Firebase Function) as clients can't write to it.
-            // This UI change only affects the 'role' field in the user document.
-            toast({ title: 'Sucesso', description: 'Role do usuário atualizado.'});
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível atualizar o role.'});
-        }
+        // Note: For admin role, you'd also need to manage the `roles_admin` collection,
+        // which requires backend logic (e.g., a Firebase Function) as clients can't write to it.
+        // This UI change only affects the 'role' field in the user document.
+        updateDoc(userDocRef, { role }).catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'update',
+                requestResourceData: { role },
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
     };
 
 
@@ -184,4 +186,3 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
         </div>
     );
 }
-
