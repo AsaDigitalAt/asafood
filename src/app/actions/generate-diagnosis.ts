@@ -24,8 +24,8 @@ const diagnosisSchema = z.object({
   currentMonthDiscounts: z.coerce.number(),
   previousMonthRevenue: z.coerce.number(),
   previousMonthDiscounts: z.coerce.number(),
-  funnelImage: z.instanceof(File),
-  productImage: z.instanceof(File),
+  funnelImage: z.any().refine((file) => file instanceof File, "A imagem do funil é obrigatória."),
+  productImage: z.any().refine((file) => file instanceof File, "A imagem do produto é obrigatória."),
   whatsapp: z.string().min(10, "O número do WhatsApp é obrigatório."),
   email: z.string().email("O e-mail é obrigatório."),
 });
@@ -99,6 +99,7 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
     email,
   } = validatedFields.data;
 
+  let responseText = '';
   try {
     const webhookFormData = new FormData();
     webhookFormData.append('restaurant_name', restaurantName);
@@ -121,21 +122,34 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
         body: webhookFormData,
     });
 
+    responseText = await response.text();
+
     if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Webhook error:', errorText);
-        throw new Error(`Ocorreu um erro ao comunicar com o webhook: ${response.statusText}`);
+        throw new Error(`Erro no Webhook (${response.status} ${response.statusText})`);
     }
 
-    const rawResultData = await response.json();
+    if (!responseText) {
+      throw new Error("A resposta do webhook está vazia.");
+    }
+    
+    const rawResultData = JSON.parse(responseText);
     const resultData = processWebhookData(rawResultData);
     
     return resultData;
 
   } catch (e: any) {
-    console.error(e);
+    console.error("Erro em generateDiagnosis:", e.message);
+    if (responseText) {
+      console.error("Resposta do Webhook (texto):", responseText.substring(0, 500));
+    }
+
+    let errorMessage = e.message || 'Ocorreu um erro ao processar o diagnóstico.';
+    if (e instanceof SyntaxError) {
+      errorMessage = 'A resposta do webhook não é um JSON válido.';
+    }
+    
     return {
-      error: e.message || 'Ocorreu um erro ao processar o diagnóstico. Tente novamente mais tarde.',
+      error: `${errorMessage} Verifique a URL do webhook e o corpo da resposta.`,
       nome: '',
       statusGeral: '',
       conversions: {},
