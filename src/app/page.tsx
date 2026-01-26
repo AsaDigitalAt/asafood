@@ -12,6 +12,7 @@ import LoadingScreen from "@/components/app/loading-screen";
 import { DashboardView } from "@/components/app/dashboard/dashboard-view";
 import { useUser } from "@/firebase";
 import AdminDashboard from "@/components/app/admin/admin-dashboard";
+import ActionPlanView from "@/components/app/action-plan/action-plan-view";
 
 type View = "login" | "diagnosis" | "action-plan" | "restaurant" | "admin";
 
@@ -53,7 +54,7 @@ export default function Home() {
       case "diagnosis":
         return dashboardData ? <DashboardView data={dashboardData} /> : <DiagnosisView onFormSubmitStart={handleFormSubmitStart} onFormSubmitEnd={handleFormSubmitEnd} />;
       case "action-plan":
-        return <EmptyStateView icon={<Rocket className="w-16 h-16" />} title="Meu Plano de Ação" description="Seus planos gerados ficarão salvos nesta área exclusiva." onBack={() => setCurrentView("diagnosis")} />;
+        return <ActionPlanView onBack={() => setCurrentView("diagnosis")} />;
       case "restaurant":
         return <EmptyStateView icon={<Store className="w-16 h-16" />} title="Meu Restaurante" description="Em breve você poderá gerenciar os dados do seu estabelecimento aqui." onBack={() => setCurrentView("diagnosis")} />;
       case "admin":

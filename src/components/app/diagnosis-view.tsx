@@ -243,6 +243,23 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                 errorEmitter.emit('permission-error', permissionError);
             });
         
+        if (!result.error) {
+            const reportCollectionRef = collection(firestore, `users/${user.uid}/diagnosisReports`);
+            const reportData = {
+                ...result,
+                userId: user.uid,
+                createdAt: serverTimestamp(),
+            };
+            addDoc(reportCollectionRef, reportData).catch(serverError => {
+                const permissionError = new FirestorePermissionError({
+                    path: reportCollectionRef.path,
+                    operation: 'create',
+                    requestResourceData: reportData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            });
+        }
+        
         onFormSubmitEnd(result);
 
         if (result?.error) {

@@ -59,6 +59,12 @@ service cloud.firestore {
             && data.timestamp == resource.data.timestamp;
     }
 
+    function isValidDiagnosisReport(userId) {
+      let data = request.resource.data;
+      return data.userId == userId
+        && data.createdAt == request.time;
+    }
+
     // --- Collection Rules ---
 
     // Admin roles are managed via backend/console, not client.
@@ -80,16 +86,25 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isCreatingOwnUser();
       allow update: if (isOwner(userId) && isUpdatingOwnProfile()) || (isAdmin() && isAdminUpdatingUser());
       allow delete: if false; // Users should be suspended, not deleted.
-    }
 
-    // Usage events are private and immutable.
-    // Only active users can create events.
-    // Admins can read anyone's events for auditing.
-    match /users/{userId}/usageEvents/{usageEventId} {
-      allow read: if (isOwner(userId) && isSelfActive()) || isAdmin();
-      allow create: if isOwner(userId) && isSelfActive() && isValidUsageEvent(userId);
-      allow update: if isOwner(userId) && isSelfActive() && isUpdatingOwnUsageEventStatus(userId);
-      allow delete: if false;
+      // Subcollections for a User
+      
+      // Usage events are private and immutable.
+      // Only active users can create events.
+      // Admins can read anyone's events for auditing.
+      match /usageEvents/{usageEventId} {
+        allow read: if (isOwner(userId) && isSelfActive()) || isAdmin();
+        allow create: if isOwner(userId) && isSelfActive() && isValidUsageEvent(userId);
+        allow update: if isOwner(userId) && isSelfActive() && isUpdatingOwnUsageEventStatus(userId);
+        allow delete: if false;
+      }
+      
+      // Diagnosis reports are private and immutable once created.
+      match /diagnosisReports/{reportId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isSelfActive() && isValidDiagnosisReport(userId);
+        allow update, delete: if false;
+      }
     }
   }
 }
