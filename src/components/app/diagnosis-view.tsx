@@ -13,7 +13,7 @@ import Image from 'next/image';
 import { generateDiagnosis, FormState } from "@/app/actions/generate-diagnosis";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useFirebase, useUser, useMemoFirebase } from "@/firebase";
+import { useFirebase, useUser, useMemoFirebase, FirestorePermissionError, errorEmitter } from "@/firebase";
 import { collection, addDoc, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -42,7 +42,7 @@ const HeroSection = () => (
         Área Exclusiva
       </span>
       <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 opacity-0 animate-fade-up [animation-delay:200ms]">
-        <span className="text-gradient">Diagnóstico de </span>
+        <span className="text-gradient">Diagnóstico de </span> 
         <span className="text-primary text-shadow-[0_0_40px_var(--tw-shadow-color)] shadow-primary/50">Performance</span>
       </h1>
       <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 opacity-0 animate-fade-up [animation-delay:400ms]">
@@ -208,23 +208,47 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
             requestPayload = rest;
         }
 
-        const usageEventRef = await addDoc(collection(firestore, `users/${user.uid}/usageEvents`), {
+        const usageEventsColRef = collection(firestore, `users/${user.uid}/usageEvents`);
+        const usageEventData = {
             userId: user.uid,
             action: 'generate_diagnosis',
             status: 'started',
             timestamp: serverTimestamp(),
             metadata: { requestPayload }
-        });
+        };
+        const usageEventRef = await addDoc(usageEventsColRef, usageEventData)
+            .catch(serverError => {
+                const permissionError = new FirestorePermissionError({
+                    path: usageEventsColRef.path,
+                    operation: 'create',
+                    requestResourceData: usageEventData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                // Re-throw a user-friendly error to be caught by the outer try-catch
+                throw new Error('Falha ao registrar o evento de uso. Verifique suas permissões.');
+            });
+
         usageEventId = usageEventRef.id;
 
         const result = await generateDiagnosis(data);
-
-        if (usageEventId) {
-            await updateDoc(doc(firestore, `users/${user.uid}/usageEvents`, usageEventId), {
-                status: result.error ? 'failure' : 'success',
-                'metadata.responsePayload': result.error ? { error: result.error } : result,
+        
+        const eventDocRef = doc(firestore, `users/${user.uid}/usageEvents`, usageEventId);
+        const updateData = {
+            status: result.error ? 'failure' : 'success',
+            'metadata.responsePayload': result.error ? { error: result.error } : result,
+        };
+        
+        updateDoc(eventDocRef, updateData)
+            .catch(serverError => {
+                const permissionError = new FirestorePermissionError({
+                    path: eventDocRef.path,
+                    operation: 'update',
+                    requestResourceData: updateData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                // This is a non-critical logging error, so we don't disrupt the user flow.
+                // The global error listener will catch it for dev purposes.
             });
-        }
         
         onFormSubmitEnd(result);
 
@@ -236,14 +260,23 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
             });
         }
     } catch (e: any) {
-        console.error("An error occurred during diagnosis generation:", e);
-        const errorMessage = 'Ocorreu um erro ao gerar o diagnóstico. Tente novamente.';
+        const errorMessage = e.message || 'Ocorreu um erro ao gerar o diagnóstico. Tente novamente.';
+        
         if (usageEventId) {
-            await updateDoc(doc(firestore, `users/${user.uid}/usageEvents`, usageEventId), {
-                status: 'failure',
-                'metadata.responsePayload': { error: errorMessage }
-            });
+            const eventDocRef = doc(firestore, `users/${user.uid}/usageEvents`, usageEventId);
+            const updateData = { status: 'failure', 'metadata.responsePayload': { error: errorMessage }};
+            
+            updateDoc(eventDocRef, updateData)
+                .catch(serverError => {
+                    const permissionError = new FirestorePermissionError({
+                        path: eventDocRef.path,
+                        operation: 'update',
+                        requestResourceData: updateData,
+                    });
+                    errorEmitter.emit('permission-error', permissionError);
+                });
         }
+        
         toast({ variant: "destructive", title: "Erro Inesperado", description: errorMessage });
         onFormSubmitEnd({ error: errorMessage, nome: '', statusGeral: '', conversions: {}, discounts: {}, problems: [], actions: [], priorities: [], aiGeneratedPlan: null });
     }
@@ -333,7 +366,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                            <RadioGroupItem value="propria" id="propria" className="sr-only"/>
                            Entrega Própria
                         </FormLabel>
-                        <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-black/20 border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-white">
+                        <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-black/20 border border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-white">
                            <RadioGroupItem value="ifood" id="ifood" className="sr-only"/>
                            Entrega do iFood
                         </FormLabel>
