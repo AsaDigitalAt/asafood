@@ -139,6 +139,15 @@ const UploadCard = ({ name, title, description, icon, form }: { name: "funnelIma
     );
 };
 
+const fileToDataURI = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+    });
+};
+
 // --- Main Component ---
 interface DiagnosisViewProps {
   onFormSubmitStart: () => void;
@@ -184,12 +193,27 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
 
     let usageEventId: string | null = null;
     try {
+        const rawFormData = Object.fromEntries(data.entries());
+        const validatedFields = diagnosisSchema.safeParse(rawFormData);
+
+        let requestPayload: any = {};
+        
+        if (validatedFields.success) {
+            const { funnelImage, productImage, ...rest } = validatedFields.data;
+            const funnelImageURI = await fileToDataURI(funnelImage);
+            const productImageURI = await fileToDataURI(productImage);
+            requestPayload = { ...rest, funnelImage: funnelImageURI, productImage: productImageURI };
+        } else {
+            const { funnelImage, productImage, ...rest } = rawFormData;
+            requestPayload = rest;
+        }
+
         const usageEventRef = await addDoc(collection(firestore, `users/${user.uid}/usageEvents`), {
             userId: user.uid,
             action: 'generate_diagnosis',
             status: 'started',
             timestamp: serverTimestamp(),
-            metadata: { restaurantName: data.get('restaurantName') }
+            metadata: { requestPayload }
         });
         usageEventId = usageEventRef.id;
 
@@ -198,7 +222,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
         if (usageEventId) {
             await updateDoc(doc(firestore, `users/${user.uid}/usageEvents`, usageEventId), {
                 status: result.error ? 'failure' : 'success',
-                ...(result.error && { metadata: { error: result.error } })
+                'metadata.responsePayload': result.error ? { error: result.error } : result,
             });
         }
         
@@ -211,13 +235,13 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                 description: result.error,
             });
         }
-    } catch (e) {
+    } catch (e: any) {
         console.error("An error occurred during diagnosis generation:", e);
         const errorMessage = 'Ocorreu um erro ao gerar o diagnóstico. Tente novamente.';
         if (usageEventId) {
             await updateDoc(doc(firestore, `users/${user.uid}/usageEvents`, usageEventId), {
                 status: 'failure',
-                metadata: { error: errorMessage }
+                'metadata.responsePayload': { error: errorMessage }
             });
         }
         toast({ variant: "destructive", title: "Erro Inesperado", description: errorMessage });
@@ -305,22 +329,14 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                         defaultValue={field.value}
                         className="grid grid-cols-1 md:grid-cols-2 gap-4"
                       >
-                        <FormItem>
-                          <FormControl>
-                             <RadioGroupItem value="propria" id="propria" className="sr-only"/>
-                          </FormControl>
-                          <FormLabel htmlFor="propria" className="flex items-center justify-center gap-3 p-5 bg-black/20 border border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[input:checked]:bg-primary/10 has-[input:checked]:border-primary has-[input:checked]:text-white">
-                            Entrega Própria
-                          </FormLabel>
-                        </FormItem>
-                         <FormItem>
-                          <FormControl>
-                             <RadioGroupItem value="ifood" id="ifood" className="sr-only"/>
-                          </FormControl>
-                          <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-black/20 border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[input:checked]:bg-primary/10 has-[input:checked]:border-primary has-[input:checked]:text-white">
-                            Entrega do iFood
-                          </FormLabel>
-                        </FormItem>
+                        <FormLabel htmlFor="propria" className="flex items-center justify-center gap-3 p-5 bg-black/20 border border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-white">
+                           <RadioGroupItem value="propria" id="propria" className="sr-only"/>
+                           Entrega Própria
+                        </FormLabel>
+                        <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-black/20 border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-white">
+                           <RadioGroupItem value="ifood" id="ifood" className="sr-only"/>
+                           Entrega do iFood
+                        </FormLabel>
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
