@@ -50,6 +50,15 @@ service cloud.firestore {
           && data.timestamp <= request.time;
     }
 
+    function isUpdatingOwnUsageEventStatus(userId) {
+        let data = request.resource.data;
+        // User must be the owner
+        return data.userId == userId
+            // Only allow updating status and metadata.
+            && data.action == resource.data.action
+            && data.timestamp == resource.data.timestamp;
+    }
+
     // --- Collection Rules ---
 
     // Admin roles are managed via backend/console, not client.
@@ -79,7 +88,8 @@ service cloud.firestore {
     match /users/{userId}/usageEvents/{usageEventId} {
       allow read: if (isOwner(userId) && isSelfActive()) || isAdmin();
       allow create: if isOwner(userId) && isSelfActive() && isValidUsageEvent(userId);
-      allow update, delete: if false;
+      allow update: if isOwner(userId) && isSelfActive() && isUpdatingOwnUsageEventStatus(userId);
+      allow delete: if false;
     }
   }
 }
