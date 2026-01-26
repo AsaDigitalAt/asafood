@@ -7,13 +7,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { BarChart3, CheckCircle, Loader2, UploadCloud, UtensilsCrossed, ChevronDown, ShieldAlert } from "lucide-react";
-import { useState } from "react";
+import { BarChart3, CheckCircle, Loader2, UploadCloud, UtensilsCrossed, ChevronDown, ShieldAlert, Mail, Phone } from "lucide-react";
+import { useState, useEffect } from "react";
 import Image from 'next/image';
 import { generateDiagnosis, FormState } from "@/app/actions/generate-diagnosis";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useFirebase, useUser, useMemoFirebase, FirestorePermissionError, errorEmitter } from "@/firebase";
+import { useFirebase, useUser, FirestorePermissionError, errorEmitter } from "@/firebase";
 import { collection, addDoc, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -31,6 +31,8 @@ const diagnosisSchema = z.object({
   previousMonthDiscounts: z.coerce.number().min(0, "O desconto deve ser positivo."),
   funnelImage: z.any().refine((file) => file instanceof File, "A imagem do funil é obrigatória."),
   productImage: z.any().refine((file) => file instanceof File, "A imagem do produto é obrigatória."),
+  whatsapp: z.string().min(10, "O número do WhatsApp é obrigatório."),
+  email: z.string().email("O e-mail é obrigatório."),
 });
 
 // --- Components ---
@@ -139,15 +141,6 @@ const UploadCard = ({ name, title, description, icon, form }: { name: "funnelIma
     );
 };
 
-const fileToDataURI = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (error) => reject(error);
-        reader.readAsDataURL(file);
-    });
-};
-
 // --- Main Component ---
 interface DiagnosisViewProps {
   onFormSubmitStart: () => void;
@@ -172,14 +165,23 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     defaultValues: {
       restaurantName: "",
       foodCategory: "",
+      deliveryType: "ifood",
       currentMonthRevenue: 0,
       currentMonthDiscounts: 0,
       previousMonthRevenue: 0,
       previousMonthDiscounts: 0,
+      whatsapp: "",
+      email: user?.email || "",
     },
   });
 
-  const onFormSubmit = async (data: FormData) => {
+  useEffect(() => {
+    if (user?.email) {
+      form.reset({ ...form.getValues(), email: user.email });
+    }
+  }, [user, form]);
+
+  const onFormSubmit = async (values: z.infer<typeof diagnosisSchema>) => {
     if (!user || !firestore) {
         toast({ variant: "destructive", title: "Erro de Autenticação", description: "Usuário não encontrado." });
         return;
@@ -191,31 +193,24 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
 
     onFormSubmitStart();
 
+    const formData = new FormData();
+    for (const key in values) {
+      const typedKey = key as keyof typeof values;
+      const value = values[typedKey];
+      if (value) {
+        formData.append(typedKey, value as string | Blob);
+      }
+    }
+
     let usageEventId: string | null = null;
     try {
-        const rawFormData = Object.fromEntries(data.entries());
-        const validatedFields = diagnosisSchema.safeParse(rawFormData);
-
-        let requestPayload: any = {};
-        
-        if (validatedFields.success) {
-            const { funnelImage, productImage, ...rest } = validatedFields.data;
-            const funnelImageURI = await fileToDataURI(funnelImage);
-            const productImageURI = await fileToDataURI(productImage);
-            requestPayload = { ...rest, funnelImage: funnelImageURI, productImage: productImageURI };
-        } else {
-            // Handle validation failure if necessary, maybe don't even proceed.
-            const errorMessages = validatedFields.error.issues.map(issue => issue.message).join(', ');
-            throw new Error(`Formulário inválido: ${errorMessages}`);
-        }
-
         const usageEventsColRef = collection(firestore, `users/${user.uid}/usageEvents`);
         const usageEventData = {
             userId: user.uid,
             action: 'generate_diagnosis',
             status: 'started',
             timestamp: serverTimestamp(),
-            metadata: { requestPayload }
+            metadata: { requestPayload: { ...values, funnelImage: values.funnelImage.name, productImage: values.productImage.name } }
         };
         const usageEventRef = await addDoc(usageEventsColRef, usageEventData)
             .catch(serverError => {
@@ -225,13 +220,12 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                     requestResourceData: usageEventData,
                 });
                 errorEmitter.emit('permission-error', permissionError);
-                // Re-throw a user-friendly error to be caught by the outer try-catch
                 throw new Error('Falha ao registrar o evento de uso. Verifique suas permissões.');
             });
 
         usageEventId = usageEventRef.id;
 
-        const result = await generateDiagnosis(data);
+        const result = await generateDiagnosis(formData);
         
         const eventDocRef = doc(firestore, `users/${user.uid}/usageEvents`, usageEventId);
         const updateData = {
@@ -247,8 +241,6 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                     requestResourceData: updateData,
                 });
                 errorEmitter.emit('permission-error', permissionError);
-                // This is a non-critical logging error, so we don't disrupt the user flow.
-                // The global error listener will catch it for dev purposes.
             });
         
         onFormSubmitEnd(result);
@@ -304,7 +296,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
         </div>
 
         <Form {...form}>
-          <form action={onFormSubmit} className="space-y-12">
+          <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-12">
             <div className="grid md:grid-cols-2 gap-8 md:gap-12">
                 <UploadCard 
                     name="funnelImage"
@@ -377,6 +369,41 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="whatsapp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">WhatsApp para Contato</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Phone className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input type="tel" placeholder="(00) 90000-0000" {...field} className="bg-black/20 border-white/10 rounded-full py-7 px-7 pl-14 text-base focus:bg-primary/5 focus:border-primary" />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+               <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">E-mail de Contato</FormLabel>
+                    <FormControl>
+                       <div className="relative">
+                        <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input placeholder="seu@email.com" {...field} readOnly className="bg-black/20 border-white/10 rounded-full py-7 px-7 pl-14 text-base focus:bg-black/20 focus:border-white/10 cursor-not-allowed" />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
 
             <div className="space-y-6">
                 <div className="glass-card p-6 md:p-8 rounded-3xl space-y-6">

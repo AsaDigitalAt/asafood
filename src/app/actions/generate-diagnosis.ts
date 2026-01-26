@@ -26,13 +26,10 @@ const diagnosisSchema = z.object({
   previousMonthDiscounts: z.coerce.number(),
   funnelImage: z.instanceof(File),
   productImage: z.instanceof(File),
+  whatsapp: z.string().min(10, "O número do WhatsApp é obrigatório."),
+  email: z.string().email("O e-mail é obrigatório."),
 });
 
-const fileToDataURI = async (file: File) => {
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  return `data:${file.type};base64,${buffer.toString('base64')}`;
-};
 
 function processWebhookData(jsonResponse: any[]): FormState {
     const data = jsonResponse[0] || {};
@@ -98,32 +95,30 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
     previousMonthDiscounts,
     funnelImage,
     productImage,
+    whatsapp,
+    email,
   } = validatedFields.data;
 
   try {
-    const funnelImageURI = await fileToDataURI(funnelImage);
-    const productImageURI = await fileToDataURI(productImage);
+    const webhookFormData = new FormData();
+    webhookFormData.append('restaurant_name', restaurantName);
+    webhookFormData.append('nicho', foodCategory);
+    webhookFormData.append('tipo_entrega', deliveryType);
+    webhookFormData.append('fat-atual', String(currentMonthRevenue));
+    webhookFormData.append('desc-atual', String(currentMonthDiscounts));
+    webhookFormData.append('fat-anterior', String(previousMonthRevenue));
+    webhookFormData.append('desc-anterior', String(previousMonthDiscounts));
+    webhookFormData.append('funnelImage', funnelImage);
+    webhookFormData.append('productImage', productImage);
+    webhookFormData.append('whatsapp', whatsapp);
+    webhookFormData.append('email', email);
 
-    const webhookPayload = {
-      restaurantName,
-      foodCategory,
-      deliveryType,
-      currentMonthRevenue,
-      currentMonthDiscounts,
-      previousMonthRevenue,
-      previousMonthDiscounts,
-      funnelImage: funnelImageURI,
-      productImage: productImageURI,
-    };
 
     const webhookUrl = 'https://unreleasible-pocked-azucena.ngrok-free.dev/webhook/asafood';
 
     const response = await fetch(webhookUrl, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(webhookPayload),
+        body: webhookFormData,
     });
 
     if (!response.ok) {
