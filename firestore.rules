@@ -12,6 +12,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
+      // This function causes a read. Ensure rules on `roles_admin` allow this.
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
@@ -52,9 +53,10 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     // Admin roles are managed via backend/console, not client.
-    // Admins can read this collection to check other users' admin status.
+    // A user can check if they are an admin, and an admin can check other users.
     match /roles_admin/{userId} {
-      allow read: if isAdmin();
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow write: if false;
     }
 

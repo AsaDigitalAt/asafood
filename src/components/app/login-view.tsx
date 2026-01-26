@@ -16,7 +16,7 @@ import {
   sendPasswordResetEmail
 } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
-import { updateUserProfile } from "@/firebase/user";
+import { createUserProfile, updateUserLastLogin } from "@/firebase/user";
 
 const loginSchema = z.object({
   email: z.string().email("Por favor, insira um e-mail válido."),
@@ -39,17 +39,6 @@ export function LoginView() {
     },
   });
   
-  const handleAuthSuccess = async (uid: string, email: string | null) => {
-    if (!email) return;
-    try {
-      await updateUserProfile(auth.app, uid, { email });
-      // The onAuthStateChanged listener in the provider will handle the redirect.
-    } catch (e) {
-      console.error("Failed to update user profile", e);
-      setError("Falha ao salvar dados do usuário.");
-    }
-  }
-
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     setError(null);
@@ -57,14 +46,15 @@ export function LoginView() {
     try {
       if (isLoginView) {
         const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-        await handleAuthSuccess(userCredential.user.uid, userCredential.user.email);
+        await updateUserLastLogin(auth.app, userCredential.user.uid);
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        await handleAuthSuccess(userCredential.user.uid, userCredential.user.email);
+        await createUserProfile(auth.app, userCredential.user.uid, { email: values.email });
         toast({ title: "Conta criada!", description: "Você já pode fazer o login." });
         setIsLoginView(true); // Switch to login view after successful sign up
       }
     } catch (e: any) {
+      console.error("Auth error:", e);
       switch (e.code) {
         case 'auth/user-not-found':
         case 'auth/wrong-password':
