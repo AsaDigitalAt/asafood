@@ -97,8 +97,8 @@ service cloud.firestore {
       match /usageEvents/{usageEventId} {
         allow list: if isOwner(userId);
         allow get: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && isSelfActive() && isValidUsageEvent(userId);
-        allow update: if isOwner(userId) && isSelfActive() && isUpdatingOwnUsageEventStatus(userId);
+        allow create: if isOwner(userId) && isValidUsageEvent(userId);
+        allow update: if isOwner(userId) && isUpdatingOwnUsageEventStatus(userId);
         allow delete: if false;
       }
       
