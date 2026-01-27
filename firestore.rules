@@ -12,7 +12,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // This function causes a read. Ensure rules on `roles_admin` allow this.
+      // This function causes a read. Use with caution, especially in list rules.
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
@@ -72,11 +72,10 @@ service cloud.firestore {
 
     // Admin roles are managed via backend/console, not client.
     // Any signed-in user can check a specific user's admin status.
-    // Only admins can list all admins.
+    // Listing all admins is disallowed to prevent recursive rule evaluation.
     match /roles_admin/{userId} {
       allow get: if isSignedIn();
-      allow list: if isAdmin();
-      allow write: if false;
+      allow list, write: if false;
     }
 
     // User profiles can be read by owner or admin.
@@ -94,11 +93,10 @@ service cloud.firestore {
       // Subcollections for a User
       
       // Usage events are private.
-      // Only active users can create events.
-      // Admins can read anyone's events for auditing.
+      // Rules are split to avoid read-in-list-query issues.
       match /usageEvents/{usageEventId} {
-        allow get: if isOwner(userId) || isAdmin();
         allow list: if isOwner(userId);
+        allow get: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && isSelfActive() && isValidUsageEvent(userId);
         allow update: if isOwner(userId) && isSelfActive() && isUpdatingOwnUsageEventStatus(userId);
         allow delete: if false;
