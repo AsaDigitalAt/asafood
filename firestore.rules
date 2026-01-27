@@ -25,7 +25,7 @@ service cloud.firestore {
       }[plan];
     }
     
-    function isUsageWithinLimit(userId) {
+    function isWithinMonthlyLimit(userId) {
         let user = get(/databases/$(database)/documents/users/$(userId)).data;
         let plan = user.plan;
         
@@ -50,12 +50,12 @@ service cloud.firestore {
     function isCreatingOwnUser() {
       let data = request.resource.data;
       return data.email == request.auth.token.email
-          && data.createdAt == request.time
-          && data.lastLoginAt == request.time
           && data.plan == 'plano_acelerador'
           && data.planStatus == 'active'
           && data.usage.reportsThisCycle == 0
-          && data.usage.cycleStart == request.time;
+          && data.usage.cycleStart == request.time
+          && data.createdAt == request.time
+          && data.lastLoginAt == request.time;
     }
 
     function isUpdatingOwnProfile() {
@@ -93,7 +93,7 @@ service cloud.firestore {
       // Also check if user is within their plan limit before allowing event creation
       return data.userId == userId
           && data.timestamp <= request.time
-          && isUsageWithinLimit(userId);
+          && isWithinMonthlyLimit(userId);
     }
 
     function isUpdatingOwnUsageEventStatus(userId) {
@@ -114,7 +114,7 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     match /roles_admin/{userId} {
-      allow read: if isAdmin();
+      allow get: if isSignedIn();
       allow list, write: if false;
     }
     
@@ -127,7 +127,7 @@ service cloud.firestore {
       
       // --- Subcollection Rules ---
        match /usageEvents/{usageEventId} {
-        allow list, get: if isOwner(userId) || isAdmin();
+        allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && isValidUsageEvent(userId);
         allow update: if isOwner(userId) && isUpdatingOwnUsageEventStatus(userId);
         allow delete: if false;
@@ -135,7 +135,7 @@ service cloud.firestore {
       
       match /diagnosisReports/{reportId} {
         allow read: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && isValidDiagnosisReport(userId);
+        allow create: if isOwner(userId) && isValidDiagnosisReport(userId) && isWithinMonthlyLimit(userId);
         allow update, delete: if false;
       }
     }
