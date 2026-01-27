@@ -17,7 +17,8 @@ service cloud.firestore {
     }
 
     function isSelfActive() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return isSignedIn() && userDoc != null && userDoc.data.status == 'active';
     }
 
     // --- Validation Functions ---
