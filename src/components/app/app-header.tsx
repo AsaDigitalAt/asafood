@@ -3,10 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { BarChart3, Rocket, Store, Star, LogOut, Shield } from "lucide-react";
-import { useAuth, useUser, useMemoFirebase, useFirestore, useCollection } from "@/firebase";
+import { useAuth, useUser, useMemoFirebase, useFirestore } from "@/firebase";
 import { useDoc } from "@/firebase/firestore/use-doc";
-import { doc, collection, query, where } from "firebase/firestore";
-import { startOfMonth } from 'date-fns';
+import { doc } from "firebase/firestore";
 
 type View = "login" | "diagnosis" | "action-plan" | "restaurant" | "admin";
 
@@ -16,17 +15,6 @@ type AppHeaderProps = {
   isLoggedIn: boolean;
   onLogout: () => void;
 };
-
-const PLAN_LIMITS = {
-    'Plano Único': 1,
-    'Plano Duplo': 2,
-    'Plano Acelerador': 4,
-    'Modo Criador': Infinity
-};
-
-type UserProfile = {
-  plan: keyof typeof PLAN_LIMITS;
-}
 
 export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: AppHeaderProps) {
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -43,28 +31,6 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
   }, [firestore, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
   const isAdmin = !!adminRole;
-
-  const userProfileRef = useMemoFirebase(() => {
-    if (!user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
-
-  const usageQuery = useMemoFirebase(() => {
-      if (!user) return null;
-      const today = new Date();
-      const start = startOfMonth(today);
-      return query(
-          collection(firestore, `users/${user.uid}/usageEvents`),
-          where('action', '==', 'generate_diagnosis'),
-          where('timestamp', '>=', start)
-      );
-  }, [firestore, user]);
-  const { data: usageEvents } = useCollection(usageQuery);
-
-  const plan = userProfile?.plan || 'Plano Único';
-  const limit = PLAN_LIMITS[plan] || 1;
-  const used = usageEvents?.length || 0;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -158,13 +124,10 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
           isProfileOpen && "opacity-100 visible translate-y-0"
         )}>
           <div className="p-2 px-4">
-             <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Plano Ativo</span>
+             <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Nível de Acesso</span>
              <div className="flex items-center gap-2 text-primary font-bold text-base text-shadow-[0_0_10px_rgba(56,189,248,0.3)]">
-               <Star className="w-5 h-5 fill-current" /> {isAdmin ? 'Admin' : (userProfile?.plan || '...')}
+               <Star className="w-5 h-5 fill-current" /> {isAdmin ? 'Administrador' : 'Usuário'}
              </div>
-              <div className="mt-2 text-xs text-muted-foreground">
-                Diagnósticos este mês: {used} / {limit === Infinity ? '∞' : limit}
-              </div>
           </div>
           <div className="border-t border-white/10 my-1"></div>
           <button onClick={handleLogout} className="flex items-center gap-3 p-2 px-4 rounded-lg text-sm font-semibold text-muted-foreground w-full text-left hover:bg-destructive/10 hover:text-red-400">

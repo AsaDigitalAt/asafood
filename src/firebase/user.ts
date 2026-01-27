@@ -19,7 +19,6 @@ export const createUserProfile = async (app: FirebaseApp, uid: string, data: Use
             ...data,
             role: 'user',
             status: 'active',
-            plan: 'Plano Único',
             createdAt: serverTimestamp(),
             lastLoginAt: serverTimestamp(),
         });

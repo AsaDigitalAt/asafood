@@ -12,14 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { subDays } from 'date-fns';
 
-type UserPlan = 'Plano Único' | 'Plano Duplo' | 'Plano Acelerador' | 'Modo Criador';
-
 type UserData = {
     id: string;
     email: string;
     role: 'user' | 'admin';
     status: 'active' | 'suspended';
-    plan: UserPlan;
     createdAt: { toDate: () => Date };
     lastLoginAt: { toDate: () => Date };
 };
@@ -116,19 +113,6 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
         });
     };
 
-    const handlePlanChange = (userId: string, plan: UserPlan) => {
-        const userDocRef = doc(firestore, 'users', userId);
-        updateDoc(userDocRef, { plan }).catch((serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: userDocRef.path,
-                operation: 'update',
-                requestResourceData: { plan },
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        });
-    };
-
-
     return (
         <div className="max-w-7xl mx-auto px-4 py-24 md:py-32 opacity-0 animate-fade-up">
             <div className="glass-card rounded-3xl p-6 md:p-10 shadow-2xl">
@@ -149,7 +133,6 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                                     <TableHead>Email</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Role</TableHead>
-                                    <TableHead>Plano</TableHead>
                                     <TableHead>Último Login</TableHead>
                                     <TableHead>Membro Desde</TableHead>
                                 </TableRow>
@@ -177,19 +160,6 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                                                 <SelectContent>
                                                     <SelectItem value="user">User</SelectItem>
                                                     <SelectItem value="admin">Admin</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Select value={u.plan} onValueChange={(value: UserPlan) => handlePlanChange(u.id, value)}>
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Plano Único">Plano Único</SelectItem>
-                                                    <SelectItem value="Plano Duplo">Plano Duplo</SelectItem>
-                                                    <SelectItem value="Plano Acelerador">Plano Acelerador</SelectItem>
-                                                    <SelectItem value="Modo Criador">Modo Criador</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </TableCell>

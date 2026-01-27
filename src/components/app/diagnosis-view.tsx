@@ -13,11 +13,10 @@ import Image from 'next/image';
 import { generateDiagnosis, FormState } from "@/app/actions/generate-diagnosis";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useFirebase, useUser, useMemoFirebase, FirestorePermissionError, errorEmitter, useCollection } from "@/firebase";
-import { collection, addDoc, serverTimestamp, doc, updateDoc, query, where } from "firebase/firestore";
+import { useFirebase, useUser, useMemoFirebase, FirestorePermissionError, errorEmitter } from "@/firebase";
+import { collection, addDoc, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { startOfMonth } from 'date-fns';
 
 // --- Schema ---
 const diagnosisSchema = z.object({
@@ -34,14 +33,6 @@ const diagnosisSchema = z.object({
   productImage: z.any().refine((file) => file instanceof File, "A imagem do produto é obrigatória."),
   email: z.string().email("O e-mail é obrigatório."),
 });
-
-// --- Plan Constants ---
-const PLAN_LIMITS = {
-    'Plano Único': 1,
-    'Plano Duplo': 2,
-    'Plano Acelerador': 4,
-    'Modo Criador': Infinity
-};
 
 // --- Components ---
 
@@ -164,27 +155,9 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
-  const { data: userProfile } = useDoc<{status: string, plan: keyof typeof PLAN_LIMITS}>(userDocRef);
-
-  const usageQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    const today = new Date();
-    const start = startOfMonth(today);
-    return query(
-        collection(firestore, `users/${user.uid}/usageEvents`),
-        where('action', '==', 'generate_diagnosis'),
-        where('timestamp', '>=', start)
-    );
-  }, [firestore, user]);
-  const { data: usageEvents, isLoading: isUsageLoading } = useCollection(usageQuery);
-
-  const plan = userProfile?.plan || 'Plano Único';
-  const limit = PLAN_LIMITS[plan] || 1;
-  const used = usageEvents?.length || 0;
-  const hasRemaining = limit === Infinity || used < limit;
+  const { data: userProfile } = useDoc<{status: string}>(userDocRef);
 
   const isSuspended = userProfile?.status === 'suspended';
-  const limitReached = !hasRemaining;
 
   const form = useForm<z.infer<typeof diagnosisSchema>>({
     resolver: zodResolver(diagnosisSchema),
@@ -213,10 +186,6 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     }
      if (isSuspended) {
         toast({ variant: "destructive", title: "Conta Suspensa", description: "Sua conta está suspensa. Contate o suporte." });
-        return;
-    }
-    if (limitReached) {
-        toast({ variant: "destructive", title: "Limite Atingido", description: "Você atingiu seu limite de diagnósticos para este mês." });
         return;
     }
 
@@ -321,22 +290,19 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     }
   };
   
-  const isButtonDisabled = form.formState.isSubmitting || isSuspended || limitReached || isUsageLoading;
+  const isButtonDisabled = form.formState.isSubmitting || isSuspended;
 
   return (
     <>
       <HeroSection />
       <Marquee />
       <section className="px-4 pb-24 md:pb-32 max-w-4xl mx-auto">
-        {(isSuspended || limitReached) && (
+        {isSuspended && (
              <Alert variant="destructive" className="mb-12 danger-bg border-destructive/30 text-red-400">
                 <ShieldAlert className="h-5 w-5 !text-red-400" />
-                <AlertTitle className="font-bold">{isSuspended ? "Conta Suspensa" : "Limite de Diagnósticos Atingido"}</AlertTitle>
+                <AlertTitle className="font-bold">Conta Suspensa</AlertTitle>
                 <AlertDescription>
-                    {isSuspended 
-                        ? "Sua conta foi suspensa e você não pode mais gerar diagnósticos. Por favor, entre em contato com o suporte para mais informações."
-                        : `Você atingiu o limite de ${limit} diagnósticos para o seu ${plan} este mês. Para gerar mais, considere um upgrade de plano.`
-                    }
+                    Sua conta foi suspensa e você não pode mais gerar diagnósticos. Por favor, entre em contato com o suporte para mais informações.
                 </AlertDescription>
             </Alert>
         )}
@@ -406,11 +372,11 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                         defaultValue={field.value}
                         className="grid grid-cols-1 md:grid-cols-2 gap-4"
                       >
-                        <FormLabel htmlFor="propria" className="flex items-center justify-center gap-3 p-5 bg-black/20 border border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-white">
+                        <FormLabel htmlFor="propria" className="flex items-center justify-center gap-3 p-5 bg-black/20 border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-white">
                            <RadioGroupItem value="propria" id="propria" />
                            Entrega Própria
                         </FormLabel>
-                        <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-black/20 border border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-white">
+                        <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-black/20 border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-white">
                            <RadioGroupItem value="ifood" id="ifood" />
                            Entrega do iFood
                         </FormLabel>
@@ -508,9 +474,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                     className="relative w-full h-16 rounded-full bg-slate-900 hover:bg-slate-800 text-sky-400 text-lg font-bold uppercase tracking-widest transition-colors duration-300 disabled:text-muted-foreground"
                     disabled={isButtonDisabled}
                   >
-                    {isUsageLoading ? (
-                      'Verificando uso...'
-                    ) : form.formState.isSubmitting ? (
+                    {form.formState.isSubmitting ? (
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     ) : (
                       "Gerar Diagnóstico Completo"

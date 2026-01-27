@@ -36,16 +36,6 @@
             "active",
             "suspended"
           ]
-        },
-        "plan": {
-          "type": "string",
-          "description": "User's subscription plan.",
-          "enum": [
-            "Plano Único",
-            "Plano Duplo",
-            "Plano Acelerador",
-            "Modo Criador"
-          ]
         }
       },
       "required": [
@@ -53,8 +43,7 @@
         "createdAt",
         "lastLoginAt",
         "role",
-        "status",
-        "plan"
+        "status"
       ]
     },
     "UsageEvent": {
