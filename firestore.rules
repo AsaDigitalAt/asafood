@@ -54,6 +54,8 @@ service cloud.firestore {
     function isUpdatingOwnProfile() {
       let incoming = request.resource.data;
       let existing = resource.data;
+      let newUsage = incoming.usage;
+      let existingUsage = existing.get('usage', null);
 
       // 1. Immutable fields that user cannot change
       let coreDataUnchanged = incoming.email == existing.email 
@@ -67,11 +69,9 @@ service cloud.firestore {
       // 3. Validate 'usage' update logic
       let usageValid = 
           // Case 1: 'usage' field is not being updated.
-          incoming.usage == existing.usage ||
-          // Case 2: 'usage' field IS being updated.
+          (incoming.usage == existing.usage) ||
+          // Case 2: 'usage' field IS being updated. It must be a valid increment or reset.
           (
-              let newUsage = incoming.usage;
-              let existingUsage = existing.get('usage', null);
               // Subcase A: First time usage is set for an old user
               (existingUsage == null && newUsage.reportsThisCycle == 1 && newUsage.cycleStart == request.time) ||
               // Subcase B: Usage already exists, check increment or reset
