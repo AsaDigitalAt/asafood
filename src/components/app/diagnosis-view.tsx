@@ -208,8 +208,9 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
   }, [user, userProfile, firestore, form]);
   
   const usageCount = userProfile?.usage?.reportsThisCycle ?? 0;
-  const usageLimit = userProfile?.plan ? planLimits[userProfile.plan] : 0;
-  const isDeveloper = userProfile?.plan === 'desenvolvedor';
+  const plan = userProfile?.plan || 'plano_acelerador'; // Default to accelerator
+  const usageLimit = planLimits[plan] || 0;
+  const isDeveloper = plan === 'desenvolvedor';
   const isLimitReached = !isDeveloper && usageCount >= usageLimit;
 
 
@@ -297,11 +298,21 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
             });
             // Increment usage counter on success
             const userRef = doc(firestore, "users", user.uid);
-            const newUsage = {
-              ...userProfile.usage,
-              reportsThisCycle: (userProfile.usage.reportsThisCycle || 0) + 1,
-            };
-            updateDoc(userRef, { usage: newUsage });
+            if (userProfile.usage && userProfile.usage.cycleStart) {
+                // Normal increment for users with existing usage object
+                const newUsage = {
+                    reportsThisCycle: userProfile.usage.reportsThisCycle + 1,
+                    cycleStart: userProfile.usage.cycleStart, // Keep the same timestamp object
+                };
+                updateDoc(userRef, { usage: newUsage });
+            } else {
+                // First-time usage for an existing user (create usage object)
+                const newUsage = {
+                    reportsThisCycle: 1,
+                    cycleStart: serverTimestamp(),
+                };
+                updateDoc(userRef, { usage: newUsage });
+            }
         }
         
         onFormSubmitEnd(result);

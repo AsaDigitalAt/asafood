@@ -26,22 +26,26 @@ service cloud.firestore {
     }
     
     function isWithinMonthlyLimit(userId) {
-        let user = get(/databases/$(database)/documents/users/$(userId)).data;
-        let plan = user.plan;
+        let userData = get(/databases/$(database)/documents/users/$(userId)).data;
+        // Default to 'plano_acelerador' if plan is not set for existing users
+        let plan = userData.get('plan', 'plano_acelerador');
         
-        // Developer plan has no limits
         if (plan == 'desenvolvedor') {
             return true;
         }
 
-        let usage = user.usage;
         let limit = getPlanLimit(plan);
+        let usage = userData.get('usage', null);
+
+        // If no usage data, they haven't generated any reports, so they are within limit.
+        if (usage == null) {
+            return limit > 0;
+        }
         
-        // Check if the usage cycle needs to be reset
         let currentMonth = request.time.month();
-        // Ensure usage and cycleStart are not null before accessing properties
-        let cycleMonth = usage != null && usage.cycleStart != null ? usage.cycleStart.month() : 0;
+        let cycleMonth = usage.cycleStart.month();
         
+        // If it's a new month, the count is effectively 0
         let reportsThisCycle = (currentMonth == cycleMonth) ? usage.reportsThisCycle : 0;
         
         return reportsThisCycle < limit;
@@ -72,19 +76,30 @@ service cloud.firestore {
       // If 'lastLoginAt' is being updated, it must be to the current time
       let validLastLoginUpdate = !('lastLoginAt' in data) || data.lastLoginAt == request.time;
       
-      // If 'usage' is being updated, it must be an increment or a reset
-      let validUsageUpdate = !('usage' in data) ||
-          // Case 1: Incrementing reports
-          (data.usage.reportsThisCycle == existingData.usage.reportsThisCycle + 1 &&
-            data.usage.cycleStart.toMillis() == existingData.usage.cycleStart.toMillis()
-          ) ||
-          // Case 2: Resetting cycle for a new month
-          (data.usage.reportsThisCycle == 0 &&
-            data.usage.cycleStart.month() != existingData.usage.cycleStart.month() &&
-            data.usage.cycleStart.year() == request.time.year()
-          );
+      // If 'usage' is NOT being updated, we're done with this check
+      if (!('usage' in data)) {
+          return validLastLoginUpdate;
+      }
+
+      // ---- From here, 'usage' is being updated ----
+      let newUsage = data.usage;
+      let existingUsage = existingData.get('usage', null);
+
+      // Case 0: creating the usage field for the first time for an old user
+      if (existingUsage == null) {
+          return newUsage.reportsThisCycle == 1 && newUsage.cycleStart == request.time;
+      }
+
+      // Case 1: Incrementing reports
+      let isIncrementing = newUsage.reportsThisCycle == existingUsage.reportsThisCycle + 1 &&
+        newUsage.cycleStart.toMillis() == existingUsage.cycleStart.toMillis();
+      
+      // Case 2: Resetting cycle for a new month (client-side logic triggers this)
+      let isResetting = newUsage.reportsThisCycle == 0 &&
+        newUsage.cycleStart.month() != existingUsage.cycleStart.month() &&
+        newUsage.cycleStart.year() == request.time.year();
           
-      return validLastLoginUpdate && validUsageUpdate;
+      return validLastLoginUpdate && (isIncrementing || isResetting);
     }
     
     function isAdminUpdatingUser() {
