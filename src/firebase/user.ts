@@ -12,7 +12,7 @@ export const createUserProfile = async (app: FirebaseApp, uid: string, email: st
     try {
         await setDoc(userDocRef, {
             email: email,
-            plan: 'convidado',
+            plan: 'plano_acelerador',
             planStatus: 'active',
             usage: {
                 reportsThisCycle: 0,

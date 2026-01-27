@@ -52,7 +52,7 @@ service cloud.firestore {
       return data.email == request.auth.token.email
           && data.createdAt == request.time
           && data.lastLoginAt == request.time
-          && data.plan == 'convidado'
+          && data.plan == 'plano_acelerador'
           && data.planStatus == 'active'
           && data.usage.reportsThisCycle == 0
           && data.usage.cycleStart == request.time;
@@ -72,9 +72,13 @@ service cloud.firestore {
           && data.usage.cycleStart.month() == request.time.month()
           && request.time.month() != existingData.usage.cycleStart.month();
 
+      // Allow user to increment their usage
+      let isIncrementingUsage = data.usage.reportsThisCycle == existingData.usage.reportsThisCycle + 1;
+
+
       return coreFieldsUnchanged && (
-        // Allow updating non-critical fields OR resetting usage
-        (data.lastLoginAt == request.time && data.usage == existingData.usage) || isResettingUsage
+        // Allow updating non-critical fields OR resetting usage OR incrementing usage
+        (data.lastLoginAt == request.time && data.usage == existingData.usage) || isResettingUsage || isIncrementingUsage
       );
     }
     
