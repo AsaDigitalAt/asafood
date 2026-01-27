@@ -97,7 +97,7 @@ service cloud.firestore {
       // Only active users can create events.
       // Admins can read anyone's events for auditing.
       match /usageEvents/{usageEventId} {
-        allow read: if isOwner(userId);
+        allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && isSelfActive() && isValidUsageEvent(userId);
         allow update: if isOwner(userId) && isSelfActive() && isUpdatingOwnUsageEventStatus(userId);
         allow delete: if false;
