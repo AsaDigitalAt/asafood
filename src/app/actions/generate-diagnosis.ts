@@ -27,6 +27,7 @@ const diagnosisSchema = z.object({
   funnelImage: z.any().refine((file) => file instanceof File, "A imagem do funil é obrigatória."),
   productImage: z.any().refine((file) => file instanceof File, "A imagem do produto é obrigatória."),
   email: z.string().email("O e-mail é obrigatório."),
+  uid: z.string().min(1, "UID do usuário é obrigatório."),
 });
 
 
@@ -95,6 +96,7 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
     funnelImage,
     productImage,
     email,
+    uid,
   } = validatedFields.data;
 
   let responseText = '';
@@ -110,6 +112,7 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
     webhookFormData.append('funnelImage', funnelImage);
     webhookFormData.append('productImage', productImage);
     webhookFormData.append('email', email);
+    webhookFormData.append('user_id', uid);
 
 
     const webhookUrl = 'https://unreleasible-pocked-azucena.ngrok-free.dev/webhook/asafood';

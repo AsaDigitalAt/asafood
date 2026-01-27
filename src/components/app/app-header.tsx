@@ -16,6 +16,22 @@ type AppHeaderProps = {
   onLogout: () => void;
 };
 
+const planLabels: Record<string, string> = {
+  convidado: "Convidado",
+  plano_unico: "Plano Único",
+  plano_duplo: "Plano Duplo",
+  plano_acelerador: "Plano Acelerador",
+  desenvolvedor: "Desenvolvedor",
+};
+
+const planLimits: Record<string, number> = {
+  convidado: 10,
+  plano_unico: 1,
+  plano_duplo: 2,
+  plano_acelerador: 4,
+  desenvolvedor: Infinity,
+};
+
 export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: AppHeaderProps) {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
@@ -24,6 +40,13 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
   const auth = useAuth();
   const { user } = useUser();
   const firestore = useFirestore();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile } = useDoc<any>(userDocRef);
 
   const adminRoleRef = useMemoFirebase(() => {
     if (!user) return null;
@@ -72,6 +95,12 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
   };
   
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || '...';
+  
+  const planName = userProfile?.plan ? planLabels[userProfile.plan] : "Carregando...";
+  const usageCount = userProfile?.usage?.reportsThisCycle ?? 0;
+  const usageLimit = userProfile?.plan ? planLimits[userProfile.plan] : 0;
+  const isDeveloper = userProfile?.plan === 'desenvolvedor';
+  const usageText = isDeveloper ? `${usageCount} / ∞` : `${usageCount} / ${usageLimit}`;
 
   return (
     <header className={cn(
@@ -119,14 +148,20 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
           </div>
         </div>
         <div className={cn(
-          "absolute top-full right-0 mt-4 glass-card backdrop-blur-lg p-2 rounded-xl whitespace-nowrap",
+          "absolute top-full right-0 mt-4 glass-card backdrop-blur-lg p-2 rounded-xl whitespace-nowrap min-w-60",
           "opacity-0 invisible -translate-y-2 transition-all duration-300 shadow-2xl",
           isProfileOpen && "opacity-100 visible translate-y-0"
         )}>
-          <div className="p-2 px-4">
-             <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Nível de Acesso</span>
+           <div className="p-2 px-4">
+             <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Plano Atual</span>
              <div className="flex items-center gap-2 text-primary font-bold text-base text-shadow-[0_0_10px_rgba(56,189,248,0.3)]">
-               <Star className="w-5 h-5 fill-current" /> {isAdmin ? 'Administrador' : 'Usuário'}
+               <Star className="w-5 h-5 fill-current" /> {planName}
+             </div>
+          </div>
+           <div className="p-2 px-4">
+             <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Gerações</span>
+             <div className="flex items-center gap-2 text-white font-bold text-base">
+                {usageText}
              </div>
           </div>
           <div className="border-t border-white/10 my-1"></div>

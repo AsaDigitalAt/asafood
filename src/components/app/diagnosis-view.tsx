@@ -32,6 +32,7 @@ const diagnosisSchema = z.object({
   funnelImage: z.any().refine((file) => file instanceof File, "A imagem do funil é obrigatória."),
   productImage: z.any().refine((file) => file instanceof File, "A imagem do produto é obrigatória."),
   email: z.string().email("O e-mail é obrigatório."),
+  uid: z.string().min(1, "UID do usuário é obrigatório."),
 });
 
 // --- Components ---
@@ -146,6 +147,14 @@ interface DiagnosisViewProps {
   onFormSubmitEnd: (data: FormState) => void;
 }
 
+const planLimits: Record<string, number> = {
+  convidado: 10,
+  plano_unico: 1,
+  plano_duplo: 2,
+  plano_acelerador: 4,
+  desenvolvedor: Infinity,
+};
+
 export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisViewProps) {
   const { toast } = useToast();
   const { firestore } = useFirebase();
@@ -155,10 +164,10 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
-  const { data: userProfile } = useDoc<{status: string}>(userDocRef);
+  const { data: userProfile } = useDoc<any>(userDocRef);
 
-  const isSuspended = userProfile?.status === 'suspended';
-
+  const isSuspended = userProfile?.planStatus !== 'active';
+  
   const form = useForm<z.infer<typeof diagnosisSchema>>({
     resolver: zodResolver(diagnosisSchema),
     defaultValues: {
@@ -170,14 +179,37 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
       previousMonthRevenue: 0,
       previousMonthDiscounts: 0,
       email: user?.email || "",
+      uid: user?.uid || "",
     },
   });
 
   useEffect(() => {
-    if (user?.email) {
-      form.reset({ ...form.getValues(), email: user.email });
+    if (user?.email && user?.uid) {
+      form.reset({ 
+          ...form.getValues(), 
+          email: user.email,
+          uid: user.uid
+      });
     }
-  }, [user, form]);
+     // Monthly usage reset logic
+    if (userProfile && firestore && user) {
+        const cycleDate = userProfile.usage?.cycleStart?.toDate();
+        const now = new Date();
+        if (cycleDate && (cycleDate.getMonth() !== now.getMonth() || cycleDate.getFullYear() !== now.getFullYear())) {
+            const userRef = doc(firestore, "users", user.uid);
+            updateDoc(userRef, {
+                "usage.reportsThisCycle": 0,
+                "usage.cycleStart": serverTimestamp()
+            }).catch(error => console.error("Failed to reset usage stats:", error));
+        }
+    }
+  }, [user, userProfile, firestore, form]);
+  
+  const usageCount = userProfile?.usage?.reportsThisCycle ?? 0;
+  const usageLimit = userProfile?.plan ? planLimits[userProfile.plan] : 0;
+  const isDeveloper = userProfile?.plan === 'desenvolvedor';
+  const isLimitReached = !isDeveloper && usageCount >= usageLimit;
+
 
   const onFormSubmit = async (values: z.infer<typeof diagnosisSchema>) => {
     if (!user || !firestore) {
@@ -185,7 +217,11 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
         return;
     }
      if (isSuspended) {
-        toast({ variant: "destructive", title: "Conta Suspensa", description: "Sua conta está suspensa. Contate o suporte." });
+        toast({ variant: "destructive", title: "Conta Inativa", description: "Seu plano não está ativo. Contate o suporte." });
+        return;
+    }
+    if (isLimitReached) {
+        toast({ variant: "destructive", title: "Limite Atingido", description: "Você atingiu o limite de diagnósticos para este mês." });
         return;
     }
 
@@ -218,7 +254,8 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                     requestResourceData: usageEventData,
                 });
                 errorEmitter.emit('permission-error', permissionError);
-                throw new Error('Falha ao registrar o evento de uso. Verifique suas permissões.');
+                // Translate permission error for the user
+                throw new Error('Você atingiu o limite de diagnósticos do seu plano este mês.');
             });
 
         usageEventId = usageEventRef.id;
@@ -228,7 +265,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
         const eventDocRef = doc(firestore, `users/${user.uid}/usageEvents`, usageEventId);
         const updateData = {
             status: result.error ? 'failure' : 'success',
-            'metadata.responsePayload': result.error ? { error: result.error } : result,
+            'metadata.responsePayload': result.error ? { error: result.error } : { success: true },
         };
         
         updateDoc(eventDocRef, updateData)
@@ -256,6 +293,9 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                 });
                 errorEmitter.emit('permission-error', permissionError);
             });
+            // Increment usage counter on success
+            const userRef = doc(firestore, "users", user.uid);
+            updateDoc(userRef, { "usage.reportsThisCycle": usageCount + 1 });
         }
         
         onFormSubmitEnd(result);
@@ -290,19 +330,23 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     }
   };
   
-  const isButtonDisabled = form.formState.isSubmitting || isSuspended;
+  const isButtonDisabled = form.formState.isSubmitting || isSuspended || isLimitReached;
 
   return (
     <>
       <HeroSection />
       <Marquee />
       <section className="px-4 pb-24 md:pb-32 max-w-4xl mx-auto">
-        {isSuspended && (
+        {(isSuspended || isLimitReached) && (
              <Alert variant="destructive" className="mb-12 danger-bg border-destructive/30 text-red-400">
                 <ShieldAlert className="h-5 w-5 !text-red-400" />
-                <AlertTitle className="font-bold">Conta Suspensa</AlertTitle>
+                <AlertTitle className="font-bold">
+                    {isSuspended ? "Plano Inativo" : "Limite de Diagnósticos Atingido"}
+                </AlertTitle>
                 <AlertDescription>
-                    Sua conta foi suspensa e você não pode mais gerar diagnósticos. Por favor, entre em contato com o suporte para mais informações.
+                    {isSuspended 
+                        ? "Seu plano atual não permite gerar novos diagnósticos. Por favor, contate o suporte."
+                        : `Você atingiu seu limite de ${usageLimit} diagnósticos para este mês. Para gerar mais, considere fazer um upgrade no seu plano.`}
                 </AlertDescription>
             </Alert>
         )}
@@ -314,6 +358,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-12">
+            <input type="hidden" {...form.register("uid")} />
             <div className="grid md:grid-cols-2 gap-8 md:gap-12">
                 <UploadCard 
                     name="funnelImage"
@@ -471,7 +516,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                   <div className="absolute inset-[-150%] animate-border-spin bg-[conic-gradient(from_90deg_at_50%_50%,#38BDF8_0%,#0F172A_50%,#38BDF8_100%)]"/>
                   <Button 
                     type="submit" 
-                    className="relative w-full h-16 rounded-full bg-slate-900 hover:bg-slate-800 text-sky-400 text-lg font-bold uppercase tracking-widest transition-colors duration-300 disabled:text-muted-foreground"
+                    className="relative w-full h-16 rounded-full bg-slate-900 hover:bg-slate-800 text-sky-400 text-lg font-bold uppercase tracking-widest transition-colors duration-300 disabled:text-muted-foreground disabled:bg-slate-900/50 disabled:cursor-not-allowed"
                     disabled={isButtonDisabled}
                   >
                     {form.formState.isSubmitting ? (

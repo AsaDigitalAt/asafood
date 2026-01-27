@@ -2,35 +2,45 @@
 
 import { useMemo } from 'react';
 import { useFirebase, useUser, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
-import { collection, doc, query, where, orderBy, updateDoc } from "firebase/firestore";
+import { collection, doc, query, updateDoc, serverTimestamp } from "firebase/firestore";
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { subDays } from 'date-fns';
+import { User } from 'firebase/auth';
 
-type UserData = {
+type UserProfile = {
     id: string;
     email: string;
-    role: 'user' | 'admin';
-    status: 'active' | 'suspended';
+    plan: 'convidado' | 'plano_unico' | 'plano_duplo' | 'plano_acelerador' | 'desenvolvedor';
+    planStatus: 'active' | 'inactive' | 'past_due';
     createdAt: { toDate: () => Date };
     lastLoginAt: { toDate: () => Date };
-};
-
-type UsageEvent = {
-    id: string;
-    action: string;
-    status: string;
-    timestamp: { toDate: () => Date };
+    usage: {
+        reportsThisCycle: number;
+        cycleStart: { toDate: () => Date };
+    }
 };
 
 interface AdminDashboardProps {
     onBack: () => void;
 }
+
+const planLabels: Record<UserProfile['plan'], string> = {
+  convidado: "Convidado",
+  plano_unico: "Plano Único",
+  plano_duplo: "Plano Duplo",
+  plano_acelerador: "Plano Acelerador",
+  desenvolvedor: "Desenvolvedor",
+};
+
+const planStatusLabels: Record<UserProfile['planStatus'], string> = {
+  active: "Ativo",
+  inactive: "Inativo",
+  past_due: "Pendente",
+};
 
 export default function AdminDashboard({ onBack }: AdminDashboardProps) {
     const { firestore } = useFirebase();
@@ -48,20 +58,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
         return collection(firestore, 'users');
     }, [firestore, isAdmin]);
 
-    const { data: users, isLoading: areUsersLoading } = useCollection<UserData>(usersQuery);
-    
-    // Usage Events for all users in last 30 days
-    const usageEventsQuery = useMemoFirebase(() => {
-        if (!isAdmin) return null;
-        const thirtyDaysAgo = subDays(new Date(), 30);
-        return query(
-            collection(firestore, 'usageEvents'), 
-            where('timestamp', '>=', thirtyDaysAgo),
-            orderBy('timestamp', 'desc')
-        );
-    }, [firestore, isAdmin]);
-    const { data: usageEvents } = useCollection<UsageEvent>(usageEventsQuery);
-
+    const { data: users, isLoading: areUsersLoading } = useCollection<UserProfile>(usersQuery);
 
     if (isAdminLoading) {
         return <div className="pt-32 text-center">Verificando permissões...</div>;
@@ -89,25 +86,13 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
         );
     }
     
-    const handleStatusChange = (userId: string, status: 'active' | 'suspended') => {
+    const handleFieldChange = (userId: string, field: 'plan' | 'planStatus', value: string) => {
         const userDocRef = doc(firestore, 'users', userId);
-        updateDoc(userDocRef, { status }).catch((serverError) => {
+        updateDoc(userDocRef, { [field]: value }).catch((serverError) => {
             const permissionError = new FirestorePermissionError({
                 path: userDocRef.path,
                 operation: 'update',
-                requestResourceData: { status },
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        });
-    };
-
-    const handleRoleChange = (userId: string, role: 'user' | 'admin') => {
-        const userDocRef = doc(firestore, 'users', userId);
-        updateDoc(userDocRef, { role }).catch((serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: userDocRef.path,
-                operation: 'update',
-                requestResourceData: { role },
+                requestResourceData: { [field]: value },
             });
             errorEmitter.emit('permission-error', permissionError);
         });
@@ -121,7 +106,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                         <span className="text-gradient">Painel do </span> 
                         <span className="text-primary">Administrador</span>
                     </h1>
-                    <p className="text-lg text-muted-foreground">Gerenciamento de usuários e auditoria.</p>
+                    <p className="text-lg text-muted-foreground">Gerenciamento de usuários e planos.</p>
                 </header>
                 
                 <div className="mb-12">
@@ -131,8 +116,9 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Email</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Role</TableHead>
+                                    <TableHead>Plano</TableHead>
+                                    <TableHead>Status do Plano</TableHead>
+                                    <TableHead>Uso no Ciclo</TableHead>
                                     <TableHead>Último Login</TableHead>
                                     <TableHead>Membro Desde</TableHead>
                                 </TableRow>
@@ -142,27 +128,30 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                                     <TableRow key={u.id}>
                                         <TableCell>{u.email}</TableCell>
                                         <TableCell>
-                                            <Select value={u.status} onValueChange={(value: 'active' | 'suspended') => handleStatusChange(u.id, value)}>
-                                                <SelectTrigger className={u.status === 'active' ? 'text-green-400' : 'text-red-400'}>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="active">Active</SelectItem>
-                                                    <SelectItem value="suspended">Suspended</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Select value={u.role} onValueChange={(value: 'user' | 'admin') => handleRoleChange(u.id, value)}>
+                                            <Select value={u.plan} onValueChange={(value) => handleFieldChange(u.id, 'plan', value)}>
                                                 <SelectTrigger>
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="user">User</SelectItem>
-                                                    <SelectItem value="admin">Admin</SelectItem>
+                                                    {Object.entries(planLabels).map(([key, label]) => (
+                                                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         </TableCell>
+                                        <TableCell>
+                                            <Select value={u.planStatus} onValueChange={(value) => handleFieldChange(u.id, 'planStatus', value)}>
+                                                <SelectTrigger className={u.planStatus === 'active' ? 'text-green-400' : 'text-red-400'}>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {Object.entries(planStatusLabels).map(([key, label]) => (
+                                                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </TableCell>
+                                        <TableCell>{u.usage?.reportsThisCycle ?? 0}</TableCell>
                                         <TableCell>{u.lastLoginAt?.toDate().toLocaleString()}</TableCell>
                                         <TableCell>{u.createdAt?.toDate().toLocaleDateString()}</TableCell>
                                     </TableRow>

@@ -21,20 +21,43 @@
           "description": "Timestamp of the user's last login.",
           "format": "date-time"
         },
-        "role": {
+        "plan": {
           "type": "string",
-          "description": "User's role within the application (e.g., 'admin', 'user').",
+          "description": "User's subscription plan.",
           "enum": [
-            "user",
-            "admin"
+            "convidado",
+            "plano_unico",
+            "plano_duplo",
+            "plano_acelerador",
+            "desenvolvedor"
           ]
         },
-        "status": {
+        "planStatus": {
           "type": "string",
-          "description": "User's account status (e.g., 'active', 'suspended').",
+          "description": "Status of the user's plan.",
           "enum": [
             "active",
-            "suspended"
+            "inactive",
+            "past_due"
+          ]
+        },
+        "usage": {
+          "type": "object",
+          "description": "Tracks monthly report generation usage.",
+          "properties": {
+            "reportsThisCycle": {
+              "type": "number",
+              "description": "Count of reports generated in the current cycle."
+            },
+            "cycleStart": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Start date of the current usage cycle."
+            }
+          },
+          "required": [
+            "reportsThisCycle",
+            "cycleStart"
           ]
         }
       },
@@ -42,8 +65,9 @@
         "email",
         "createdAt",
         "lastLoginAt",
-        "role",
-        "status"
+        "plan",
+        "planStatus",
+        "usage"
       ]
     },
     "UsageEvent": {

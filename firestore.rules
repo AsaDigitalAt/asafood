@@ -14,35 +14,82 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
+    
+    function getPlanLimit(plan) {
+      return {
+        'convidado': 10,
+        'plano_unico': 1,
+        'plano_duplo': 2,
+        'plano_acelerador': 4,
+        'desenvolvedor': 999
+      }[plan];
+    }
+    
+    function isUsageWithinLimit(userId) {
+        let user = get(/databases/$(database)/documents/users/$(userId)).data;
+        let plan = user.plan;
+        
+        // Developer plan has no limits
+        if (plan == 'desenvolvedor') {
+            return true;
+        }
+
+        let usage = user.usage;
+        let limit = getPlanLimit(plan);
+        
+        // Check if the usage cycle needs to be reset
+        let currentMonth = request.time.month();
+        let cycleMonth = usage.cycleStart.month();
+        
+        let reportsThisCycle = (currentMonth == cycleMonth) ? usage.reportsThisCycle : 0;
+        
+        return reportsThisCycle < limit;
+    }
 
     // --- Validation Functions ---
     function isCreatingOwnUser() {
       let data = request.resource.data;
       return data.email == request.auth.token.email
-          && data.role == 'user'
-          && data.status == 'active'
           && data.createdAt == request.time
-          && data.lastLoginAt == request.time;
+          && data.lastLoginAt == request.time
+          && data.plan == 'convidado'
+          && data.planStatus == 'active'
+          && data.usage.reportsThisCycle == 0
+          && data.usage.cycleStart == request.time;
     }
 
     function isUpdatingOwnProfile() {
       let data = request.resource.data;
-      // User can't change their own role or status.
-      return data.role == resource.data.role
-          && data.status == resource.data.status
-          && data.createdAt == resource.data.createdAt; // Immutable
+      let existingData = resource.data;
+
+      // User can't change their own plan or status, or critical immutable fields
+      let coreFieldsUnchanged = data.plan == existingData.plan
+          && data.planStatus == existingData.planStatus
+          && data.createdAt == existingData.createdAt;
+
+      // Allow user to reset their usage stats if a new month has started
+      let isResettingUsage = data.usage.reportsThisCycle == 0
+          && data.usage.cycleStart.month() == request.time.month()
+          && request.time.month() != existingData.usage.cycleStart.month();
+
+      return coreFieldsUnchanged && (
+        // Allow updating non-critical fields OR resetting usage
+        (data.lastLoginAt == request.time && data.usage == existingData.usage) || isResettingUsage
+      );
     }
     
     function isAdminUpdatingUser() {
       let data = request.resource.data;
-       // Admin can change role and status, but not immutable fields.
+       // Admin can change plan and status, but not immutable fields.
       return data.createdAt == resource.data.createdAt;
     }
 
     function isValidUsageEvent(userId) {
       let data = request.resource.data;
+      // Also check if user is within their plan limit before allowing event creation
       return data.userId == userId
-          && data.timestamp <= request.time;
+          && data.timestamp <= request.time
+          && isUsageWithinLimit(userId);
     }
 
     function isUpdatingOwnUsageEventStatus(userId) {
@@ -62,27 +109,21 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
-    // Admin roles are managed via backend/console, not client.
     match /roles_admin/{userId} {
-      allow get: if isSignedIn();
+      allow read: if isAdmin();
       allow list, write: if false;
     }
-
-    // User profiles can be read by owner or admin.
-    // Only admins can list all users.
-    // Users can create their own profile.
-    // Users can update their own profile (with restrictions).
-    // Admins can update any user's profile (role/status).
+    
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId) && isCreatingOwnUser();
       allow update: if (isOwner(userId) && isUpdatingOwnProfile()) || (isAdmin() && isAdminUpdatingUser());
-      allow delete: if false; // Users should be suspended, not deleted.
+      allow delete: if false;
       
       // --- Subcollection Rules ---
-      match /usageEvents/{usageEventId} {
-        allow read: if isOwner(userId) || isAdmin();
+       match /usageEvents/{usageEventId} {
+        allow list, get: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && isValidUsageEvent(userId);
         allow update: if isOwner(userId) && isUpdatingOwnUsageEventStatus(userId);
         allow delete: if false;

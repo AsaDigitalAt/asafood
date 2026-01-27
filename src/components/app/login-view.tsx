@@ -12,10 +12,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/firebase";
 import { 
   signInWithEmailAndPassword,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  User
 } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
-import { updateUserLastLogin } from "@/firebase/user";
+import { upsertUserProfileOnLogin } from "@/firebase/user";
 
 const loginSchema = z.object({
   email: z.string().email("Por favor, insira um e-mail válido."),
@@ -43,7 +44,8 @@ export function LoginView() {
     
     try {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-      await updateUserLastLogin(auth.app, userCredential.user.uid);
+      // This now handles profile creation on first login
+      await upsertUserProfileOnLogin(auth.app, userCredential.user);
     } catch (e: any) {
       console.error("Auth error:", e);
       switch (e.code) {
