@@ -27,28 +27,16 @@ service cloud.firestore {
     
     function isWithinMonthlyLimit(userId) {
         let userData = get(/databases/$(database)/documents/users/$(userId)).data;
-        // Default to 'plano_acelerador' if plan is not set for existing users
         let plan = userData.get('plan', 'plano_acelerador');
-        
-        if (plan == 'desenvolvedor') {
-            return true;
-        }
-
         let limit = getPlanLimit(plan);
         let usage = userData.get('usage', null);
+        // Ternary to check for new cycle or null usage
+        let reportsThisCycle = usage != null && usage.cycleStart.month() == request.time.month() 
+            ? usage.reportsThisCycle 
+            : 0;
 
-        // If no usage data, they haven't generated any reports, so they are within limit.
-        if (usage == null) {
-            return limit > 0;
-        }
-        
-        let currentMonth = request.time.month();
-        let cycleMonth = usage.cycleStart.month();
-        
-        // If it's a new month, the count is effectively 0
-        let reportsThisCycle = (currentMonth == cycleMonth) ? usage.reportsThisCycle : 0;
-        
-        return reportsThisCycle < limit;
+        // Return true if developer OR if reports are under the limit
+        return plan == 'desenvolvedor' || reportsThisCycle < limit;
     }
 
     // --- Validation Functions ---
@@ -64,47 +52,43 @@ service cloud.firestore {
     }
 
     function isUpdatingOwnProfile() {
-      let data = request.resource.data;
-      let existingData = resource.data;
-      let allowedKeys = ['lastLoginAt', 'usage'];
+      let incoming = request.resource.data;
+      let existing = resource.data;
 
-      // Disallow changing any field except the allowed ones
-      if (data.keys().removeAll(allowedKeys).size() != 0) {
-        return false;
-      }
+      // 1. Immutable fields that user cannot change
+      let coreDataUnchanged = incoming.email == existing.email 
+                          && incoming.createdAt == existing.createdAt
+                          && incoming.plan == existing.plan 
+                          && incoming.planStatus == existing.planStatus;
 
-      // If 'lastLoginAt' is being updated, it must be to the current time
-      let validLastLoginUpdate = !('lastLoginAt' in data) || data.lastLoginAt == request.time;
+      // 2. User can update lastLoginAt only to the request time, or it can remain unchanged
+      let lastLoginAtValid = incoming.lastLoginAt == existing.lastLoginAt || incoming.lastLoginAt == request.time;
       
-      // If 'usage' is NOT being updated, we're done with this check
-      if (!('usage' in data)) {
-          return validLastLoginUpdate;
-      }
+      // 3. Validate 'usage' update logic
+      let usageValid = 
+          // Case 1: 'usage' field is not being updated.
+          incoming.usage == existing.usage ||
+          // Case 2: 'usage' field IS being updated.
+          (
+              let newUsage = incoming.usage;
+              let existingUsage = existing.get('usage', null);
+              // Subcase A: First time usage is set for an old user
+              (existingUsage == null && newUsage.reportsThisCycle == 1 && newUsage.cycleStart == request.time) ||
+              // Subcase B: Usage already exists, check increment or reset
+              (existingUsage != null && (
+                  // B1: Incrementing report count by 1, for the same cycle
+                  (newUsage.reportsThisCycle == existingUsage.reportsThisCycle + 1 && newUsage.cycleStart.toMillis() == existingUsage.cycleStart.toMillis()) ||
+                  // B2: Resetting for a new month
+                  (newUsage.reportsThisCycle == 0 && newUsage.cycleStart.month() != existingUsage.cycleStart.month() && newUsage.cycleStart.year() == request.time.year())
+              ))
+          );
 
-      // ---- From here, 'usage' is being updated ----
-      let newUsage = data.usage;
-      let existingUsage = existingData.get('usage', null);
-
-      // Case 0: creating the usage field for the first time for an old user
-      if (existingUsage == null) {
-          return newUsage.reportsThisCycle == 1 && newUsage.cycleStart == request.time;
-      }
-
-      // Case 1: Incrementing reports
-      let isIncrementing = newUsage.reportsThisCycle == existingUsage.reportsThisCycle + 1 &&
-        newUsage.cycleStart.toMillis() == existingUsage.cycleStart.toMillis();
-      
-      // Case 2: Resetting cycle for a new month (client-side logic triggers this)
-      let isResetting = newUsage.reportsThisCycle == 0 &&
-        newUsage.cycleStart.month() != existingUsage.cycleStart.month() &&
-        newUsage.cycleStart.year() == request.time.year();
-          
-      return validLastLoginUpdate && (isIncrementing || isResetting);
+      return coreDataUnchanged && lastLoginAtValid && usageValid;
     }
     
     function isAdminUpdatingUser() {
       let data = request.resource.data;
-       // Admin can change plan and status, but not immutable fields.
+       // Admin can change plan and status, but not immutable fields like createdAt.
       return data.createdAt == resource.data.createdAt;
     }
 
