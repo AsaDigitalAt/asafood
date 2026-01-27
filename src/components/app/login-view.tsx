@@ -11,12 +11,11 @@ import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/firebase";
 import { 
-  createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
   sendPasswordResetEmail
 } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
-import { createUserProfile, updateUserLastLogin } from "@/firebase/user";
+import { updateUserLastLogin } from "@/firebase/user";
 
 const loginSchema = z.object({
   email: z.string().email("Por favor, insira um e-mail válido."),
@@ -26,7 +25,6 @@ const loginSchema = z.object({
 export function LoginView() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoginView, setIsLoginView] = useState(true);
   
   const auth = useAuth();
   const { toast } = useToast();
@@ -44,15 +42,8 @@ export function LoginView() {
     setError(null);
     
     try {
-      if (isLoginView) {
-        const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-        await updateUserLastLogin(auth.app, userCredential.user.uid);
-      } else {
-        const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        await createUserProfile(auth.app, userCredential.user.uid, { email: values.email });
-        toast({ title: "Conta criada!", description: "Você já pode fazer o login." });
-        setIsLoginView(true); // Switch to login view after successful sign up
-      }
+      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      await updateUserLastLogin(auth.app, userCredential.user.uid);
     } catch (e: any) {
       console.error("Auth error:", e);
       switch (e.code) {
@@ -60,9 +51,6 @@ export function LoginView() {
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
           setError("E-mail ou senha incorretos.");
-          break;
-        case 'auth/email-already-in-use':
-          setError("Este e-mail já está em uso.");
           break;
         default:
           setError("Ocorreu um erro. Tente novamente.");
@@ -102,7 +90,7 @@ export function LoginView() {
             <span className="text-primary">Asa</span> Food
           </h1>
           <p className="text-muted-foreground mb-8">
-            {isLoginView ? "Acesse sua conta para gerenciar." : "Crie uma conta para começar."}
+            Acesse sua conta para gerenciar.
           </p>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 text-left">
@@ -150,10 +138,10 @@ export function LoginView() {
                   <div className="absolute inset-[-150%] animate-border-spin bg-[conic-gradient(from_90deg_at_50%_50%,#38BDF8_0%,#0F172A_50%,#38BDF8_100%)]"/>
                   <Button 
                     type="submit" 
-                    className="relative w-full h-16 rounded-full bg-slate-900 hover:bg-slate-800 text-primary text-lg font-bold uppercase tracking-widest transition-colors duration-300"
+                    className="relative w-full h-16 rounded-full bg-slate-900 hover:bg-slate-800 text-sky-400 text-lg font-bold uppercase tracking-widest transition-colors duration-300"
                     disabled={isLoading}
                   >
-                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isLoginView ? "Acessar Plataforma" : "Criar Conta")}
+                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Acessar Plataforma"}
                   </Button>
                 </div>
                </div>
@@ -161,10 +149,6 @@ export function LoginView() {
           </Form>
 
           <div className="mt-6 text-sm">
-            <button onClick={() => setIsLoginView(!isLoginView)} className="text-primary hover:underline">
-              {isLoginView ? "Não tem uma conta? Crie agora!" : "Já tem uma conta? Faça login."}
-            </button>
-            <span className="mx-2 text-muted-foreground">|</span>
             <button onClick={handlePasswordReset} className="text-muted-foreground hover:underline">
               Esqueceu a senha?
             </button>
