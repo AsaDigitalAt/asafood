@@ -12,11 +12,14 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { subDays } from 'date-fns';
 
+type UserPlan = 'Plano Único' | 'Plano Duplo' | 'Plano Acelerador' | 'Modo Criador';
+
 type UserData = {
     id: string;
     email: string;
     role: 'user' | 'admin';
     status: 'active' | 'suspended';
+    plan: UserPlan;
     createdAt: { toDate: () => Date };
     lastLoginAt: { toDate: () => Date };
 };
@@ -103,14 +106,23 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
     const handleRoleChange = (userId: string, role: 'user' | 'admin') => {
         const userDocRef = doc(firestore, 'users', userId);
-        // Note: For admin role, you'd also need to manage the `roles_admin` collection,
-        // which requires backend logic (e.g., a Firebase Function) as clients can't write to it.
-        // This UI change only affects the 'role' field in the user document.
         updateDoc(userDocRef, { role }).catch((serverError) => {
             const permissionError = new FirestorePermissionError({
                 path: userDocRef.path,
                 operation: 'update',
                 requestResourceData: { role },
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+    };
+
+    const handlePlanChange = (userId: string, plan: UserPlan) => {
+        const userDocRef = doc(firestore, 'users', userId);
+        updateDoc(userDocRef, { plan }).catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'update',
+                requestResourceData: { plan },
             });
             errorEmitter.emit('permission-error', permissionError);
         });
@@ -137,6 +149,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                                     <TableHead>Email</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Role</TableHead>
+                                    <TableHead>Plano</TableHead>
                                     <TableHead>Último Login</TableHead>
                                     <TableHead>Membro Desde</TableHead>
                                 </TableRow>
@@ -164,6 +177,19 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                                                 <SelectContent>
                                                     <SelectItem value="user">User</SelectItem>
                                                     <SelectItem value="admin">Admin</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Select value={u.plan} onValueChange={(value: UserPlan) => handlePlanChange(u.id, value)}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Plano Único">Plano Único</SelectItem>
+                                                    <SelectItem value="Plano Duplo">Plano Duplo</SelectItem>
+                                                    <SelectItem value="Plano Acelerador">Plano Acelerador</SelectItem>
+                                                    <SelectItem value="Modo Criador">Modo Criador</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </TableCell>
