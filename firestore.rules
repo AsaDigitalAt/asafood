@@ -84,25 +84,17 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isCreatingOwnUser();
       allow update: if (isOwner(userId) && isUpdatingOwnProfile()) || (isAdmin() && isAdminUpdatingUser());
       allow delete: if false; // Users should be suspended, not deleted.
-
-      // --- Recursive Read for all user-owned documents ---
-      // This rule grants the owner read access to all documents in their subcollections.
-      match /{document=**} {
-        allow read: if isOwner(userId);
-      }
       
-      // --- Write rules remain specific ---
+      // --- Subcollection Rules ---
       match /usageEvents/{usageEventId} {
-        // READ rules are covered by the recursive match above.
-        // We only define write/update rules here.
+        allow read: if isOwner(userId);
         allow create: if isOwner(userId) && isValidUsageEvent(userId);
         allow update: if isOwner(userId) && isUpdatingOwnUsageEventStatus(userId);
         allow delete: if false;
       }
       
       match /diagnosisReports/{reportId} {
-        // READ rules are covered by the recursive match above.
-        // We only define write/update rules here.
+        allow read: if isOwner(userId);
         allow create: if isOwner(userId) && isValidDiagnosisReport(userId);
         allow update, delete: if false;
       }
