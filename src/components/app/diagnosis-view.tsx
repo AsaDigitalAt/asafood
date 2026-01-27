@@ -198,8 +198,10 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
         if (cycleDate && (cycleDate.getMonth() !== now.getMonth() || cycleDate.getFullYear() !== now.getFullYear())) {
             const userRef = doc(firestore, "users", user.uid);
             updateDoc(userRef, {
-                "usage.reportsThisCycle": 0,
-                "usage.cycleStart": serverTimestamp()
+                usage: {
+                  reportsThisCycle: 0,
+                  cycleStart: serverTimestamp()
+                }
             }).catch(error => console.error("Failed to reset usage stats:", error));
         }
     }
@@ -278,7 +280,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                 errorEmitter.emit('permission-error', permissionError);
             });
         
-        if (!result.error) {
+        if (!result.error && userProfile) {
             const reportCollectionRef = collection(firestore, `users/${user.uid}/diagnosisReports`);
             const reportData = {
                 ...result,
@@ -295,7 +297,11 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
             });
             // Increment usage counter on success
             const userRef = doc(firestore, "users", user.uid);
-            updateDoc(userRef, { "usage.reportsThisCycle": usageCount + 1 });
+            const newUsage = {
+              ...userProfile.usage,
+              reportsThisCycle: (userProfile.usage.reportsThisCycle || 0) + 1,
+            };
+            updateDoc(userRef, { usage: newUsage });
         }
         
         onFormSubmitEnd(result);

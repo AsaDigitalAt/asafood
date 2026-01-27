@@ -39,7 +39,8 @@ service cloud.firestore {
         
         // Check if the usage cycle needs to be reset
         let currentMonth = request.time.month();
-        let cycleMonth = usage.cycleStart.month();
+        // Ensure usage and cycleStart are not null before accessing properties
+        let cycleMonth = usage != null && usage.cycleStart != null ? usage.cycleStart.month() : 0;
         
         let reportsThisCycle = (currentMonth == cycleMonth) ? usage.reportsThisCycle : 0;
         
@@ -61,25 +62,29 @@ service cloud.firestore {
     function isUpdatingOwnProfile() {
       let data = request.resource.data;
       let existingData = resource.data;
+      let allowedKeys = ['lastLoginAt', 'usage'];
 
-      // User can't change their own plan or status, or critical immutable fields
-      let coreFieldsUnchanged = data.plan == existingData.plan
-          && data.planStatus == existingData.planStatus
-          && data.createdAt == existingData.createdAt;
+      // Disallow changing any field except the allowed ones
+      if (data.keys().removeAll(allowedKeys).size() != 0) {
+        return false;
+      }
 
-      // Allow user to reset their usage stats if a new month has started
-      let isResettingUsage = data.usage.reportsThisCycle == 0
-          && data.usage.cycleStart.month() == request.time.month()
-          && request.time.month() != existingData.usage.cycleStart.month();
-
-      // Allow user to increment their usage
-      let isIncrementingUsage = data.usage.reportsThisCycle == existingData.usage.reportsThisCycle + 1;
-
-
-      return coreFieldsUnchanged && (
-        // Allow updating non-critical fields OR resetting usage OR incrementing usage
-        (data.lastLoginAt == request.time && data.usage == existingData.usage) || isResettingUsage || isIncrementingUsage
-      );
+      // If 'lastLoginAt' is being updated, it must be to the current time
+      let validLastLoginUpdate = !('lastLoginAt' in data) || data.lastLoginAt == request.time;
+      
+      // If 'usage' is being updated, it must be an increment or a reset
+      let validUsageUpdate = !('usage' in data) ||
+          // Case 1: Incrementing reports
+          (data.usage.reportsThisCycle == existingData.usage.reportsThisCycle + 1 &&
+            data.usage.cycleStart.toMillis() == existingData.usage.cycleStart.toMillis()
+          ) ||
+          // Case 2: Resetting cycle for a new month
+          (data.usage.reportsThisCycle == 0 &&
+            data.usage.cycleStart.month() != existingData.usage.cycleStart.month() &&
+            data.usage.cycleStart.year() == request.time.year()
+          );
+          
+      return validLastLoginUpdate && validUsageUpdate;
     }
     
     function isAdminUpdatingUser() {
