@@ -26,15 +26,17 @@ service cloud.firestore {
       return data.email == request.auth.token.email
           && data.role == 'user'
           && data.status == 'active'
+          && data.plan == 'Plano Único'
           && data.createdAt == request.time
           && data.lastLoginAt == request.time;
     }
 
     function isUpdatingOwnProfile() {
       let data = request.resource.data;
-      // User can't change their own role or status.
+      // User can't change their own role, status, or plan.
       return data.role == resource.data.role
           && data.status == resource.data.status
+          && data.plan == resource.data.plan
           && data.createdAt == resource.data.createdAt; // Immutable
     }
     
@@ -68,9 +70,10 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     // Admin roles are managed via backend/console, not client.
-    // A user can check if they are an admin, and an admin can check other users.
+    // Any signed-in user can check a specific user's admin status.
+    // Only admins can list all admins.
     match /roles_admin/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
+      allow get: if isSignedIn();
       allow list: if isAdmin();
       allow write: if false;
     }
@@ -79,7 +82,7 @@ service cloud.firestore {
     // Only admins can list all users.
     // Users can create their own profile.
     // Users can update their own profile (with restrictions).
-    // Admins can update any user's profile (role/status).
+    // Admins can update any user's profile (role/status/plan).
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
@@ -89,7 +92,7 @@ service cloud.firestore {
 
       // Subcollections for a User
       
-      // Usage events are private and immutable.
+      // Usage events are private.
       // Only active users can create events.
       // Admins can read anyone's events for auditing.
       match /usageEvents/{usageEventId} {
@@ -99,7 +102,7 @@ service cloud.firestore {
         allow delete: if false;
       }
       
-      // Diagnosis reports are private and immutable once created.
+      // Diagnosis reports are private.
       match /diagnosisReports/{reportId} {
         allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && isSelfActive() && isValidDiagnosisReport(userId);
