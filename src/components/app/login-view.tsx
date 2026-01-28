@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -85,13 +86,17 @@ export function LoginView() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 opacity-0 animate-fade-up animation-delay-[300ms]">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-primary text-primary-foreground opacity-0 animate-fade-up animation-delay-[300ms]">
       <div className="w-full max-w-md text-center">
-        <div className="glass-card p-10 md:p-14 rounded-3xl shadow-2xl">
-          <h1 className="text-4xl font-extrabold mb-2">
-            <span className="text-primary">Asa</span> Food
-          </h1>
-          <p className="text-muted-foreground mb-8">
+          <Image
+            src="https://tmpfiles.org/dl/21575704/logoasaoff.png"
+            alt="Asa Food Logo"
+            width={180}
+            height={50}
+            className="mx-auto mb-4"
+            priority
+          />
+          <p className="text-primary-foreground/80 mb-8">
             Acesse sua conta para gerenciar.
           </p>
           <Form {...form}>
@@ -106,10 +111,10 @@ export function LoginView() {
                       <Input 
                         type="email" 
                         placeholder="seu@email.com" 
-                        className="bg-card/80 border-border rounded-full py-6 px-7 text-base focus:bg-white focus:border-primary"
+                        className="bg-white/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60 rounded-full py-6 px-7 text-base focus:bg-white/20 focus:ring-1 focus:ring-primary-foreground focus:border-transparent"
                         {...field} />
                     </FormControl>
-                    <FormMessage className="ml-4" />
+                    <FormMessage className="ml-4 text-primary-foreground/80" />
                   </FormItem>
                 )}
               />
@@ -123,39 +128,35 @@ export function LoginView() {
                       <Input 
                         type="password" 
                         placeholder="••••••••" 
-                        className="bg-card/80 border-border rounded-full py-6 px-7 text-base focus:bg-white focus:border-primary"
+                        className="bg-white/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60 rounded-full py-6 px-7 text-base focus:bg-white/20 focus:ring-1 focus:ring-primary-foreground focus:border-transparent"
                         {...field} />
                     </FormControl>
-                    <FormMessage className="ml-4" />
+                    <FormMessage className="ml-4 text-primary-foreground/80" />
                   </FormItem>
                 )}
               />
               {error && (
-                <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive">
+                <Alert variant="destructive" className="bg-transparent border-primary-foreground/50 text-primary-foreground">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
                <div className="pt-4">
-                <div className="relative p-0.5 rounded-full overflow-hidden group">
-                  <div className="absolute inset-[-150%] animate-border-spin bg-[conic-gradient(from_90deg_at_50%_50%,#FE1413_0%,#FFF4E2_50%,#FE1413_100%)]"/>
                   <Button 
                     type="submit" 
-                    className="relative w-full h-16 rounded-full bg-background hover:bg-card text-primary text-lg font-bold uppercase tracking-widest transition-colors duration-300"
+                    className="w-full h-16 rounded-full bg-primary-foreground hover:bg-primary-foreground/90 text-primary text-lg font-bold uppercase tracking-widest transition-colors duration-300"
                     disabled={isLoading}
                   >
                     {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Acessar Plataforma"}
                   </Button>
-                </div>
                </div>
             </form>
           </Form>
 
           <div className="mt-6 text-sm">
-            <button onClick={handlePasswordReset} className="text-muted-foreground hover:underline">
+            <button onClick={handlePasswordReset} className="text-primary-foreground/80 hover:text-primary-foreground hover:underline">
               Esqueceu a senha?
             </button>
           </div>
-        </div>
       </div>
     </div>
   );
