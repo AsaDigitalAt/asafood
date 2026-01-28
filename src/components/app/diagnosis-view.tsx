@@ -120,7 +120,7 @@ const UploadCard = ({ name, title, description, icon, form }: { name: "funnelIma
                     <Image src={preview} alt="Preview" fill className="object-cover opacity-30 group-hover:opacity-40 transition-opacity" />
                     <div className="relative z-10 flex flex-col items-center justify-center bg-black/50 p-6 rounded-full border border-primary">
                         <CheckCircle className="w-12 h-12 text-primary mb-2" />
-                        <span className="font-bold text-white">Imagem Carregada</span>
+                        <span className="font-bold text-foreground">Imagem Carregada</span>
                     </div>
                   </>
               ) : (
@@ -129,7 +129,7 @@ const UploadCard = ({ name, title, description, icon, form }: { name: "funnelIma
                       <div className="text-5xl mb-6 text-slate-400 group-hover:text-primary transition-colors duration-300 group-hover:drop-shadow-[0_0_15px_var(--tw-shadow-color)] shadow-primary/50">
                           {icon}
                       </div>
-                      <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+                      <h3 className="text-xl font-bold text-foreground mb-2">{title}</h3>
                       <p className="text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: description }}/>
                   </>
               )}
@@ -401,7 +401,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                   <FormItem>
                     <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Nome do Restaurante</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Hamburgueria do João" {...field} className="bg-black/20 border-white/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
+                      <Input placeholder="Ex: Hamburgueria do João" {...field} className="bg-black/20 border-foreground/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -415,7 +415,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                   <FormItem>
                     <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Nicho de comida</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Hamburgueria, Sushi..." {...field} className="bg-black/20 border-white/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
+                      <Input placeholder="Ex: Hamburgueria, Sushi..." {...field} className="bg-black/20 border-foreground/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -434,11 +434,11 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                         defaultValue={field.value}
                         className="grid grid-cols-1 md:grid-cols-2 gap-4"
                       >
-                        <FormLabel htmlFor="propria" className="flex items-center justify-center gap-3 p-5 bg-black/20 border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-white">
+                        <FormLabel htmlFor="propria" className="flex items-center justify-center gap-3 p-5 bg-black/20 border-foreground/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-foreground">
                            <RadioGroupItem value="propria" id="propria" />
                            Entrega Própria
                         </FormLabel>
-                        <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-black/20 border-white/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-white">
+                        <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-black/20 border-foreground/10 rounded-full cursor-pointer hover:bg-primary/5 hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-foreground">
                            <RadioGroupItem value="ifood" id="ifood" />
                            Entrega do iFood
                         </FormLabel>
@@ -458,7 +458,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                     <FormControl>
                        <div className="relative">
                         <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input placeholder="seu@email.com" {...field} readOnly className="bg-black/20 border-white/10 rounded-full py-7 px-7 pl-14 text-base focus:bg-black/20 focus:border-white/10 cursor-not-allowed" />
+                        <Input placeholder="seu@email.com" {...field} readOnly className="bg-black/20 border-foreground/10 rounded-full py-7 px-7 pl-14 text-base focus:bg-black/20 focus:border-white/10 cursor-not-allowed" />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -469,7 +469,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
 
             <div className="space-y-6">
                 <div className="glass-card p-6 md:p-8 rounded-3xl space-y-6">
-                     <h3 className="font-bold text-white text-lg">📅 Mês Atual</h3>
+                     <h3 className="font-bold text-foreground text-lg">📅 Mês Atual</h3>
                      <FormField
                         control={form.control}
                         name="currentMonthRevenue"
@@ -477,7 +477,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                           <FormItem>
                             <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Faturamento Bruto (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 border-white/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
+                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 border-foreground/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -490,7 +490,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                           <FormItem>
                             <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Descontos iFood (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 border-white/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
+                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 border-foreground/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
                             </FormControl>
                              <FormMessage />
                           </FormItem>
@@ -498,7 +498,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                       />
                 </div>
                 <div className="glass-card p-6 md:p-8 rounded-3xl space-y-6">
-                    <h3 className="font-bold text-white text-lg">📅 Mês Anterior</h3>
+                    <h3 className="font-bold text-foreground text-lg">📅 Mês Anterior</h3>
                     <FormField
                         control={form.control}
                         name="previousMonthRevenue"
@@ -506,7 +506,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                           <FormItem>
                             <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Faturamento Bruto (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 border-white/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
+                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 border-foreground/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
                             </FormControl>
                              <FormMessage />
                           </FormItem>
@@ -519,7 +519,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                           <FormItem>
                             <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Descontos iFood (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 border-white/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
+                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 border-foreground/10 rounded-full py-7 px-7 text-base focus:bg-primary/5 focus:border-primary" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

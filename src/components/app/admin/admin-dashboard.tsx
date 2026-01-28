@@ -10,6 +10,7 @@ import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User } from 'firebase/auth';
+import { cn } from '@/lib/utils';
 
 type UserProfile = {
     id: string;
@@ -68,15 +69,15 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
         return (
             <div className="min-h-screen flex flex-col justify-center items-center text-center p-4">
                  <div className="glass-card max-w-lg w-full p-10 md:p-16 rounded-3xl shadow-2xl opacity-0 animate-fade-up">
-                    <div className="text-6xl mb-6 text-red-500/50">
+                    <div className="text-6xl mb-6 text-destructive/50">
                         <ShieldAlert />
                     </div>
-                    <h2 className="text-3xl font-bold text-white mb-2">Acesso Negado</h2>
+                    <h2 className="text-3xl font-bold text-foreground mb-2">Acesso Negado</h2>
                     <p className="text-muted-foreground mb-8">Você não tem permissão para acessar esta página.</p>
                     <Button 
                         onClick={onBack}
                         variant="outline"
-                        className="rounded-full bg-transparent border-white/20 hover:bg-primary/10 hover:border-primary hover:text-primary h-12 px-8 uppercase font-bold tracking-wider"
+                        className="rounded-full bg-transparent border-foreground/20 hover:bg-primary/10 hover:border-primary hover:text-primary h-12 px-8 uppercase font-bold tracking-wider"
                     >
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Voltar
@@ -141,7 +142,10 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                                         </TableCell>
                                         <TableCell>
                                             <Select value={u.planStatus} onValueChange={(value) => handleFieldChange(u.id, 'planStatus', value)}>
-                                                <SelectTrigger className={u.planStatus === 'active' ? 'text-green-400' : 'text-red-400'}>
+                                                <SelectTrigger className={cn(
+                                                    u.planStatus === 'active' && 'success-text',
+                                                    u.planStatus !== 'active' && 'danger-text'
+                                                )}>
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>

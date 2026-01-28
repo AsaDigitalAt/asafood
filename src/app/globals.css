@@ -32,29 +32,29 @@
   }
 
   .dark {
-    --background: 240 5% 8%;
-    --foreground: 39 100% 94%;
-    --card: 240 5% 11%;
-    --card-foreground: 39 100% 94%;
-    --popover: 240 5% 8%;
-    --popover-foreground: 39 100% 94%;
-    --primary: 0 99% 54%;
-    --primary-foreground: 39 100% 94%;
-    --secondary: 221 51% 36%;
-    --secondary-foreground: 39 100% 94%;
-    --muted: 240 5% 15%;
-    --muted-foreground: 39 25% 70%;
-    --accent: 190 56% 66%;
-    --accent-foreground: 240 5% 8%;
-    --destructive: 0 99% 54%;
-    --destructive-foreground: 39 100% 94%;
-    --border: 240 5% 15%;
-    --input: 240 5% 15%;
-    --ring: 0 99% 54%;
-    --chart-1: 0 99% 54%;
+    --background: 0 99% 54%; /* red */
+    --foreground: 39 100% 94%; /* off-white */
+    --card: 240 5% 8%; /* black */
+    --card-foreground: 39 100% 94%; /* off-white */
+    --popover: 240 5% 8%; /* black */
+    --popover-foreground: 39 100% 94%; /* off-white */
+    --primary: 190 56% 66%; /* light blue */
+    --primary-foreground: 240 5% 8%; /* black */
+    --secondary: 221 51% 36%; /* dark blue */
+    --secondary-foreground: 39 100% 94%; /* off-white */
+    --muted: 0 80% 30%; /* very dark red */
+    --muted-foreground: 39 25% 70%; /* muted off-white */
+    --accent: 221 51% 36%; /* dark blue */
+    --accent-foreground: 39 100% 94%; /* off-white */
+    --destructive: 38 92% 53%; /* amber */
+    --destructive-foreground: 240 5% 8%; /* black */
+    --border: 0 90% 40%; /* darker red */
+    --input: 0 90% 40%; /* darker red */
+    --ring: 190 56% 66%;
+    --chart-1: 190 56% 66%;
     --chart-2: 221 51% 36%;
-    --chart-3: 190 56% 66%;
-    --chart-4: 0 99% 70%;
+    --chart-3: 39 100% 94%;
+    --chart-4: 190 56% 80%;
     --chart-5: 221 51% 50%;
   }
 }
@@ -74,7 +74,7 @@
 
 @layer utilities {
   .glass-card {
-      @apply bg-background/80 border border-foreground/10 backdrop-blur-lg;
+      @apply bg-card/80 border border-border/10 backdrop-blur-lg;
   }
 
   .text-gradient {
@@ -88,7 +88,7 @@
     color: #F59E0B;
   }
   .danger-text {
-    color: #EF4444;
+    color: hsl(var(--destructive));
   }
   .success-bg {
     background-color: rgba(16, 185, 129, 0.1);
@@ -99,7 +99,7 @@
     border-color: rgba(245, 158, 11, 0.3);
   }
   .danger-bg {
-    background-color: rgba(239, 68, 68, 0.1);
-    border-color: rgba(239, 68, 68, 0.2);
+    background-color: hsl(var(--secondary) / 0.3);
+    border-color: hsl(var(--secondary));
   }
 }

@@ -21,7 +21,7 @@ type DiagnosisReport = FormState & {
 
 const getStatusClass = (status?: string) => {
     const s = status ? status.toLowerCase() : '';
-    if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return 'danger-bg !text-red-400 border-red-500/30';
+    if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return 'danger-bg !text-foreground border-secondary';
     if (s.includes('atenção') || s.includes('medio')) return 'warning-bg !text-amber-400 border-amber-500/30';
     if (s.includes('bom') || s.includes('otimo') || s.includes('ideal')) return 'success-bg !text-green-400 border-green-500/30';
     return 'warning-bg !text-amber-400 border-amber-500/30';
@@ -69,7 +69,7 @@ export default function ActionPlanList({ onSelectReport, onBack }: ActionPlanLis
                     >
                         <div className="flex justify-between items-center">
                             <div>
-                                <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors">{report.nome}</h3>
+                                <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{report.nome}</h3>
                                 <p className="text-sm text-muted-foreground">
                                     Gerado em: {report.createdAt ? format(report.createdAt.toDate(), 'dd/MM/yyyy HH:mm') : 'Data desconhecida'}
                                 </p>

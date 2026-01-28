@@ -13,7 +13,7 @@ export function ThreeBackground() {
     let scrollY = 0;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0xfff4e2, 0.02);
+    scene.fog = new THREE.FogExp2(0xfe1413, 0.02);
     const camera = new THREE.PerspectiveCamera(
       45,
       container.clientWidth / container.clientHeight,
@@ -37,7 +37,7 @@ export function ThreeBackground() {
       metalness: 0.9,
     });
     const shackleMat = new THREE.MeshStandardMaterial({
-      color: 0xfe1413,
+      color: 0x7aced8,
       roughness: 0.1,
       metalness: 1.0,
     });
@@ -101,7 +101,7 @@ export function ThreeBackground() {
       particlesGeo,
       new THREE.PointsMaterial({
         size: 0.05,
-        color: 0xfe1413,
+        color: 0x7aced8,
         transparent: true,
         opacity: 0.6,
         blending: THREE.AdditiveBlending,
@@ -114,7 +114,7 @@ export function ThreeBackground() {
     const mainL = new THREE.DirectionalLight(0x7aced8, 3.0);
     mainL.position.set(5, 10, 8);
     scene.add(mainL);
-    const rimL = new THREE.PointLight(0xfe1413, 2.0, 20);
+    const rimL = new THREE.PointLight(0x2e4c8c, 2.0, 20);
     rimL.position.set(-5, 2, -5);
     scene.add(rimL);
 

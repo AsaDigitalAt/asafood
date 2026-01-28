@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 const getStatusClass = (status?: string) => {
     const s = status ? status.toLowerCase() : '';
-    if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return '!border-red-500 danger-text';
+    if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return '!border-destructive danger-text';
     if (s.includes('atenção') || s.includes('medio')) return '!border-amber-500 warning-text';
     if (s.includes('bom') || s.includes('otimo') || s.includes('ideal')) return '!border-green-500 success-text';
     return '!border-amber-500 warning-text';
@@ -21,7 +21,7 @@ const getStatusLabel = (status?: string) => {
 
 const getChartColor = (status?: string) => {
     const s = status ? status.toLowerCase() : '';
-    if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return '#EF4444';
+    if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return '#F59E0B'; // Amber for destructive
     if (s.includes('atenção') || s.includes('medio')) return '#F59E0B';
     if (s.includes('bom') || s.includes('otimo') || s.includes('ideal')) return '#10B981';
     return '#7aced8';
@@ -40,7 +40,7 @@ const MetricCard = ({ label, metricData }: { label: string, metricData: any }) =
                     style={{ background: `conic-gradient(${color} ${pct}%, rgba(255,255,255,0.05) 0)`}}
                 >
                     <div className="w-[80%] h-[80%] bg-slate-900 rounded-full flex items-center justify-center">
-                        <span className="text-2xl font-bold text-white">{pct}%</span>
+                        <span className="text-2xl font-bold text-foreground">{pct}%</span>
                     </div>
                 </div>
             </div>
