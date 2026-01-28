@@ -36,6 +36,38 @@ const diagnosisSchema = z.object({
 });
 
 // --- Components ---
+const HeroSection = () => {
+    return (
+        <div className="relative bg-primary text-primary-foreground min-h-screen flex flex-col justify-center items-center text-center overflow-hidden p-4">
+            <Image
+                src="https://tmpfiles.org/dl/21565256/camada1.png"
+                alt="Elemento decorativo de fundo 1"
+                fill
+                className="object-contain object-left-top opacity-10"
+            />
+            <Image
+                src="https://tmpfiles.org/dl/21565118/camada2.png"
+                alt="Elemento decorativo de fundo 2"
+                fill
+                className="object-contain object-right-bottom opacity-10"
+            />
+            <div className="relative z-10 max-w-4xl mx-auto opacity-0 animate-fade-up">
+                <h1 className="text-6xl md:text-8xl font-extrabold tracking-tighter">
+                    Diagnóstico de Performance
+                </h1>
+                <p className="mt-4 text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto">
+                    Veja o que está travando seus resultados e saiba onde agir para destravar suas vendas no iFood.
+                </p>
+            </div>
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10">
+                <div className="w-8 h-8 text-primary-foreground/50 animate-bounce-indicator">
+                    <ChevronDown className="w-full h-full" />
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const Marquee = () => {
     const items = ["Aumento de Conversão", "Margem Saudável", "Visibilidade no Topo", "Cardápio Atrativo", "Avaliação 5 Estrelas", "Menos Cancelamentos"];
     const icons = ["🚀", "💰", "📈", "🍔", "⭐", "📉"];
@@ -47,7 +79,7 @@ const Marquee = () => {
     ));
     
     return (
-        <section className="w-full bg-card/50 border-y border-border backdrop-blur-lg py-6 overflow-hidden mt-[100vh] mb-20 md:mb-32">
+        <section className="w-full bg-card/50 border-y border-border backdrop-blur-lg py-6 overflow-hidden">
             <div className="flex gap-20 animate-scroll-marquee">
                 {marqueeItems}
             </div>
@@ -331,8 +363,9 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
 
   return (
     <>
+      <HeroSection />
       <Marquee />
-      <section className="bg-background px-4 pb-24 md:pb-32 max-w-4xl mx-auto">
+      <section className="bg-background px-4 py-24 md:py-32 max-w-4xl mx-auto">
         {(isSuspended || isLimitReached) && (
              <Alert variant="destructive" className="mb-12 danger-bg border-destructive/30 text-red-400">
                 <ShieldAlert className="h-5 w-5 !text-red-400" />
@@ -347,7 +380,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
             </Alert>
         )}
         <div className="text-center mb-16 md:mb-20 opacity-0 animate-fade-up [animation-delay:500ms]">
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-5"><span className="text-gradient">LEVEL UP: ANÁLISE DE PERFORMANCE</span></h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-5"><span className="text-gradient">Complete sua Missão</span></h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">Complete os dados da missão abaixo para desbloquear seu plano de ação.</p>
           <div className="w-16 h-1 bg-primary rounded-full mx-auto mt-8 shadow-[0_0_20px_var(--tw-shadow-color)] shadow-primary/50"></div>
         </div>
