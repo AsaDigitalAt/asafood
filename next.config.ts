@@ -28,12 +28,6 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'tmpfiles.org',
-        port: '',
-        pathname: '/**',
-      },
     ],
   },
 };

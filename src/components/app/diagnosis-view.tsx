@@ -36,67 +36,6 @@ const diagnosisSchema = z.object({
 });
 
 // --- Components ---
-
-const HeroSection = () => (
-    <div className="relative min-h-screen w-full flex flex-col justify-center items-center text-center px-4 overflow-hidden bg-primary text-primary-foreground">
-        {/* Decorative Images */}
-        <div className="absolute top-0 right-0 w-3/4 h-3/4 md:w-1/2 md:h-full pointer-events-none -mr-16 -mt-16 md:mr-0 md:mt-0 opacity-0 animate-fade-up [animation-delay:400ms]">
-            <Image src="https://tmpfiles.org/dl/21565256/camada1.png" alt="Decorative graphic of a hand holding a bag" layout="fill" className="object-contain object-top-right" />
-        </div>
-        <div className="absolute bottom-0 left-0 w-3/4 h-3/4 md:w-1/2 md:h-full pointer-events-none -ml-16 -mb-16 md:ml-0 md:mb-0 opacity-0 animate-fade-up [animation-delay:600ms]">
-            <Image src="https://tmpfiles.org/dl/21565118/camada2.png" alt="Decorative graphic of a hand holding a bag" layout="fill" className="object-contain object-bottom-left" />
-        </div>
-        
-        {/* Content */}
-        <div className="relative z-10 max-w-lg mx-auto flex flex-col items-center opacity-0 animate-fade-up">
-            <h1
-                className="text-[35vw] sm:text-[25vw] md:text-[18rem] font-black leading-none tracking-tighter text-white/10 select-none -mb-4 md:-mb-10 uppercase"
-                aria-hidden="true"
-            >
-                Des
-                <br className="md:hidden" />
-                tra
-                <br className="md:hidden" />
-                ve
-            </h1>
-
-            <div className="relative -mt-4">
-                 <div className="relative flex justify-center mb-6 h-10">
-                    <div className="bg-accent text-accent-foreground text-sm font-bold py-2 px-4 rounded-lg shadow-lg absolute transform -rotate-12"/>
-                    <div className="bg-accent text-accent-foreground text-sm font-bold py-2 px-4 rounded-lg shadow-lg absolute transform rotate-6"/>
-                    <div className="bg-accent text-accent-foreground text-sm font-bold py-2 px-4 rounded-lg shadow-lg relative z-10">Destrave</div>
-                 </div>
-                
-                <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground">
-                    suas vendas no iFood
-                </h2>
-
-                <div className="mt-8 max-w-xs mx-auto">
-                    <div className="border-2 border-accent rounded-full p-3 pr-5 flex items-center gap-3 bg-primary/80 backdrop-blur-sm">
-                         <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                             {/* Target icon SVG */}
-                             <svg width="20" height="20" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="hsl(var(--accent-foreground))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                <path d="M9 12C10.6569 12 12 10.6569 12 9C12 7.34315 10.6569 6 9 6C7.34315 6 6 7.34315 6 9C6 10.6569 7.34315 12 9 12Z" stroke="hsl(var(--accent-foreground))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                         </div>
-                         <p className="text-left text-accent-foreground font-medium text-sm">
-                            Veja o que está travando seus resultados e saiba onde agir.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-primary-foreground/70 text-xs tracking-widest uppercase opacity-0 animate-fade-in [animation-delay:1500ms]">
-            <div className="animate-bounce-indicator">
-                <ChevronDown className="h-6 w-6 mx-auto" />
-                Role para preencher
-            </div>
-        </div>
-    </div>
-);
-
 const Marquee = () => {
     const items = ["Aumento de Conversão", "Margem Saudável", "Visibilidade no Topo", "Cardápio Atrativo", "Avaliação 5 Estrelas", "Menos Cancelamentos"];
     const icons = ["🚀", "💰", "📈", "🍔", "⭐", "📉"];
@@ -108,7 +47,7 @@ const Marquee = () => {
     ));
     
     return (
-        <section className="w-full bg-card/50 border-y border-border backdrop-blur-lg py-6 overflow-hidden relative z-10 mb-20 md:mb-32">
+        <section className="w-full bg-card/50 border-y border-border backdrop-blur-lg py-6 overflow-hidden mt-[100vh] mb-20 md:mb-32">
             <div className="flex gap-20 animate-scroll-marquee">
                 {marqueeItems}
             </div>
@@ -139,7 +78,7 @@ const UploadCard = ({ name, title, description, icon, form }: { name: "funnelIma
           <FormControl>
             <div 
               className={cn(
-                "bg-card border-2 border-dashed border-border/50 rounded-3xl p-8 text-center min-h-[350px] flex flex-col justify-center items-center transition-all duration-300 cursor-pointer relative overflow-hidden group",
+                "glass-card rounded-3xl p-8 text-center min-h-[350px] flex flex-col justify-center items-center transition-all duration-300 cursor-pointer relative overflow-hidden group",
                 "hover:border-primary hover:-translate-y-1 hover:shadow-xl",
                 file && "border-solid border-primary/50"
               )}
@@ -392,7 +331,6 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
 
   return (
     <>
-      <HeroSection />
       <Marquee />
       <section className="bg-background px-4 pb-24 md:pb-32 max-w-4xl mx-auto">
         {(isSuspended || isLimitReached) && (
