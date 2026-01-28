@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { BarChart3, Rocket, Store, Star, LogOut, Shield } from "lucide-react";
 import { useAuth, useUser, useMemoFirebase, useFirestore } from "@/firebase";
@@ -132,9 +133,13 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
           </nav>
         </div>
         {/* Brand */}
-        <div className="text-2xl font-extrabold text-foreground tracking-tight">
-          <span className="text-primary">Asa</span> Food
-        </div>
+        <Image
+          src="https://tmpfiles.org/dl/21575704/logoasaoff.png"
+          alt="Asa Food Logo"
+          width={120}
+          height={30}
+          priority
+        />
       </div>
 
       {/* User Profile */}
