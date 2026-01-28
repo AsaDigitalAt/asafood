@@ -40,18 +40,18 @@ const HeroSection = () => {
     return (
         <div className="relative bg-primary text-primary-foreground min-h-screen flex flex-col justify-center items-center text-center overflow-hidden p-4">
             <Image
-                src="https://tmpfiles.org/dl/21565118/camada2.png"
+                src="https://tmpfiles.org/dl/21565256/camada1.png"
                 alt="Elemento decorativo de fundo 1"
                 width={400}
                 height={400}
-                className="absolute top-0 left-0 w-auto h-auto max-w-[300px] md:max-w-[400px] -translate-x-1/4 -translate-y-1/4"
+                className="absolute top-0 left-0 w-auto h-auto max-w-[300px] md:max-w-[400px] -translate-x-1/4 -translate-y-1/4 opacity-100"
             />
             <Image
-                src="https://tmpfiles.org/dl/21565256/camada1.png"
+                src="https://tmpfiles.org/dl/21565118/camada2.png"
                 alt="Elemento decorativo de fundo 2"
                 width={400}
                 height={400}
-                className="absolute bottom-0 right-0 w-auto h-auto max-w-[300px] md:max-w-[400px] translate-x-1/4 translate-y-1/4"
+                className="absolute bottom-0 right-0 w-auto h-auto max-w-[300px] md:max-w-[400px] translate-x-1/4 translate-y-1/4 opacity-100"
             />
             <div className="relative z-10 max-w-4xl mx-auto opacity-0 animate-fade-up">
                 <h1 className="text-6xl md:text-8xl font-extrabold tracking-tighter">
@@ -482,7 +482,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
 
 
             <div className="space-y-6">
-                <div className="bg-card border border-border p-6 md:p-8 rounded-3xl space-y-6">
+                <div className="bg-card border border-primary/20 p-6 md:p-8 rounded-3xl space-y-6">
                      <h3 className="font-bold text-foreground text-lg">📅 Mês Atual</h3>
                      <FormField
                         control={form.control}
@@ -511,7 +511,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                         )}
                       />
                 </div>
-                <div className="bg-card border border-border p-6 md:p-8 rounded-3xl space-y-6">
+                <div className="bg-card border border-primary/20 p-6 md:p-8 rounded-3xl space-y-6">
                     <h3 className="font-bold text-foreground text-lg">📅 Mês Anterior</h3>
                     <FormField
                         control={form.control}
