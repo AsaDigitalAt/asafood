@@ -36,11 +36,14 @@ const MetricCard = ({ label, metricData }: { label: string, metricData: any }) =
         <div className="bg-card/80 border border-border/50 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 text-center md:text-left transition-all hover:border-primary/20 hover:-translate-y-1">
             <div className="relative w-28 h-28 flex-shrink-0">
                 <div 
-                    className="w-full h-full rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(46,76,140,0.15)]"
-                    style={{ background: `conic-gradient(${color} ${pct}%, hsl(var(--muted)) 0)`}}
+                    className="w-full h-full rounded-full flex items-center justify-center border-2"
+                    style={{
+                        background: `conic-gradient(${color} ${pct}%, hsl(var(--muted) / 0.1) 0)`,
+                        borderColor: color,
+                    }}
                 >
-                    <div className="w-[80%] h-[80%] bg-card rounded-full flex items-center justify-center">
-                        <span className="text-2xl font-bold text-foreground">{pct}%</span>
+                    <div className="w-[85%] h-[85%] bg-card rounded-full flex items-center justify-center">
+                        <span className="text-3xl font-extrabold" style={{ color: color }}>{`+${pct}%`}</span>
                     </div>
                 </div>
             </div>
