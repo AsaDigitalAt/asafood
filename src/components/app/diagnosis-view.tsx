@@ -40,14 +40,14 @@ const HeroSection = () => {
     return (
         <div className="relative bg-primary text-primary-foreground min-h-screen flex flex-col justify-center items-center text-center overflow-hidden p-4">
             <Image
-                src="https://tmpfiles.org/dl/21565256/camada1.png"
+                src="https://tmpfiles.org/dl/21565118/camada2.png"
                 alt="Elemento decorativo de fundo 1"
                 width={400}
                 height={400}
                 className="absolute top-0 left-0 w-auto h-auto max-w-[300px] md:max-w-[400px] -translate-x-1/4 -translate-y-1/4"
             />
             <Image
-                src="https://tmpfiles.org/dl/21565118/camada2.png"
+                src="https://tmpfiles.org/dl/21565256/camada1.png"
                 alt="Elemento decorativo de fundo 2"
                 width={400}
                 height={400}
