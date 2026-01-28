@@ -106,7 +106,7 @@ export function LoginView() {
                       <Input 
                         type="email" 
                         placeholder="seu@email.com" 
-                        className="bg-black/20 border-white/10 rounded-full py-6 px-7 text-base focus:bg-primary/5 focus:border-primary"
+                        className="bg-card/80 border-border rounded-full py-6 px-7 text-base focus:bg-white focus:border-primary"
                         {...field} />
                     </FormControl>
                     <FormMessage className="ml-4" />
@@ -123,7 +123,7 @@ export function LoginView() {
                       <Input 
                         type="password" 
                         placeholder="••••••••" 
-                        className="bg-black/20 border-white/10 rounded-full py-6 px-7 text-base focus:bg-primary/5 focus:border-primary"
+                        className="bg-card/80 border-border rounded-full py-6 px-7 text-base focus:bg-white focus:border-primary"
                         {...field} />
                     </FormControl>
                     <FormMessage className="ml-4" />
@@ -137,10 +137,10 @@ export function LoginView() {
               )}
                <div className="pt-4">
                 <div className="relative p-0.5 rounded-full overflow-hidden group">
-                  <div className="absolute inset-[-150%] animate-border-spin bg-[conic-gradient(from_90deg_at_50%_50%,#38BDF8_0%,#0F172A_50%,#38BDF8_100%)]"/>
+                  <div className="absolute inset-[-150%] animate-border-spin bg-[conic-gradient(from_90deg_at_50%_50%,#FE1413_0%,#FFF4E2_50%,#FE1413_100%)]"/>
                   <Button 
                     type="submit" 
-                    className="relative w-full h-16 rounded-full bg-slate-900 hover:bg-slate-800 text-sky-400 text-lg font-bold uppercase tracking-widest transition-colors duration-300"
+                    className="relative w-full h-16 rounded-full bg-background hover:bg-card text-primary text-lg font-bold uppercase tracking-widest transition-colors duration-300"
                     disabled={isLoading}
                   >
                     {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Acessar Plataforma"}

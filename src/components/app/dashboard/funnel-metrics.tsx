@@ -21,10 +21,10 @@ const getStatusLabel = (status?: string) => {
 
 const getChartColor = (status?: string) => {
     const s = status ? status.toLowerCase() : '';
-    if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return '#F59E0B'; // Amber for destructive
-    if (s.includes('atenção') || s.includes('medio')) return '#F59E0B';
-    if (s.includes('bom') || s.includes('otimo') || s.includes('ideal')) return '#10B981';
-    return '#7aced8';
+    if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return '#ef4444'; // Red
+    if (s.includes('atenção') || s.includes('medio')) return '#f59e0b'; // Amber
+    if (s.includes('bom') || s.includes('otimo') || s.includes('ideal')) return '#10b981'; // Green
+    return '#2e4c8c'; // Dark Blue
 }
 
 const MetricCard = ({ label, metricData }: { label: string, metricData: any }) => {
@@ -33,13 +33,13 @@ const MetricCard = ({ label, metricData }: { label: string, metricData: any }) =
     const pct = metricData.percentual || 0;
 
     return (
-        <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 text-center md:text-left transition-all hover:border-primary/20 hover:-translate-y-1">
+        <div className="bg-card/80 border border-border/50 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 text-center md:text-left transition-all hover:border-primary/20 hover:-translate-y-1">
             <div className="relative w-28 h-28 flex-shrink-0">
                 <div 
-                    className="w-full h-full rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(56,189,248,0.15)]"
-                    style={{ background: `conic-gradient(${color} ${pct}%, rgba(255,255,255,0.05) 0)`}}
+                    className="w-full h-full rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(46,76,140,0.15)]"
+                    style={{ background: `conic-gradient(${color} ${pct}%, hsl(var(--muted)) 0)`}}
                 >
-                    <div className="w-[80%] h-[80%] bg-slate-900 rounded-full flex items-center justify-center">
+                    <div className="w-[80%] h-[80%] bg-card rounded-full flex items-center justify-center">
                         <span className="text-2xl font-bold text-foreground">{pct}%</span>
                     </div>
                 </div>
@@ -50,7 +50,7 @@ const MetricCard = ({ label, metricData }: { label: string, metricData: any }) =
                 <div className={`inline-block border text-xs font-bold uppercase py-1 px-3 rounded-full ${getStatusClass(metricData.status)}`}>
                     {getStatusLabel(metricData.status)}
                 </div>
-                <p className="text-sm text-slate-300 mt-4">{metricData.comentario || ''}</p>
+                <p className="text-sm text-slate-500 mt-4">{metricData.comentario || ''}</p>
             </div>
         </div>
     )

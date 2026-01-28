@@ -10,14 +10,14 @@ const getStatusClass = (status?: string) => {
 
 const DiscountCard = ({ title, value, classification }: { title: string, value?: number, classification?: string }) => {
     if (value === undefined || value === null) return (
-        <div className="bg-slate-900/50 p-6 rounded-2xl text-center">
+        <div className="bg-card/80 p-6 rounded-2xl text-center">
             <h4 className="text-sm uppercase font-bold text-muted-foreground mb-2">{title}</h4>
             <p className="text-4xl font-extrabold text-muted-foreground">-</p>
         </div>
     );
 
     return (
-        <div className="bg-slate-900/50 p-6 rounded-2xl text-center">
+        <div className="bg-card/80 p-6 rounded-2xl text-center">
             <h4 className="text-sm uppercase font-bold text-muted-foreground mb-2">{title}</h4>
             <p className={`text-4xl font-extrabold ${getStatusClass(classification)}`}>{value}%</p>
             <p className="text-xs text-muted-foreground">do faturamento em descontos</p>
@@ -36,7 +36,7 @@ export const DiscountAnalysis = ({ discounts }: { discounts: any }) => {
                 <DiscountCard title="Mês Anterior" value={discounts.mes_anterior.percentual_descontos} classification={discounts.mes_anterior.classificacao} />
             </div>
             <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6 text-center">
-                <p className="font-bold text-white mb-1">Tendência: <span className="uppercase">{discounts.comparativo.tendencia}</span></p>
+                <p className="font-bold text-foreground mb-1">Tendência: <span className="uppercase">{discounts.comparativo.tendencia}</span></p>
                 <p className="text-sm text-muted-foreground">{discounts.comparativo.analise}</p>
             </div>
         </div>

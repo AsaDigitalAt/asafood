@@ -114,7 +114,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setMenuOpen(!isMenuOpen)}
-            className="bg-foreground/5 border border-foreground/10 w-12 h-12 rounded-xl flex flex-col justify-center items-center gap-1.5 cursor-pointer transition-colors hover:bg-primary/10 hover:border-primary"
+            className="bg-card/80 border border-border/50 w-12 h-12 rounded-xl flex flex-col justify-center items-center gap-1.5 cursor-pointer transition-colors hover:bg-primary/10 hover:border-primary"
           >
             <span className="w-6 h-0.5 bg-foreground rounded-full"></span>
             <span className="w-4 h-0.5 bg-foreground rounded-full"></span>
@@ -141,7 +141,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
       <div ref={profileRef} className="relative">
         <div onClick={() => setProfileOpen(!isProfileOpen)} className="flex items-center gap-4 cursor-pointer">
           <div className="relative group">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-primary/30 flex justify-center items-center text-foreground font-bold transition-all duration-300 group-hover:border-primary group-hover:shadow-[0_0_15px_rgba(56,189,248,0.5)]">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-200 to-slate-100 border-2 border-primary/30 flex justify-center items-center text-primary font-bold transition-all duration-300 group-hover:border-primary group-hover:shadow-[0_0_15px_rgba(254,20,19,0.5)]">
               {userInitials}
             </div>
             <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></span>
@@ -154,7 +154,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
         )}>
            <div className="p-2 px-4">
              <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Plano Atual</span>
-             <div className="flex items-center gap-2 text-primary font-bold text-base text-shadow-[0_0_10px_rgba(56,189,248,0.3)]">
+             <div className="flex items-center gap-2 text-primary font-bold text-base text-shadow-[0_0_10px_rgba(254,20,19,0.3)]">
                <Star className="w-5 h-5 fill-current" /> {planName}
              </div>
           </div>
@@ -164,7 +164,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
                 {usageText}
              </div>
           </div>
-          <div className="border-t border-foreground/10 my-1"></div>
+          <div className="border-t border-border/50 my-1"></div>
           <button onClick={handleLogout} className="flex items-center gap-3 p-2 px-4 rounded-lg text-sm font-semibold text-muted-foreground w-full text-left hover:bg-destructive/10 hover:text-destructive">
             <LogOut className="w-5 h-5" />
             <span>Sair</span>

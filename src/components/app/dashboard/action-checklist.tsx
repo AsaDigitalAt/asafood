@@ -27,7 +27,7 @@ export const ActionChecklist = ({ actions }: { actions: any[] }) => {
                             key={index} 
                             onClick={() => toggleItem(index)}
                             className={cn(
-                                "bg-slate-900/50 p-6 rounded-2xl flex items-start gap-4 cursor-pointer transition-all border border-transparent hover:bg-slate-800/70 hover:border-primary/20",
+                                "bg-card/80 p-6 rounded-2xl flex items-start gap-4 cursor-pointer transition-all border border-transparent hover:bg-accent/5 hover:border-primary/20",
                                 isChecked && "opacity-60"
                             )}
                         >
@@ -40,10 +40,10 @@ export const ActionChecklist = ({ actions }: { actions: any[] }) => {
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                                     {action.prioridade && <span className="py-0.5 px-2 bg-primary text-primary-foreground rounded-full text-xs font-bold">Prioridade {action.prioridade}</span>}
-                                    {action.categoria && <span className="py-0.5 px-2 bg-slate-700 text-slate-300 rounded-full text-xs font-bold uppercase">{action.categoria}</span>}
+                                    {action.categoria && <span className="py-0.5 px-2 bg-muted text-muted-foreground rounded-full text-xs font-bold uppercase">{action.categoria}</span>}
                                 </div>
                                 <p className={cn(
-                                    "text-slate-200 transition-all",
+                                    "text-foreground/80 transition-all",
                                     isChecked && "line-through text-muted-foreground"
                                 )}>{action.descricao}</p>
                             </div>

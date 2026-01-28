@@ -13,7 +13,7 @@ export function ThreeBackground() {
     let scrollY = 0;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0xfe1413, 0.02);
+    scene.fog = new THREE.FogExp2(0xfff4e2, 0.02);
     const camera = new THREE.PerspectiveCamera(
       45,
       container.clientWidth / container.clientHeight,
