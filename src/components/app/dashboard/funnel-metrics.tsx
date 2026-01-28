@@ -44,7 +44,7 @@ const MetricCard = ({ label, metricData }: { label: string, metricData: any }) =
                     }}
                 >
                     <div className="w-[85%] h-[85%] bg-card rounded-full flex items-center justify-center">
-                        <div className="flex items-baseline font-surgena font-bold" style={{ color: color }}>
+                        <div className="flex items-baseline font-saira font-extrabold" style={{ color: color }}>
                             <span className="text-4xl">{`+${pct}`}</span>
                             <span className="text-xl">%</span>
                         </div>
