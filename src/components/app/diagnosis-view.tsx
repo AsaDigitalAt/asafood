@@ -42,14 +42,16 @@ const HeroSection = () => {
             <Image
                 src="https://tmpfiles.org/dl/21565256/camada1.png"
                 alt="Elemento decorativo de fundo 1"
-                fill
-                className="object-contain object-left-top opacity-10"
+                width={400}
+                height={400}
+                className="absolute top-0 left-0 w-auto h-auto max-w-[300px] md:max-w-[400px] -translate-x-1/4 -translate-y-1/4"
             />
             <Image
                 src="https://tmpfiles.org/dl/21565118/camada2.png"
                 alt="Elemento decorativo de fundo 2"
-                fill
-                className="object-contain object-right-bottom opacity-10"
+                width={400}
+                height={400}
+                className="absolute bottom-0 right-0 w-auto h-auto max-w-[300px] md:max-w-[400px] translate-x-1/4 translate-y-1/4"
             />
             <div className="relative z-10 max-w-4xl mx-auto opacity-0 animate-fade-up">
                 <h1 className="text-6xl md:text-8xl font-extrabold tracking-tighter">
