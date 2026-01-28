@@ -13,7 +13,7 @@ export function ThreeBackground() {
     let scrollY = 0;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x020617, 0.02);
+    scene.fog = new THREE.FogExp2(0x141416, 0.02);
     const camera = new THREE.PerspectiveCamera(
       45,
       container.clientWidth / container.clientHeight,
@@ -32,17 +32,17 @@ export function ThreeBackground() {
 
     const padlockGroup = new THREE.Group();
     const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0x0f172a,
+      color: 0x2e4c8c,
       roughness: 0.2,
       metalness: 0.9,
     });
     const shackleMat = new THREE.MeshStandardMaterial({
-      color: 0xe2e8f0,
+      color: 0xfff4e2,
       roughness: 0.1,
       metalness: 1.0,
     });
     const keyMat = new THREE.MeshStandardMaterial({
-      color: 0x000000,
+      color: 0x141416,
       roughness: 0.8,
     });
 
@@ -101,7 +101,7 @@ export function ThreeBackground() {
       particlesGeo,
       new THREE.PointsMaterial({
         size: 0.05,
-        color: 0x38bdf8,
+        color: 0xfe1413,
         transparent: true,
         opacity: 0.6,
         blending: THREE.AdditiveBlending,
@@ -111,10 +111,10 @@ export function ThreeBackground() {
 
     const ambient = new THREE.AmbientLight(0xffffff, 0.3);
     scene.add(ambient);
-    const mainL = new THREE.DirectionalLight(0xa0c4ff, 3.0);
+    const mainL = new THREE.DirectionalLight(0x7aced8, 3.0);
     mainL.position.set(5, 10, 8);
     scene.add(mainL);
-    const rimL = new THREE.PointLight(0x38bdf8, 2.0, 20);
+    const rimL = new THREE.PointLight(0xfe1413, 2.0, 20);
     rimL.position.set(-5, 2, -5);
     scene.add(rimL);
 

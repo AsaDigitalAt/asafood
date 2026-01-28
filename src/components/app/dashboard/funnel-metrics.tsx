@@ -24,7 +24,7 @@ const getChartColor = (status?: string) => {
     if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return '#EF4444';
     if (s.includes('atenção') || s.includes('medio')) return '#F59E0B';
     if (s.includes('bom') || s.includes('otimo') || s.includes('ideal')) return '#10B981';
-    return '#38BDF8';
+    return '#7aced8';
 }
 
 const MetricCard = ({ label, metricData }: { label: string, metricData: any }) => {
