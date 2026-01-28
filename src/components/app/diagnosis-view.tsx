@@ -102,9 +102,9 @@ const UploadCard = ({ name, title, description, icon, form }: { name: "funnelIma
           <FormControl>
             <div 
               className={cn(
-                "glass-card rounded-3xl p-8 text-center min-h-[350px] flex flex-col justify-center items-center transition-all duration-300 cursor-pointer relative overflow-hidden group",
-                "hover:border-primary hover:bg-white/80 hover:-translate-y-2 hover:shadow-2xl",
-                file && "border-primary"
+                "bg-primary rounded-3xl p-8 text-center min-h-[350px] flex flex-col justify-center items-center transition-all duration-300 cursor-pointer relative overflow-hidden group",
+                "hover:brightness-110 hover:-translate-y-2 hover:shadow-2xl",
+                file ? "border-2 border-secondary/50" : "border-2 border-transparent"
               )}
               onClick={() => document.getElementById(name)?.click()}
             >
@@ -117,20 +117,20 @@ const UploadCard = ({ name, title, description, icon, form }: { name: "funnelIma
               />
               {preview ? (
                   <>
-                    <Image src={preview} alt="Preview" fill className="object-cover opacity-30 group-hover:opacity-40 transition-opacity" />
-                    <div className="relative z-10 flex flex-col items-center justify-center bg-card/80 p-6 rounded-full border border-primary">
-                        <CheckCircle className="w-12 h-12 text-primary mb-2" />
-                        <span className="font-bold text-foreground">Imagem Carregada</span>
+                    <Image src={preview} alt="Preview" fill className="object-cover opacity-20 group-hover:opacity-25 transition-opacity" />
+                    <div className="relative z-10 flex flex-col items-center justify-center bg-black/20 p-6 rounded-full border border-secondary">
+                        <CheckCircle className="w-12 h-12 text-secondary mb-2" />
+                        <span className="font-bold text-primary-foreground">Imagem Carregada</span>
                     </div>
                   </>
               ) : (
                   <>
-                      <div className="absolute top-6 left-6 py-1 px-3 bg-white/5 border border-border/50 rounded-full text-xs font-bold uppercase tracking-widest">Obrigatório</div>
-                      <div className="text-5xl mb-6 text-muted-foreground group-hover:text-primary transition-colors duration-300 group-hover:drop-shadow-[0_0_15px_var(--tw-shadow-color)] shadow-primary/50">
+                      <div className="absolute top-6 left-6 py-1 px-3 bg-black/10 border border-secondary/20 rounded-full text-xs font-bold uppercase tracking-widest text-secondary">Obrigatório</div>
+                      <div className="text-5xl mb-6 text-secondary transition-colors duration-300 group-hover:drop-shadow-[0_0_15px_var(--tw-shadow-color)] shadow-secondary/50">
                           {icon}
                       </div>
-                      <h3 className="text-xl font-bold text-foreground mb-2">{title}</h3>
-                      <p className="text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: description }}/>
+                      <h3 className="text-xl font-bold text-primary-foreground mb-2">{title}</h3>
+                      <p className="text-sm text-secondary/90" dangerouslySetInnerHTML={{ __html: description }}/>
                   </>
               )}
             </div>
@@ -401,7 +401,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                   <FormItem>
                     <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Nome do Restaurante</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Hamburgueria do João" {...field} className="bg-card/80 border-border rounded-full py-7 px-7 text-base focus:bg-white focus:border-primary" />
+                      <Input placeholder="Ex: Hamburgueria do João" {...field} className="bg-primary text-primary-foreground placeholder:text-secondary/70 border-secondary/30 rounded-full py-7 px-7 text-base focus:brightness-110 focus:border-secondary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -415,7 +415,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                   <FormItem>
                     <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Nicho de comida</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Hamburgueria, Sushi..." {...field} className="bg-card/80 border-border rounded-full py-7 px-7 text-base focus:bg-white focus:border-primary" />
+                      <Input placeholder="Ex: Hamburgueria, Sushi..." {...field} className="bg-primary text-primary-foreground placeholder:text-secondary/70 border-secondary/30 rounded-full py-7 px-7 text-base focus:brightness-110 focus:border-secondary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -434,11 +434,11 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                         defaultValue={field.value}
                         className="grid grid-cols-1 md:grid-cols-2 gap-4"
                       >
-                        <FormLabel htmlFor="propria" className="flex items-center justify-center gap-3 p-5 bg-card/80 border-border rounded-full cursor-pointer hover:bg-white hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-foreground">
+                        <FormLabel htmlFor="propria" className="flex items-center justify-center gap-3 p-5 bg-primary text-primary-foreground border-secondary/30 rounded-full cursor-pointer hover:brightness-110 has-[[data-state=checked]]:bg-black/20 has-[[data-state=checked]]:border-secondary has-[[data-state=checked]]:text-secondary">
                            <RadioGroupItem value="propria" id="propria" />
                            Entrega Própria
                         </FormLabel>
-                        <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-card/80 border-border rounded-full cursor-pointer hover:bg-white hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:text-foreground">
+                        <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-primary text-primary-foreground border-secondary/30 rounded-full cursor-pointer hover:brightness-110 has-[[data-state=checked]]:bg-black/20 has-[[data-state=checked]]:border-secondary has-[[data-state=checked]]:text-secondary">
                            <RadioGroupItem value="ifood" id="ifood" />
                            Entrega do iFood
                         </FormLabel>
@@ -468,16 +468,16 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
 
 
             <div className="space-y-6">
-                <div className="glass-card p-6 md:p-8 rounded-3xl space-y-6">
-                     <h3 className="font-bold text-foreground text-lg">📅 Mês Atual</h3>
+                <div className="bg-primary p-6 md:p-8 rounded-3xl space-y-6">
+                     <h3 className="font-bold text-primary-foreground text-lg">📅 Mês Atual</h3>
                      <FormField
                         control={form.control}
                         name="currentMonthRevenue"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Faturamento Bruto (R$)</FormLabel>
+                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold text-secondary">Faturamento Bruto (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-card/80 border-border rounded-full py-7 px-7 text-base focus:bg-white focus:border-primary" />
+                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 text-primary-foreground placeholder:text-secondary/70 border-secondary/30 rounded-full py-7 px-7 text-base focus:bg-black/30 focus:border-secondary" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -488,25 +488,25 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                         name="currentMonthDiscounts"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Descontos iFood (R$)</FormLabel>
+                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold text-secondary">Descontos iFood (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-card/80 border-border rounded-full py-7 px-7 text-base focus:bg-white focus:border-primary" />
+                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 text-primary-foreground placeholder:text-secondary/70 border-secondary/30 rounded-full py-7 px-7 text-base focus:bg-black/30 focus:border-secondary" />
                             </FormControl>
                              <FormMessage />
                           </FormItem>
                         )}
                       />
                 </div>
-                <div className="glass-card p-6 md:p-8 rounded-3xl space-y-6">
-                    <h3 className="font-bold text-foreground text-lg">📅 Mês Anterior</h3>
+                <div className="bg-primary p-6 md:p-8 rounded-3xl space-y-6">
+                    <h3 className="font-bold text-primary-foreground text-lg">📅 Mês Anterior</h3>
                     <FormField
                         control={form.control}
                         name="previousMonthRevenue"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Faturamento Bruto (R$)</FormLabel>
+                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold text-secondary">Faturamento Bruto (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-card/80 border-border rounded-full py-7 px-7 text-base focus:bg-white focus:border-primary" />
+                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 text-primary-foreground placeholder:text-secondary/70 border-secondary/30 rounded-full py-7 px-7 text-base focus:bg-black/30 focus:border-secondary" />
                             </FormControl>
                              <FormMessage />
                           </FormItem>
@@ -517,9 +517,9 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                         name="previousMonthDiscounts"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Descontos iFood (R$)</FormLabel>
+                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold text-secondary">Descontos iFood (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-card/80 border-border rounded-full py-7 px-7 text-base focus:bg-white focus:border-primary" />
+                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 text-primary-foreground placeholder:text-secondary/70 border-secondary/30 rounded-full py-7 px-7 text-base focus:bg-black/30 focus:border-secondary" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
