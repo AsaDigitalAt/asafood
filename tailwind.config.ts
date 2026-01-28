@@ -13,6 +13,7 @@ export default {
         body: ['Plus Jakarta Sans', 'sans-serif'],
         headline: ['Plus Jakarta Sans', 'sans-serif'],
         code: ['monospace'],
+        surgena: ['Surgena', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
