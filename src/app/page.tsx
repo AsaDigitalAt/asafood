@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import type { FormState } from "@/app/actions/generate-diagnosis";
-import { ThreeBackground } from "@/components/app/three-background";
 import { AppHeader } from "@/components/app/app-header";
 import { LoginView } from "@/components/app/login-view";
 import { DiagnosisView } from "@/components/app/diagnosis-view";
@@ -71,7 +70,6 @@ export default function Home() {
 
   return (
     <>
-      <ThreeBackground />
       <LoadingScreen isVisible={isLoading && !isUserLoading} />
       
       <div className="relative z-10 min-h-screen">

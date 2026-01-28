@@ -38,26 +38,63 @@ const diagnosisSchema = z.object({
 // --- Components ---
 
 const HeroSection = () => (
-  <div className="relative min-h-screen w-full flex flex-col justify-center items-center text-center px-4 overflow-hidden">
-    <div className="relative z-10 max-w-3xl mt-16">
-      <span className="inline-block py-2 px-6 bg-primary/10 border border-primary/20 rounded-full text-primary text-sm font-bold uppercase tracking-widest mb-8 opacity-0 animate-fade-up shadow-lg backdrop-blur-sm">
-        Área Exclusiva
-      </span>
-      <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 opacity-0 animate-fade-up [animation-delay:200ms]">
-        <span className="text-gradient">Diagnóstico de </span> 
-        <span className="text-primary text-shadow-[0_0_40px_var(--tw-shadow-color)] shadow-primary/50">Performance</span>
-      </h1>
-      <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 opacity-0 animate-fade-up [animation-delay:400ms]">
-        Sua consultoria está ativa. Insira os dados operacionais abaixo para processar seu plano de ação estratégico.
-      </p>
-    </div>
-    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-muted-foreground text-xs tracking-widest uppercase opacity-0 animate-fade-in [animation-delay:1500ms]">
-        <div className="animate-bounce-indicator">
-            <ChevronDown className="h-6 w-6 mx-auto" />
-            Role para preencher
+    <div className="relative min-h-screen w-full flex flex-col justify-center items-center text-center px-4 overflow-hidden bg-primary text-primary-foreground">
+        {/* Decorative Images */}
+        <div className="absolute top-0 right-0 w-3/4 h-3/4 md:w-1/2 md:h-full pointer-events-none -mr-16 -mt-16 md:mr-0 md:mt-0 opacity-0 animate-fade-up [animation-delay:400ms]">
+            <Image src="https://tmpfiles.org/dl/21565256/camada1.png" alt="Decorative graphic of a hand holding a bag" layout="fill" className="object-contain object-top-right" />
+        </div>
+        <div className="absolute bottom-0 left-0 w-3/4 h-3/4 md:w-1/2 md:h-full pointer-events-none -ml-16 -mb-16 md:ml-0 md:mb-0 opacity-0 animate-fade-up [animation-delay:600ms]">
+            <Image src="https://tmpfiles.org/dl/21565118/camada2.png" alt="Decorative graphic of a hand holding a bag" layout="fill" className="object-contain object-bottom-left" />
+        </div>
+        
+        {/* Content */}
+        <div className="relative z-10 max-w-lg mx-auto flex flex-col items-center opacity-0 animate-fade-up">
+            <h1
+                className="text-[35vw] sm:text-[25vw] md:text-[18rem] font-black leading-none tracking-tighter text-white/10 select-none -mb-4 md:-mb-10 uppercase"
+                aria-hidden="true"
+            >
+                Des
+                <br className="md:hidden" />
+                tra
+                <br className="md:hidden" />
+                ve
+            </h1>
+
+            <div className="relative -mt-4">
+                 <div className="relative flex justify-center mb-6 h-10">
+                    <div className="bg-accent text-accent-foreground text-sm font-bold py-2 px-4 rounded-lg shadow-lg absolute transform -rotate-12"/>
+                    <div className="bg-accent text-accent-foreground text-sm font-bold py-2 px-4 rounded-lg shadow-lg absolute transform rotate-6"/>
+                    <div className="bg-accent text-accent-foreground text-sm font-bold py-2 px-4 rounded-lg shadow-lg relative z-10">Destrave</div>
+                 </div>
+                
+                <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground">
+                    suas vendas no iFood
+                </h2>
+
+                <div className="mt-8 max-w-xs mx-auto">
+                    <div className="border-2 border-accent rounded-full p-3 pr-5 flex items-center gap-3 bg-primary/80 backdrop-blur-sm">
+                         <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                             {/* Target icon SVG */}
+                             <svg width="20" height="20" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="hsl(var(--accent-foreground))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M9 12C10.6569 12 12 10.6569 12 9C12 7.34315 10.6569 6 9 6C7.34315 6 6 7.34315 6 9C6 10.6569 7.34315 12 9 12Z" stroke="hsl(var(--accent-foreground))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                         </div>
+                         <p className="text-left text-accent-foreground font-medium text-sm">
+                            Veja o que está travando seus resultados e saiba onde agir.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-primary-foreground/70 text-xs tracking-widest uppercase opacity-0 animate-fade-in [animation-delay:1500ms]">
+            <div className="animate-bounce-indicator">
+                <ChevronDown className="h-6 w-6 mx-auto" />
+                Role para preencher
+            </div>
         </div>
     </div>
-  </div>
 );
 
 const Marquee = () => {
@@ -102,9 +139,9 @@ const UploadCard = ({ name, title, description, icon, form }: { name: "funnelIma
           <FormControl>
             <div 
               className={cn(
-                "bg-primary rounded-3xl p-8 text-center min-h-[350px] flex flex-col justify-center items-center transition-all duration-300 cursor-pointer relative overflow-hidden group",
-                "hover:brightness-110 hover:-translate-y-2 hover:shadow-2xl",
-                file ? "border-2 border-secondary/50" : "border-2 border-transparent"
+                "bg-card border-2 border-dashed border-border/50 rounded-3xl p-8 text-center min-h-[350px] flex flex-col justify-center items-center transition-all duration-300 cursor-pointer relative overflow-hidden group",
+                "hover:border-primary hover:-translate-y-1 hover:shadow-xl",
+                file && "border-solid border-primary/50"
               )}
               onClick={() => document.getElementById(name)?.click()}
             >
@@ -117,20 +154,24 @@ const UploadCard = ({ name, title, description, icon, form }: { name: "funnelIma
               />
               {preview ? (
                   <>
-                    <Image src={preview} alt="Preview" fill className="object-cover opacity-20 group-hover:opacity-25 transition-opacity" />
-                    <div className="relative z-10 flex flex-col items-center justify-center bg-black/20 p-6 rounded-full border border-secondary">
-                        <CheckCircle className="w-12 h-12 text-secondary mb-2" />
-                        <span className="font-bold text-primary-foreground">Imagem Carregada</span>
+                    <Image src={preview} alt="Preview" layout="fill" className="object-cover opacity-10 group-hover:opacity-20 transition-opacity" />
+                    <div className="relative z-10 flex flex-col items-center justify-center">
+                        <CheckCircle className="w-12 h-12 text-green-500 mb-4" />
+                        <span className="font-bold text-foreground">Imagem Carregada</span>
+                        <span className="text-xs text-muted-foreground mt-1">Clique para alterar</span>
                     </div>
                   </>
               ) : (
                   <>
-                      <div className="absolute top-6 left-6 py-1 px-3 bg-black/10 border border-secondary/20 rounded-full text-xs font-bold uppercase tracking-widest text-secondary">Obrigatório</div>
-                      <div className="text-5xl mb-6 text-secondary transition-colors duration-300 group-hover:drop-shadow-[0_0_15px_var(--tw-shadow-color)] shadow-secondary/50">
+                      <div className="text-5xl mb-6 text-primary transition-colors duration-300 group-hover:drop-shadow-[0_0_15px_var(--tw-shadow-color)] shadow-primary/50">
                           {icon}
                       </div>
-                      <h3 className="text-xl font-bold text-primary-foreground mb-2">{title}</h3>
-                      <p className="text-sm text-secondary/90" dangerouslySetInnerHTML={{ __html: description }}/>
+                      <h3 className="text-xl font-bold text-foreground mb-2">{title}</h3>
+                      <p className="text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: description }}/>
+                      <div className="mt-4 py-2 px-4 bg-muted text-muted-foreground rounded-full text-sm font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <UploadCloud className="inline-block mr-2 h-4 w-4" />
+                        Fazer Upload
+                      </div>
                   </>
               )}
             </div>
@@ -353,7 +394,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     <>
       <HeroSection />
       <Marquee />
-      <section className="px-4 pb-24 md:pb-32 max-w-4xl mx-auto">
+      <section className="bg-background px-4 pb-24 md:pb-32 max-w-4xl mx-auto">
         {(isSuspended || isLimitReached) && (
              <Alert variant="destructive" className="mb-12 danger-bg border-destructive/30 text-red-400">
                 <ShieldAlert className="h-5 w-5 !text-red-400" />
@@ -401,7 +442,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                   <FormItem>
                     <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Nome do Restaurante</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Hamburgueria do João" {...field} className="bg-primary text-primary-foreground placeholder:text-secondary/70 border-secondary/30 rounded-full py-7 px-7 text-base focus:brightness-110 focus:border-secondary" />
+                      <Input placeholder="Ex: Hamburgueria do João" {...field} className="bg-card text-foreground placeholder:text-muted-foreground border-input rounded-full py-7 px-7 text-base focus:border-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -415,7 +456,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                   <FormItem>
                     <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold">Nicho de comida</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Hamburgueria, Sushi..." {...field} className="bg-primary text-primary-foreground placeholder:text-secondary/70 border-secondary/30 rounded-full py-7 px-7 text-base focus:brightness-110 focus:border-secondary" />
+                      <Input placeholder="Ex: Hamburgueria, Sushi..." {...field} className="bg-card text-foreground placeholder:text-muted-foreground border-input rounded-full py-7 px-7 text-base focus:border-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -434,11 +475,11 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                         defaultValue={field.value}
                         className="grid grid-cols-1 md:grid-cols-2 gap-4"
                       >
-                        <FormLabel htmlFor="propria" className="flex items-center justify-center gap-3 p-5 bg-primary text-primary-foreground border-secondary/30 rounded-full cursor-pointer hover:brightness-110 has-[[data-state=checked]]:bg-black/20 has-[[data-state=checked]]:border-secondary has-[[data-state=checked]]:text-secondary">
+                        <FormLabel htmlFor="propria" className="flex items-center justify-center gap-3 p-5 bg-card border border-border rounded-full cursor-pointer hover:border-primary has-[[data-state=checked]]:bg-primary has-[[data-state=checked]]:text-primary-foreground has-[[data-state=checked]]:border-primary">
                            <RadioGroupItem value="propria" id="propria" />
                            Entrega Própria
                         </FormLabel>
-                        <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-primary text-primary-foreground border-secondary/30 rounded-full cursor-pointer hover:brightness-110 has-[[data-state=checked]]:bg-black/20 has-[[data-state=checked]]:border-secondary has-[[data-state=checked]]:text-secondary">
+                        <FormLabel htmlFor="ifood" className="flex items-center justify-center gap-3 p-5 bg-card border border-border rounded-full cursor-pointer hover:border-primary has-[[data-state=checked]]:bg-primary has-[[data-state=checked]]:text-primary-foreground has-[[data-state=checked]]:border-primary">
                            <RadioGroupItem value="ifood" id="ifood" />
                            Entrega do iFood
                         </FormLabel>
@@ -468,16 +509,16 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
 
 
             <div className="space-y-6">
-                <div className="bg-primary p-6 md:p-8 rounded-3xl space-y-6">
-                     <h3 className="font-bold text-primary-foreground text-lg">📅 Mês Atual</h3>
+                <div className="bg-card border border-border p-6 md:p-8 rounded-3xl space-y-6">
+                     <h3 className="font-bold text-foreground text-lg">📅 Mês Atual</h3>
                      <FormField
                         control={form.control}
                         name="currentMonthRevenue"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold text-secondary">Faturamento Bruto (R$)</FormLabel>
+                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold text-muted-foreground">Faturamento Bruto (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 text-primary-foreground placeholder:text-secondary/70 border-secondary/30 rounded-full py-7 px-7 text-base focus:bg-black/30 focus:border-secondary" />
+                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-background text-foreground placeholder:text-muted-foreground border-input rounded-full py-7 px-7 text-base focus:border-primary" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -488,25 +529,25 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                         name="currentMonthDiscounts"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold text-secondary">Descontos iFood (R$)</FormLabel>
+                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold text-muted-foreground">Descontos iFood (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 text-primary-foreground placeholder:text-secondary/70 border-secondary/30 rounded-full py-7 px-7 text-base focus:bg-black/30 focus:border-secondary" />
+                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-background text-foreground placeholder:text-muted-foreground border-input rounded-full py-7 px-7 text-base focus:border-primary" />
                             </FormControl>
                              <FormMessage />
                           </FormItem>
                         )}
                       />
                 </div>
-                <div className="bg-primary p-6 md:p-8 rounded-3xl space-y-6">
-                    <h3 className="font-bold text-primary-foreground text-lg">📅 Mês Anterior</h3>
+                <div className="bg-card border border-border p-6 md:p-8 rounded-3xl space-y-6">
+                    <h3 className="font-bold text-foreground text-lg">📅 Mês Anterior</h3>
                     <FormField
                         control={form.control}
                         name="previousMonthRevenue"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold text-secondary">Faturamento Bruto (R$)</FormLabel>
+                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold text-muted-foreground">Faturamento Bruto (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 text-primary-foreground placeholder:text-secondary/70 border-secondary/30 rounded-full py-7 px-7 text-base focus:bg-black/30 focus:border-secondary" />
+                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-background text-foreground placeholder:text-muted-foreground border-input rounded-full py-7 px-7 text-base focus:border-primary" />
                             </FormControl>
                              <FormMessage />
                           </FormItem>
@@ -517,9 +558,9 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                         name="previousMonthDiscounts"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold text-secondary">Descontos iFood (R$)</FormLabel>
+                            <FormLabel className="ml-4 uppercase text-xs tracking-widest font-bold text-muted-foreground">Descontos iFood (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-black/20 text-primary-foreground placeholder:text-secondary/70 border-secondary/30 rounded-full py-7 px-7 text-base focus:bg-black/30 focus:border-secondary" />
+                              <Input type="number" step="0.01" placeholder="0,00" {...field} className="bg-background text-foreground placeholder:text-muted-foreground border-input rounded-full py-7 px-7 text-base focus:border-primary" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -530,10 +571,10 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
 
             <div className="pt-8 opacity-0 animate-fade-up [animation-delay:900ms]">
                 <div className="relative p-0.5 rounded-full overflow-hidden group">
-                  <div className="absolute inset-[-150%] animate-border-spin bg-[conic-gradient(from_90deg_at_50%_50%,#FE1413_0%,#FFF4E2_50%,#FE1413_100%)]"/>
+                  <div className="absolute inset-[-150%] animate-border-spin bg-[conic-gradient(from_90deg_at_50%_50%,#FE1413_0%,#2E4C8C_50%,#FE1413_100%)]"/>
                   <Button 
                     type="submit" 
-                    className="relative w-full h-16 rounded-full bg-background hover:bg-card text-primary text-lg font-bold uppercase tracking-widest transition-colors duration-300 disabled:text-muted-foreground disabled:bg-slate-900/50 disabled:cursor-not-allowed"
+                    className="relative w-full h-16 rounded-full bg-background hover:bg-card text-primary text-lg font-bold uppercase tracking-widest transition-colors duration-300 disabled:text-muted-foreground disabled:bg-slate-200/50 disabled:cursor-not-allowed"
                     disabled={isButtonDisabled}
                   >
                     {form.formState.isSubmitting ? (
