@@ -13,7 +13,7 @@ export function ThreeBackground() {
     let scrollY = 0;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x141416, 0.02);
+    scene.fog = new THREE.FogExp2(0xfff4e2, 0.02);
     const camera = new THREE.PerspectiveCamera(
       45,
       container.clientWidth / container.clientHeight,
@@ -37,7 +37,7 @@ export function ThreeBackground() {
       metalness: 0.9,
     });
     const shackleMat = new THREE.MeshStandardMaterial({
-      color: 0xfff4e2,
+      color: 0xfe1413,
       roughness: 0.1,
       metalness: 1.0,
     });

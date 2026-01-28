@@ -74,11 +74,11 @@
 
 @layer utilities {
   .glass-card {
-      @apply bg-slate-900/60 border border-white/5 backdrop-blur-xl;
+      @apply bg-background/80 border border-foreground/10 backdrop-blur-lg;
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
   }
 
   .success-text {
