@@ -47,7 +47,7 @@ const HeroSection = () => {
                 className="absolute top-0 left-0 w-auto h-auto max-w-[300px] md:max-w-[400px] -translate-x-1/4 -translate-y-1/4 opacity-100"
             />
             <Image
-                src="https://tmpfiles.org/dl/21565256/camada1.png"
+                src="https://firebasestorage.googleapis.com/v0/b/base-arquivos.firebasestorage.app/o/Camada%201.png?alt=media&token=718c45d7-1da6-478b-8168-f3f5423416b7"
                 alt="Elemento decorativo de fundo 2"
                 width={400}
                 height={400}
