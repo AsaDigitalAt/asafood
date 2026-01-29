@@ -40,7 +40,7 @@ const HeroSection = () => {
     return (
         <div className="relative bg-primary text-primary-foreground min-h-screen flex flex-col justify-center items-center text-center overflow-hidden p-4">
             <Image
-                src="https://tmpfiles.org/dl/21565118/camada2.png"
+                src="https://firebasestorage.googleapis.com/v0/b/base-arquivos.firebasestorage.app/o/Camada%202.png?alt=media&token=b5e254f5-2ef5-4d35-9c71-ee095ed5795a"
                 alt="Elemento decorativo de fundo 1"
                 width={400}
                 height={400}
