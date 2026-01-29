@@ -89,7 +89,7 @@ export function LoginView() {
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-primary text-primary-foreground opacity-0 animate-fade-up animation-delay-[300ms]">
       <div className="w-full max-w-md text-center">
           <Image
-            src="https://tmpfiles.org/dl/21575704/logoasaoff.png"
+            src="https://firebasestorage.googleapis.com/v0/b/base-arquivos.firebasestorage.app/o/Logo%20ASA%20OFF.png?alt=media&token=62ef02f9-1b75-4a7a-b496-b56184407e2f"
             alt="Asa Food Logo"
             width={180}
             height={50}

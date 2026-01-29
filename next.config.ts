@@ -33,6 +33,12 @@ const nextConfig: NextConfig = {
         hostname: 'tmpfiles.org',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
