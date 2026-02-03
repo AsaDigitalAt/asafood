@@ -26,16 +26,25 @@ service cloud.firestore {
     }
     
     function isWithinMonthlyLimit(userId) {
+        // First, check if the user's profile document even exists.
+        if (!exists(/databases/$(database)/documents/users/$(userId))) {
+          // If the profile doesn't exist, they can't create a report.
+          // The profile is created on first login, so this should not happen in a normal flow.
+          return false;
+        }
+
         let userData = get(/databases/$(database)/documents/users/$(userId)).data;
         let plan = userData.get('plan', 'plano_acelerador');
         let limit = getPlanLimit(plan);
         let usage = userData.get('usage', null);
-        // Ternary to check for new cycle or null usage
-        let reportsThisCycle = usage != null && usage.cycleStart.month() == request.time.month() 
-            ? usage.reportsThisCycle 
-            : 0;
 
-        // Return true if developer OR if reports are under the limit
+        // If usage data doesn't exist, or if it's a new month, treat usage count as 0.
+        // This correctly handles the very first report creation for a new user.
+        let reportsThisCycle = (usage != null && usage.cycleStart.month() == request.time.month())
+            ? usage.reportsThisCycle
+            : 0;
+            
+        // Allow if the user is a developer (no limit) OR if their current usage is less than their plan's limit.
         return plan == 'desenvolvedor' || reportsThisCycle < limit;
     }
 
