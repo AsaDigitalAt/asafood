@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Trash2, PlusCircle, ArrowLeft, Calculator, ListChecks } from 'lucide-react';
+import { Trash2, PlusCircle, ArrowLeft, Calculator, ListChecks, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface Ingredient {
   id: number;
@@ -39,6 +40,8 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   const [dishesPerMonth, setDishesPerMonth] = useState<number>(100);
   const [profitMargin, setProfitMargin] = useState<number>(30);
   const [result, setResult] = useState<CalculationResult | null>(null);
+  const [isCalculating, setIsCalculating] = useState<boolean>(false);
+  const { toast } = useToast();
 
   const handleNewCalculation = () => {
     setIngredients([{ id: Date.now(), name: '', totalCost: 0, totalWeight: 1000, plateWeight: 0 }]);
@@ -103,19 +106,44 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
     setFixedCosts(fixedCosts.filter(cost => cost.id !== id));
   };
   
-  const calculatePrice = () => {
-    const totalIngredientCost = ingredients.reduce((acc, ing) => acc + getIngredientCostPerPlate(ing), 0);
-    const totalMonthlyFixedCost = fixedCosts.reduce((acc, cost) => acc + cost.monthlyCost, 0);
-    const totalFixedCostPerDish = dishesPerMonth > 0 ? totalMonthlyFixedCost / dishesPerMonth : 0;
-    const totalCostPerDish = totalIngredientCost + totalFixedCostPerDish;
-    const suggestedPrice = totalCostPerDish / (1 - profitMargin / 100);
+  const calculatePrice = async () => {
+    setIsCalculating(true);
+    setResult(null);
 
-    setResult({
-      totalIngredientCost,
-      totalFixedCostPerDish,
-      totalCostPerDish,
-      suggestedPrice,
-    });
+    const payload = {
+      ingredients,
+      fixedCosts,
+      dishesPerMonth,
+      profitMargin,
+    };
+
+    try {
+      const response = await fetch('https://unreleasible-pocked-azucena.ngrok-free.dev/webhook/preconovo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro no Webhook (${response.status}): ${errorText || response.statusText}`);
+      }
+
+      const data = await response.json();
+      setResult(data);
+
+    } catch (error: any) {
+      console.error("Erro ao calcular preço:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro no Cálculo",
+        description: error.message || "Não foi possível conectar ao serviço de cálculo de preços.",
+      });
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   if (view === 'new_calculation') {
@@ -225,7 +253,16 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                             <Label htmlFor="profit-margin">Margem de lucro desejada (%)</Label>
                             <Input id="profit-margin" type="number" value={profitMargin || ''} onChange={e => setProfitMargin(Number(e.target.value))} />
                         </div>
-                        <Button className="w-full h-12 text-lg font-bold" onClick={calculatePrice}>Calcular Preço Ideal</Button>
+                         <Button className="w-full h-12 text-lg font-bold" onClick={calculatePrice} disabled={isCalculating}>
+                            {isCalculating ? (
+                                <>
+                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                    Calculando...
+                                </>
+                            ) : (
+                                "Calcular Preço Ideal"
+                            )}
+                        </Button>
                     </CardContent>
                 </Card>
 
