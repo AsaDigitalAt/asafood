@@ -17,7 +17,7 @@ export default function EmptyStateView({ icon, title, description, onBack }: Emp
                 <div className="text-6xl mb-6 text-slate-500/50">
                     {icon}
                 </div>
-                <h2 className="text-3xl font-bold text-white mb-2">{title}</h2>
+                <h2 className="text-3xl font-bold text-primary mb-2">{title}</h2>
                 <p className="text-muted-foreground mb-8">{description}</p>
                 <Button 
                     onClick={onBack}
