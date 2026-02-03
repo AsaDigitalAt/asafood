@@ -26,26 +26,23 @@ service cloud.firestore {
     }
     
     function isWithinMonthlyLimit(userId) {
-        // First, check if the user's profile document even exists.
-        if (!exists(/databases/$(database)/documents/users/$(userId))) {
-          // If the profile doesn't exist, they can't create a report.
-          // The profile is created on first login, so this should not happen in a normal flow.
-          return false;
-        }
-
-        let userData = get(/databases/$(database)/documents/users/$(userId)).data;
-        let plan = userData.get('plan', 'plano_acelerador');
-        let limit = getPlanLimit(plan);
-        let usage = userData.get('usage', null);
-
-        // If usage data doesn't exist, or if it's a new month, treat usage count as 0.
-        // This correctly handles the very first report creation for a new user.
-        let reportsThisCycle = (usage != null && usage.cycleStart.month() == request.time.month())
-            ? usage.reportsThisCycle
-            : 0;
-            
-        // Allow if the user is a developer (no limit) OR if their current usage is less than their plan's limit.
-        return plan == 'desenvolvedor' || reportsThisCycle < limit;
+      // A user can create a report if:
+      // 1. Their user profile exists.
+      // 2. AND (they are a developer OR their usage is within the plan's limit).
+      return exists(/databases/$(database)/documents/users/$(userId)) && (
+        get(/databases/$(database)/documents/users/$(userId)).data.plan == 'desenvolvedor'
+        ||
+        (
+          // Calculate reports this cycle. Defaults to 0 if 'usage' field doesn't exist or it's a new month.
+          (
+            'usage' in get(/databases/$(database)/documents/users/$(userId)).data &&
+            get(/databases/$(database)/documents/users/$(userId)).data.usage.cycleStart.month() == request.time.month()
+              ? get(/databases/$(database)/documents/users/$(userId)).data.usage.reportsThisCycle
+              : 0
+          )
+          < getPlanLimit(get(/databases/$(database)/documents/users/$(userId)).data.plan)
+        )
+      );
     }
 
     // --- Validation Functions ---
@@ -61,38 +58,37 @@ service cloud.firestore {
     }
 
     function isUpdatingOwnProfile() {
-      let incoming = request.resource.data;
-      let existing = resource.data;
-      let newUsage = incoming.usage;
-      let existingUsage = existing.get('usage', null);
+      return (
+        // 1. Immutable fields check
+        request.resource.data.email == resource.data.email &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.plan == resource.data.plan &&
+        request.resource.data.planStatus == resource.data.planStatus &&
 
-      // 1. Immutable fields that user cannot change
-      let coreDataUnchanged = incoming.email == existing.email 
-                          && incoming.createdAt == existing.createdAt
-                          && incoming.plan == existing.plan 
-                          && incoming.planStatus == existing.planStatus;
+        // 2. lastLoginAt check: can be unchanged or updated to now
+        (request.resource.data.lastLoginAt == resource.data.lastLoginAt || request.resource.data.lastLoginAt == request.time) &&
 
-      // 2. User can update lastLoginAt only to the request time, or it can remain unchanged
-      let lastLoginAtValid = incoming.lastLoginAt == existing.lastLoginAt || incoming.lastLoginAt == request.time;
-      
-      // 3. Validate 'usage' update logic
-      let usageValid = 
+        // 3. usage update logic
+        (
           // Case 1: 'usage' field is not being updated.
-          (incoming.usage == existing.usage) ||
+          request.resource.data.usage == resource.data.usage ||
           // Case 2: 'usage' field IS being updated. It must be a valid increment or reset.
           (
-              // Subcase A: First time usage is set for an old user
-              (existingUsage == null && newUsage.reportsThisCycle == 1 && newUsage.cycleStart == request.time) ||
-              // Subcase B: Usage already exists, check increment or reset
-              (existingUsage != null && (
-                  // B1: Incrementing report count by 1, for the same cycle
-                  (newUsage.reportsThisCycle == existingUsage.reportsThisCycle + 1 && newUsage.cycleStart.toMillis() == existingUsage.cycleStart.toMillis()) ||
-                  // B2: Resetting for a new month
-                  (newUsage.reportsThisCycle == 0 && newUsage.cycleStart.month() != existingUsage.cycleStart.month() && newUsage.cycleStart.year() == request.time.year())
-              ))
-          );
-
-      return coreDataUnchanged && lastLoginAtValid && usageValid;
+            // Subcase A: First time usage is set for a user
+            (resource.data.get('usage', null) == null && request.resource.data.usage.reportsThisCycle == 1 && request.resource.data.usage.cycleStart == request.time) ||
+            // Subcase B: Usage already exists, check increment or reset
+            (
+              resource.data.get('usage', null) != null &&
+              (
+                // B1: Incrementing report count by 1 for the same cycle
+                (request.resource.data.usage.reportsThisCycle == resource.data.get('usage').reportsThisCycle + 1 && request.resource.data.usage.cycleStart.toMillis() == resource.data.get('usage').cycleStart.toMillis()) ||
+                // B2: Resetting for a new month
+                (request.resource.data.usage.reportsThisCycle == 0 && request.resource.data.usage.cycleStart.month() != resource.data.get('usage').cycleStart.month() && request.resource.data.usage.cycleStart.year() == request.time.year())
+              )
+            )
+          )
+        )
+      );
     }
     
     function isAdminUpdatingUser() {
