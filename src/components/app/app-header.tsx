@@ -3,12 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { BarChart3, Rocket, Store, Star, LogOut, Shield } from "lucide-react";
+import { BarChart3, Rocket, Store, Star, LogOut, Shield, BookOpenCheck } from "lucide-react";
 import { useAuth, useUser, useMemoFirebase, useFirestore } from "@/firebase";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { doc } from "firebase/firestore";
 
-type View = "login" | "diagnosis" | "action-plan" | "restaurant" | "admin";
+type View = "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis";
 
 type AppHeaderProps = {
   currentView: View;
@@ -128,6 +128,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
           )}>
             <NavItem view="diagnosis" icon={<BarChart3 className="w-5 h-5" />} text="Diagnóstico de Performance" />
             <NavItem view="action-plan" icon={<Rocket className="w-5 h-5" />} text="Meu Plano de Ação" />
+            <NavItem view="menu-analysis" icon={<BookOpenCheck className="w-5 h-5" />} text="Análise de Cardápio" />
             <NavItem view="restaurant" icon={<Store className="w-5 h-5" />} text="Meu Restaurante" />
             <NavItem view="admin" icon={<Shield className="w-5 h-5" />} text="Painel do Administrador" adminOnly={true} />
           </nav>

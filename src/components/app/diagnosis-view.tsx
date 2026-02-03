@@ -30,7 +30,6 @@ const diagnosisSchema = z.object({
   previousMonthRevenue: z.coerce.number().min(0, "O faturamento deve ser positivo."),
   previousMonthDiscounts: z.coerce.number().min(0, "O desconto deve ser positivo."),
   funnelImage: z.any().refine((file) => file instanceof File, "A imagem do funil é obrigatória."),
-  productImage: z.any().refine((file) => file instanceof File, "A imagem do produto é obrigatória."),
   email: z.string().email("O e-mail é obrigatório."),
   uid: z.string().min(1, "UID do usuário é obrigatório."),
 });
@@ -89,7 +88,7 @@ const Marquee = () => {
     );
 }
 
-const UploadCard = ({ name, title, description, icon, form }: { name: "funnelImage" | "productImage", title: string, description: string, icon: React.ReactNode, form: any }) => {
+const UploadCard = ({ name, title, description, icon, form }: { name: "funnelImage", title: string, description: string, icon: React.ReactNode, form: any }) => {
     const [preview, setPreview] = useState<string | null>(null);
     const file = form.watch(name);
 
@@ -261,7 +260,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
             action: 'generate_diagnosis',
             status: 'started',
             timestamp: serverTimestamp(),
-            metadata: { requestPayload: { ...values, funnelImage: values.funnelImage.name, productImage: values.productImage.name } }
+            metadata: { requestPayload: { ...values, funnelImage: values.funnelImage.name } }
         };
         const usageEventRef = await addDoc(usageEventsColRef, usageEventData)
             .catch(serverError => {
@@ -390,21 +389,16 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-12">
             <input type="hidden" {...form.register("uid")} />
-            <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-                <UploadCard 
-                    name="funnelImage"
-                    title="Funil de Vendas"
-                    description="Print do Portal do Parceiro<br/>(Desempenho > Cardápio)"
-                    icon={<BarChart3 />}
-                    form={form}
-                />
-                <UploadCard 
-                    name="productImage"
-                    title="Produto Campeão"
-                    description="Foto do item mais vendido<br/>do seu cardápio"
-                    icon={<UtensilsCrossed />}
-                    form={form}
-                />
+            <div className="flex justify-center">
+                <div className="w-full max-w-md">
+                    <UploadCard 
+                        name="funnelImage"
+                        title="Funil de Vendas"
+                        description="Print do Portal do Parceiro<br/>(Desempenho > Cardápio)"
+                        icon={<BarChart3 />}
+                        form={form}
+                    />
+                </div>
             </div>
             
             <div className="space-y-8 opacity-0 animate-fade-up [animation-delay:700ms]">

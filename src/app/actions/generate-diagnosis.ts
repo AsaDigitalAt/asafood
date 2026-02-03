@@ -25,7 +25,6 @@ const diagnosisSchema = z.object({
   previousMonthRevenue: z.coerce.number(),
   previousMonthDiscounts: z.coerce.number(),
   funnelImage: z.any().refine((file) => file instanceof File, "A imagem do funil é obrigatória."),
-  productImage: z.any().refine((file) => file instanceof File, "A imagem do produto é obrigatória."),
   email: z.string().email("O e-mail é obrigatório."),
   uid: z.string().min(1, "UID do usuário é obrigatório."),
 });
@@ -94,7 +93,6 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
     previousMonthRevenue,
     previousMonthDiscounts,
     funnelImage,
-    productImage,
     email,
     uid,
   } = validatedFields.data;
@@ -110,7 +108,6 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
     webhookFormData.append('fat-anterior', String(previousMonthRevenue));
     webhookFormData.append('desc-anterior', String(previousMonthDiscounts));
     webhookFormData.append('funnelImage', funnelImage);
-    webhookFormData.append('productImage', productImage);
     webhookFormData.append('email', email);
     webhookFormData.append('user_id', uid);
 

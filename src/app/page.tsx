@@ -6,14 +6,14 @@ import { AppHeader } from "@/components/app/app-header";
 import { LoginView } from "@/components/app/login-view";
 import { DiagnosisView } from "@/components/app/diagnosis-view";
 import EmptyStateView from "@/components/app/empty-state-view";
-import { Rocket, Store, Shield } from "lucide-react";
+import { Rocket, Store, Shield, BookOpenCheck } from "lucide-react";
 import LoadingScreen from "@/components/app/loading-screen";
 import { DashboardView } from "@/components/app/dashboard/dashboard-view";
 import { useUser } from "@/firebase";
 import AdminDashboard from "@/components/app/admin/admin-dashboard";
 import ActionPlanView from "@/components/app/action-plan/action-plan-view";
 
-type View = "login" | "diagnosis" | "action-plan" | "restaurant" | "admin";
+type View = "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis";
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
@@ -54,6 +54,8 @@ export default function Home() {
         return dashboardData ? <DashboardView data={dashboardData} /> : <DiagnosisView onFormSubmitStart={handleFormSubmitStart} onFormSubmitEnd={handleFormSubmitEnd} />;
       case "action-plan":
         return <ActionPlanView onBack={() => setCurrentView("diagnosis")} />;
+      case "menu-analysis":
+        return <EmptyStateView icon={<BookOpenCheck className="w-16 h-16" />} title="Análise de Cardápio" description="Em breve você poderá analisar seu cardápio, descobrir os pontos fortes e fracos, e receber sugestões para otimizar suas vendas." onBack={() => setCurrentView("diagnosis")} />;
       case "restaurant":
         return <EmptyStateView icon={<Store className="w-16 h-16" />} title="Meu Restaurante" description="Em breve você poderá gerenciar os dados do seu estabelecimento aqui." onBack={() => setCurrentView("diagnosis")} />;
       case "admin":
