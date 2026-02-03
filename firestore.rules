@@ -46,9 +46,9 @@ service cloud.firestore {
           && data.plan == 'plano_acelerador'
           && data.planStatus == 'active'
           && data.usage.reportsThisCycle == 0
-          && data.usage.cycleStart == request.time
-          && data.createdAt == request.time
-          && data.lastLoginAt == request.time;
+          && data.createdAt is timestamp
+          && data.lastLoginAt is timestamp
+          && data.usage.cycleStart is timestamp;
     }
 
     function isUpdatingOwnProfile() {
