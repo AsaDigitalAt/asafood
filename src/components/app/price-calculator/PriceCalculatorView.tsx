@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Label } from '@/components/ui/label';
 import { Trash2, PlusCircle, ArrowLeft } from 'lucide-react';
 
 interface Ingredient {
@@ -132,35 +132,39 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                     <CardTitle>Insumos do Prato</CardTitle>
                     <CardDescription>Adicione os ingredientes e seus custos.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Insumo</TableHead>
-                                <TableHead>Custo Total (R$)</TableHead>
-                                <TableHead>Peso Total (g)</TableHead>
-                                <TableHead>Qtd. Prato (g)</TableHead>
-                                <TableHead>Custo/Prato</TableHead>
-                                <TableHead></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {ingredients.map(ing => (
-                                <TableRow key={ing.id}>
-                                    <TableCell><Input placeholder="Ex: Arroz" value={ing.name} onChange={e => updateIngredient(ing.id, 'name', e.target.value)} /></TableCell>
-                                    <TableCell><Input type="number" placeholder="20,00" value={ing.totalCost || ''} onChange={e => updateIngredient(ing.id, 'totalCost', e.target.value)} /></TableCell>
-                                    <TableCell><Input type="number" placeholder="1000" value={ing.totalWeight || ''} onChange={e => updateIngredient(ing.id, 'totalWeight', e.target.value)} /></TableCell>
-                                    <TableCell><Input type="number" placeholder="150" value={ing.plateWeight || ''} onChange={e => updateIngredient(ing.id, 'plateWeight', e.target.value)} /></TableCell>
-                                    <TableCell className="font-bold">R$ {getIngredientCostPerPlate(ing).toFixed(2)}</TableCell>
-                                    <TableCell>
-                                        <Button variant="ghost" size="icon" onClick={() => removeIngredient(ing.id)}>
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                <CardContent className="space-y-4">
+                    {ingredients.map(ing => (
+                        <Card key={ing.id} className="p-4 bg-card/50">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="flex-grow pr-4">
+                                    <Label htmlFor={`ingredient-name-${ing.id}`}>Nome do Insumo</Label>
+                                    <Input id={`ingredient-name-${ing.id}`} placeholder="Ex: Arroz" value={ing.name} onChange={e => updateIngredient(ing.id, 'name', e.target.value)} className="text-base" />
+                                </div>
+                                <Button variant="ghost" size="icon" onClick={() => removeIngredient(ing.id)} className="mt-5">
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                                <div>
+                                    <Label htmlFor={`total-cost-${ing.id}`}>Custo Total (R$)</Label>
+                                    <Input id={`total-cost-${ing.id}`} type="number" placeholder="20,00" value={ing.totalCost || ''} onChange={e => updateIngredient(ing.id, 'totalCost', e.target.value)} />
+                                </div>
+                                <div>
+                                    <Label htmlFor={`total-weight-${ing.id}`}>Peso Total (g/ml)</Label>
+                                    <Input id={`total-weight-${ing.id}`} type="number" placeholder="1000" value={ing.totalWeight || ''} onChange={e => updateIngredient(ing.id, 'totalWeight', e.target.value)} />
+                                </div>
+                                <div>
+                                    <Label htmlFor={`plate-weight-${ing.id}`}>Qtd. no Prato (g/ml)</Label>
+                                    <Input id={`plate-weight-${ing.id}`} type="number" placeholder="150" value={ing.plateWeight || ''} onChange={e => updateIngredient(ing.id, 'plateWeight', e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-border/50 flex justify-end items-center">
+                                <span className="text-sm text-muted-foreground mr-2">Custo deste insumo no prato:</span>
+                                <span className="font-bold text-lg">R$ {getIngredientCostPerPlate(ing).toFixed(2)}</span>
+                            </div>
+                        </Card>
+                    ))}
                     <Button variant="outline" className="mt-4 w-full" onClick={addIngredient}>
                         <PlusCircle className="mr-2" /> Adicionar Insumo
                     </Button>
@@ -173,29 +177,22 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                     <CardTitle>Custos Fixos e Variáveis</CardTitle>
                     <CardDescription>Adicione os custos mensais da sua operação.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Descrição do Custo</TableHead>
-                                <TableHead>Valor Mensal (R$)</TableHead>
-                                <TableHead></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {fixedCosts.map(cost => (
-                                <TableRow key={cost.id}>
-                                    <TableCell><Input placeholder="Ex: Aluguel" value={cost.name} onChange={e => updateFixedCost(cost.id, 'name', e.target.value)} /></TableCell>
-                                    <TableCell><Input type="number" placeholder="1500,00" value={cost.monthlyCost || ''} onChange={e => updateFixedCost(cost.id, 'monthlyCost', e.target.value)} /></TableCell>
-                                    <TableCell>
-                                        <Button variant="ghost" size="icon" onClick={() => removeFixedCost(cost.id)}>
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                <CardContent className="space-y-4">
+                    {fixedCosts.map(cost => (
+                         <div key={cost.id} className="flex items-end gap-4 p-4 rounded-lg bg-card/50">
+                            <div className="flex-grow">
+                                <Label htmlFor={`cost-name-${cost.id}`}>Descrição do Custo</Label>
+                                <Input id={`cost-name-${cost.id}`} placeholder="Ex: Aluguel" value={cost.name} onChange={e => updateFixedCost(cost.id, 'name', e.target.value)} />
+                            </div>
+                            <div className="w-48">
+                                <Label htmlFor={`cost-value-${cost.id}`}>Valor Mensal (R$)</Label>
+                                <Input id={`cost-value-${cost.id}`} type="number" placeholder="1500,00" value={cost.monthlyCost || ''} onChange={e => updateFixedCost(cost.id, 'monthlyCost', e.target.value)} />
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => removeFixedCost(cost.id)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                        </div>
+                    ))}
                     <Button variant="outline" className="mt-4 w-full" onClick={addFixedCost}>
                         <PlusCircle className="mr-2" /> Adicionar Custo
                     </Button>
@@ -212,12 +209,12 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div>
-                        <label className="text-sm font-medium">Média de pratos vendidos por mês</label>
-                        <Input type="number" value={dishesPerMonth || ''} onChange={e => setDishesPerMonth(Number(e.target.value))} />
+                        <Label htmlFor="dishes-per-month">Média de pratos vendidos por mês</Label>
+                        <Input id="dishes-per-month" type="number" value={dishesPerMonth || ''} onChange={e => setDishesPerMonth(Number(e.target.value))} />
                     </div>
                     <div>
-                        <label className="text-sm font-medium">Margem de lucro desejada (%)</label>
-                        <Input type="number" value={profitMargin || ''} onChange={e => setProfitMargin(Number(e.target.value))} />
+                        <Label htmlFor="profit-margin">Margem de lucro desejada (%)</Label>
+                        <Input id="profit-margin" type="number" value={profitMargin || ''} onChange={e => setProfitMargin(Number(e.target.value))} />
                     </div>
                     <Button className="w-full h-12 text-lg font-bold" onClick={calculatePrice}>Calcular Preço Ideal</Button>
                 </CardContent>
