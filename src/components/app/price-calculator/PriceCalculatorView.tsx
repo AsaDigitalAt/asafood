@@ -7,27 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Trash2, PlusCircle, ArrowLeft, Calculator, ListChecks, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface Ingredient {
-  id: number;
-  name: string;
-  totalCost: number;
-  totalWeight: number;
-  plateWeight: number;
-}
-
-interface FixedCost {
-  id: number;
-  name: string;
-  monthlyCost: number;
-}
-
-interface CalculationResult {
-    totalIngredientCost: number;
-    totalFixedCostPerDish: number;
-    totalCostPerDish: number;
-    suggestedPrice: number;
-}
+import { calculateNewPrice, type Ingredient, type FixedCost, type CalculationResult, type CalculationPayload } from '@/app/actions/calculate-price';
 
 interface PriceCalculatorViewProps {
     onBack: () => void;
@@ -110,7 +90,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
     setIsCalculating(true);
     setResult(null);
 
-    const payload = {
+    const payload: CalculationPayload = {
       ingredients,
       fixedCosts,
       dishesPerMonth,
@@ -118,22 +98,13 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
     };
 
     try {
-      const response = await fetch('https://unreleasible-pocked-azucena.ngrok-free.dev/webhook/preconovo', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-        },
-        body: JSON.stringify(payload),
-      });
+      const resultState = await calculateNewPrice(payload);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erro no Webhook (${response.status}): ${errorText || response.statusText}`);
+      if (resultState.error) {
+        throw new Error(resultState.error);
       }
-
-      const data = await response.json();
-      setResult(data);
+      
+      setResult(resultState.data);
 
     } catch (error: any) {
       console.error("Erro ao calcular preço:", error);
