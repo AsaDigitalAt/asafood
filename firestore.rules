@@ -112,7 +112,7 @@ service cloud.firestore {
     function isValidDiagnosisReport(userId) {
       let data = request.resource.data;
       return data.userId == userId
-        && data.createdAt == request.time;
+        && data.createdAt is timestamp;
     }
 
     // --- Collection Rules ---
