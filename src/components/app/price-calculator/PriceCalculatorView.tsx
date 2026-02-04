@@ -105,6 +105,10 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
       }
       
       setResult(resultState.data);
+      toast({
+        title: "Cálculo bem-sucedido!",
+        description: "O preço ideal para seu produto foi calculado.",
+      });
 
     } catch (error: any) {
       console.error("Erro ao calcular preço:", error);

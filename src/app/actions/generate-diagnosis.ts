@@ -112,7 +112,7 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
     webhookFormData.append('user_id', uid);
 
 
-    const webhookUrl = 'https://unreleasible-pocked-azucena.ngrok-free.dev/webhook/asafood';
+    const webhookUrl = 'https://unreleasible-pocked-azucena.ngrok-free.dev/webhook-test/asafood';
 
     const response = await fetch(webhookUrl, {
         method: 'POST',
