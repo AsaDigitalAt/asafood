@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { BarChart3, Rocket, Store, Star, LogOut, Shield, BookOpenCheck, Calculator } from "lucide-react";
+import { BarChart3, Rocket, Store, Star, LogOut, Shield, BookOpenCheck, Calculator, Lock } from "lucide-react";
 import { useAuth, useUser, useMemoFirebase, useFirestore } from "@/firebase";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { doc } from "firebase/firestore";
@@ -74,25 +74,50 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
     onLogout();
   };
   
-  const NavItem = ({ view, icon, text, adminOnly = false }: { view: View; icon: React.ReactNode; text: string, adminOnly?: boolean }) => {
+  const NavItem = ({
+    view,
+    icon,
+    text,
+    adminOnly = false,
+    locked = false,
+  }: {
+    view: View;
+    icon: React.ReactNode;
+    text: string;
+    adminOnly?: boolean;
+    locked?: boolean;
+  }) => {
     if (adminOnly && !isAdmin) return null;
-
+  
+    const isClickable = !locked;
+  
     return (
-        <div
-          className={cn(
-            "flex items-center gap-4 p-4 rounded-lg text-muted-foreground font-semibold text-sm transition-colors cursor-pointer",
-            "hover:bg-primary/10 hover:text-foreground",
-            currentView === view && "bg-primary/10 text-foreground"
-          )}
-          onClick={() => {
+      <div
+        className={cn(
+          "flex items-center justify-between gap-4 p-4 rounded-lg font-semibold text-sm transition-colors",
+          isClickable
+            ? "cursor-pointer text-muted-foreground hover:bg-primary/10 hover:text-foreground"
+            : "cursor-not-allowed text-muted-foreground opacity-60",
+          currentView === view &&
+            isClickable &&
+            "bg-primary/10 text-foreground"
+        )}
+        onClick={() => {
+          if (isClickable) {
             onNavigate(view);
             setMenuOpen(false);
-          }}
-        >
+          }
+        }}
+      >
+        <div className="flex items-center gap-4">
           {icon}
           <span>{text}</span>
         </div>
-    )
+        {locked && (
+          <Lock className="h-4 w-4 flex-shrink-0 text-amber-500/80" />
+        )}
+      </div>
+    );
   };
   
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || '...';
@@ -128,8 +153,8 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
           )}>
             <NavItem view="diagnosis" icon={<BarChart3 className="w-5 h-5" />} text="Diagnóstico de Performance" />
             <NavItem view="action-plan" icon={<Rocket className="w-5 h-5" />} text="Meu Plano de Ação" />
-            <NavItem view="menu-analysis" icon={<BookOpenCheck className="w-5 h-5" />} text="Análise de Cardápio" />
-            <NavItem view="price-calculator" icon={<Calculator className="w-5 h-5" />} text="Calcula de Preços" />
+            <NavItem view="menu-analysis" icon={<BookOpenCheck className="w-5 h-5" />} text="Análise de Cardápio" locked={true} />
+            <NavItem view="price-calculator" icon={<Calculator className="w-5 h-5" />} text="Calcula de Preços" locked={true} />
             <NavItem view="restaurant" icon={<Store className="w-5 h-5" />} text="Meu Restaurante" />
             <NavItem view="admin" icon={<Shield className="w-5 h-5" />} text="Painel do Administrador" adminOnly={true} />
           </nav>
