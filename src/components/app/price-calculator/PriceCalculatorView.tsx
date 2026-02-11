@@ -16,7 +16,6 @@ interface PriceCalculatorViewProps {
 export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps) {
   const [view, setView] = useState<'initial' | 'new_calculation' | 'view_prices'>('initial');
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [dishesPerMonth, setDishesPerMonth] = useState<number>(100);
   const [profitMargin, setProfitMargin] = useState<number>(30);
   const [taxes, setTaxes] = useState<number>(0);
   const [result, setResult] = useState<CalculationResult | null>(null);
@@ -25,7 +24,6 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
 
   const handleNewCalculation = () => {
     setIngredients([{ id: Date.now(), name: '', totalCost: 0, totalWeight: 1000, plateWeight: 0 }]);
-    setDishesPerMonth(100);
     setProfitMargin(30);
     setTaxes(0);
     setResult(null);
@@ -69,7 +67,6 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
 
     const payload: CalculationPayload = {
       ingredients,
-      dishesPerMonth,
       profitMargin,
       taxes,
     };
@@ -170,18 +167,22 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                     <CardHeader>
                         <CardTitle>Configuração da Precificação</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div>
-                            <Label htmlFor="dishes-per-month">Média de pratos vendidos por mês</Label>
-                            <Input id="dishes-per-month" type="number" value={dishesPerMonth || ''} onChange={e => setDishesPerMonth(Number(e.target.value))} />
-                        </div>
-                        <div>
-                            <Label htmlFor="profit-margin">Margem de lucro desejada (%)</Label>
-                            <Input id="profit-margin" type="number" value={profitMargin || ''} onChange={e => setProfitMargin(Number(e.target.value))} />
-                        </div>
-                        <div>
-                            <Label htmlFor="taxes">Impostos (%)</Label>
-                            <Input id="taxes" type="number" value={taxes || ''} onChange={e => setTaxes(Number(e.target.value))} />
+                    <CardContent className="space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="text-center bg-card/50 p-4 rounded-xl">
+                               <Label htmlFor="profit-margin" className="text-sm font-bold text-muted-foreground">MARGEM DE LUCRO</Label>
+                               <div className="relative mt-1">
+                                   <Input id="profit-margin" type="number" value={profitMargin || ''} onChange={e => setProfitMargin(Number(e.target.value))} className="text-3xl font-bold h-16 text-center bg-transparent border-0 pl-8" />
+                                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground">%</span>
+                               </div>
+                           </div>
+                           <div className="text-center bg-card/50 p-4 rounded-xl">
+                               <Label htmlFor="taxes" className="text-sm font-bold text-muted-foreground">IMPOSTOS</Label>
+                               <div className="relative mt-1">
+                                   <Input id="taxes" type="number" value={taxes || ''} onChange={e => setTaxes(Number(e.target.value))} className="text-3xl font-bold h-16 text-center bg-transparent border-0 pl-8" />
+                                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground">%</span>
+                               </div>
+                           </div>
                         </div>
                          <Button className="w-full h-12 text-lg font-bold" onClick={calculatePrice} disabled={isCalculating}>
                             {isCalculating ? (

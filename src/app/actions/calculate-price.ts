@@ -12,7 +12,6 @@ export interface Ingredient {
 // Type for the data sent to the webhook
 export interface CalculationPayload {
   ingredients: Ingredient[];
-  dishesPerMonth: number;
   profitMargin: number;
   taxes: number;
 }
