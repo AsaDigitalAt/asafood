@@ -48,7 +48,9 @@ export async function calculateNewPrice(payload: CalculationPayload): Promise<Pr
       throw new Error(`Erro no Webhook (${response.status}): ${errorText || response.statusText}`);
     }
 
-    const data: CalculationResult[] = await response.json();
+    const rawData = await response.json();
+    // Ensure the data is always an array for consistent handling on the client
+    const data: CalculationResult[] = Array.isArray(rawData) ? rawData : [rawData];
     return { data, error: null };
 
   } catch (error: any) {
