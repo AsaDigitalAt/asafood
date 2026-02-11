@@ -36,7 +36,7 @@ type SavedCalculation = {
     id: string;
     productName: string;
     calculationData: any;
-    createdAt: { toDate: () => Date };
+    createdAt: { toDate: () => Date } | null;
 };
 
 // --- Main Component ---
@@ -393,19 +393,20 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                     <div className="grid md:grid-cols-3 gap-6">
                         <Card className="bg-card/80 p-6 text-center">
                             <CardDescription>Custo (CMV)</CardDescription>
-                            <CardTitle className="text-3xl font-bold">R$ {(custos.cmv ?? 0).toFixed(2)}</CardTitle>
+                            <CardTitle className="text-3xl font-bold">R$ {(custos?.cmv ?? 0).toFixed(2)}</CardTitle>
                         </Card>
                          <Card className="bg-card/80 p-6 text-center">
-                            <CardDescription>Impostos ({inputs.impostoPercentual}%)</CardDescription>
-                            <CardTitle className="text-3xl font-bold">R$ {(valores.valorImposto ?? 0).toFixed(2)}</CardTitle>
+                            <CardDescription>Impostos ({inputs?.impostoPercentual ?? 0}%)</CardDescription>
+                            <CardTitle className="text-3xl font-bold">R$ {(valores?.valorImposto ?? 0).toFixed(2)}</CardTitle>
                         </Card>
                         <Card className="bg-card/80 p-6 text-center">
-                            <CardDescription>Margem ({inputs.margemPercentual}%)</CardDescription>
-                            <CardTitle className="text-3xl font-bold">R$ {(valores.valorMargem ?? 0).toFixed(2)}</CardTitle>
+                            <CardDescription>Margem ({inputs?.margemPercentual ?? 0}%)</CardDescription>
+                            <CardTitle className="text-3xl font-bold">R$ {(valores?.valorMargem ?? 0).toFixed(2)}</CardTitle>
                         </Card>
                     </div>
 
                     {/* Insights */}
+                    {insights && (
                     <Card className="glass-card">
                          <CardHeader>
                             <CardTitle>Insights do Custo</CardTitle>
@@ -418,13 +419,14 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                                 {insights.topIngredientes.map((ing: any) => (
                                     <div key={ing.id} className="flex justify-between p-3 bg-card/50 rounded-lg">
                                         <span>{ing.name}</span>
-                                        <span className="font-bold">R$ {ing.custoNoPrato.toFixed(2)} ({ing.shareCmvPercent.toFixed(1)}% do CMV)</span>
+                                        <span className="font-bold">R$ {(ing.custoNoPrato ?? 0).toFixed(2)} ({(ing.shareCmvPercent ?? 0).toFixed(1)}% do CMV)</span>
                                     </div>
                                 ))}
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
+                    )}
 
                     {/* Actions */}
                     <div className="flex flex-col md:flex-row justify-center gap-4 pt-8">
@@ -484,7 +486,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                         <div>
                             <h3 className="text-lg font-bold group-hover:text-primary">{calc.productName}</h3>
                             <p className="text-sm text-muted-foreground">
-                                Salvo em: {format(calc.createdAt.toDate(), 'dd/MM/yyyy')}
+                                Salvo em: {calc.createdAt ? format(calc.createdAt.toDate(), 'dd/MM/yyyy') : 'Data pendente'}
                             </p>
                         </div>
                         <div className='flex items-center gap-4'>
