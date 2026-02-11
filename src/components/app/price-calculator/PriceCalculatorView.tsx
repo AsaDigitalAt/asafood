@@ -19,6 +19,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   const [fixedCosts, setFixedCosts] = useState<FixedCost[]>([]);
   const [dishesPerMonth, setDishesPerMonth] = useState<number>(100);
   const [profitMargin, setProfitMargin] = useState<number>(30);
+  const [taxes, setTaxes] = useState<number>(0);
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const { toast } = useToast();
@@ -28,6 +29,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
     setFixedCosts([]);
     setDishesPerMonth(100);
     setProfitMargin(30);
+    setTaxes(0);
     setResult(null);
     setView('new_calculation');
   };
@@ -95,6 +97,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
       fixedCosts,
       dishesPerMonth,
       profitMargin,
+      taxes,
     };
 
     try {
@@ -228,6 +231,10 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                         <div>
                             <Label htmlFor="profit-margin">Margem de lucro desejada (%)</Label>
                             <Input id="profit-margin" type="number" value={profitMargin || ''} onChange={e => setProfitMargin(Number(e.target.value))} />
+                        </div>
+                        <div>
+                            <Label htmlFor="taxes">Impostos (%)</Label>
+                            <Input id="taxes" type="number" value={taxes || ''} onChange={e => setTaxes(Number(e.target.value))} />
                         </div>
                          <Button className="w-full h-12 text-lg font-bold" onClick={calculatePrice} disabled={isCalculating}>
                             {isCalculating ? (

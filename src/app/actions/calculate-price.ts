@@ -22,6 +22,7 @@ export interface CalculationPayload {
   fixedCosts: FixedCost[];
   dishesPerMonth: number;
   profitMargin: number;
+  taxes: number;
 }
 
 // Type for the data returned by the webhook on success
