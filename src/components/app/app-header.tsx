@@ -154,7 +154,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
             <NavItem view="diagnosis" icon={<BarChart3 className="w-5 h-5" />} text="Diagnóstico de Performance" />
             <NavItem view="action-plan" icon={<Rocket className="w-5 h-5" />} text="Meu Plano de Ação" />
             <NavItem view="menu-analysis" icon={<BookOpenCheck className="w-5 h-5" />} text="Análise de Cardápio" locked={true} />
-            <NavItem view="price-calculator" icon={<Calculator className="w-5 h-5" />} text="Calcula de Preços" locked={true} />
+            <NavItem view="price-calculator" icon={<Calculator className="w-5 h-5" />} text="Calcula de Preços" />
             <NavItem view="restaurant" icon={<Store className="w-5 h-5" />} text="Meu Restaurante" />
             <NavItem view="admin" icon={<Shield className="w-5 h-5" />} text="Painel do Administrador" adminOnly={true} />
           </nav>
