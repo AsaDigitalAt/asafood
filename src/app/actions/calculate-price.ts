@@ -11,6 +11,7 @@ export interface Ingredient {
 
 // Type for the data sent to the webhook
 export interface CalculationPayload {
+  productName: string;
   ingredients: Ingredient[];
   profitMargin: number;
   taxes: number;
@@ -18,13 +19,12 @@ export interface CalculationPayload {
 
 // Type for the data returned by the webhook on success
 export interface CalculationResult {
-    totalIngredientCost: number;
-    suggestedPrice: number;
+    [key: string]: any;
 }
 
 // Type for the state returned by the server action
 export type PriceCalculationState = {
-  data: CalculationResult | null;
+  data: CalculationResult[] | null;
   error: string | null;
 };
 
@@ -48,7 +48,7 @@ export async function calculateNewPrice(payload: CalculationPayload): Promise<Pr
       throw new Error(`Erro no Webhook (${response.status}): ${errorText || response.statusText}`);
     }
 
-    const data: CalculationResult = await response.json();
+    const data: CalculationResult[] = await response.json();
     return { data, error: null };
 
   } catch (error: any) {

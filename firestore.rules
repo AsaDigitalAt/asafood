@@ -147,6 +147,11 @@ service cloud.firestore {
         allow create: if isOwner(userId) && isValidDiagnosisReport(userId) && isWithinMonthlyLimit(userId);
         allow update, delete: if false;
       }
+
+      match /priceCalculations/{calculationId} {
+        allow read, create, delete: if isOwner(userId);
+        allow update: if false; // Calculations are immutable once saved
+      }
     }
   }
 }
