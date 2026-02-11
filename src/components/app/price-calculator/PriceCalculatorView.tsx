@@ -257,19 +257,19 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                         <CardContent className="space-y-4 text-lg">
                             <div className="flex justify-between">
                                 <span>Custo de Insumos p/ Prato:</span>
-                                <span className="font-bold">R$ {result.totalIngredientCost.toFixed(2)}</span>
+                                <span className="font-bold">R$ {(result.totalIngredientCost ?? 0).toFixed(2)}</span>
                             </div>
                              <div className="flex justify-between">
                                 <span>Custo Fixo p/ Prato:</span>
-                                <span className="font-bold">R$ {result.totalFixedCostPerDish.toFixed(2)}</span>
+                                <span className="font-bold">R$ {(result.totalFixedCostPerDish ?? 0).toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-xl font-bold border-t border-primary/20 pt-4 mt-4">
                                 <span>CUSTO TOTAL POR PRATO:</span>
-                                <span>R$ {result.totalCostPerDish.toFixed(2)}</span>
+                                <span>R$ {(result.totalCostPerDish ?? 0).toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-2xl font-extrabold text-primary border-t-2 border-primary pt-4 mt-4">
                                 <span>PREÇO DE VENDA SUGERIDO:</span>
-                                <span>R$ {result.suggestedPrice.toFixed(2)}</span>
+                                <span>R$ {(result.suggestedPrice ?? 0).toFixed(2)}</span>
                             </div>
                         </CardContent>
                     </Card>
