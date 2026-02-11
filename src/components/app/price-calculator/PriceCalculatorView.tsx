@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Trash2, PlusCircle, ArrowLeft, Calculator, ListChecks, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { calculateNewPrice, type Ingredient, type FixedCost, type CalculationResult, type CalculationPayload } from '@/app/actions/calculate-price';
+import { calculateNewPrice, type Ingredient, type CalculationResult, type CalculationPayload } from '@/app/actions/calculate-price';
 
 interface PriceCalculatorViewProps {
     onBack: () => void;
@@ -16,7 +16,6 @@ interface PriceCalculatorViewProps {
 export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps) {
   const [view, setView] = useState<'initial' | 'new_calculation' | 'view_prices'>('initial');
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [fixedCosts, setFixedCosts] = useState<FixedCost[]>([]);
   const [dishesPerMonth, setDishesPerMonth] = useState<number>(100);
   const [profitMargin, setProfitMargin] = useState<number>(30);
   const [taxes, setTaxes] = useState<number>(0);
@@ -26,7 +25,6 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
 
   const handleNewCalculation = () => {
     setIngredients([{ id: Date.now(), name: '', totalCost: 0, totalWeight: 1000, plateWeight: 0 }]);
-    setFixedCosts([]);
     setDishesPerMonth(100);
     setProfitMargin(30);
     setTaxes(0);
@@ -64,29 +62,6 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
     if (ingredient.totalWeight === 0) return 0;
     return (ingredient.totalCost / ingredient.totalWeight) * ingredient.plateWeight;
   };
-
-  const addFixedCost = () => {
-    setFixedCosts([...fixedCosts, { id: Date.now(), name: '', monthlyCost: 0 }]);
-  };
-
-  const updateFixedCost = (id: number, field: keyof FixedCost, value: string) => {
-    setFixedCosts(
-      fixedCosts.map(cost => {
-        if (cost.id === id) {
-          if (field === 'name') {
-            return { ...cost, name: value };
-          }
-          const numericValue = parseFloat(value);
-          return { ...cost, [field]: isNaN(numericValue) ? 0 : numericValue };
-        }
-        return cost;
-      })
-    );
-  };
-
-  const removeFixedCost = (id: number) => {
-    setFixedCosts(fixedCosts.filter(cost => cost.id !== id));
-  };
   
   const calculatePrice = async () => {
     setIsCalculating(true);
@@ -94,7 +69,6 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
 
     const payload: CalculationPayload = {
       ingredients,
-      fixedCosts,
       dishesPerMonth,
       profitMargin,
       taxes,
@@ -188,33 +162,6 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                     </CardContent>
                 </Card>
 
-                {/* Fixed Costs Card */}
-                <Card className="glass-card">
-                    <CardHeader>
-                        <CardTitle>Custos Fixos e Variáveis</CardTitle>
-                        <CardDescription>Adicione os custos mensais da sua operação.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {fixedCosts.map(cost => (
-                             <div key={cost.id} className="flex items-end gap-4 p-4 rounded-lg bg-card/50">
-                                <div className="flex-grow">
-                                    <Label htmlFor={`cost-name-${cost.id}`}>Descrição do Custo</Label>
-                                    <Input id={`cost-name-${cost.id}`} placeholder="Ex: Aluguel" value={cost.name} onChange={e => updateFixedCost(cost.id, 'name', e.target.value)} />
-                                </div>
-                                <div className="w-48">
-                                    <Label htmlFor={`cost-value-${cost.id}`}>Valor Mensal (R$)</Label>
-                                    <Input id={`cost-value-${cost.id}`} type="number" placeholder="1500,00" value={cost.monthlyCost || ''} onChange={e => updateFixedCost(cost.id, 'monthlyCost', e.target.value)} />
-                                </div>
-                                <Button variant="ghost" size="icon" onClick={() => removeFixedCost(cost.id)}>
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                            </div>
-                        ))}
-                        <Button variant="outline" className="mt-4 w-full" onClick={addFixedCost}>
-                            <PlusCircle className="mr-2" /> Adicionar Custo
-                        </Button>
-                    </CardContent>
-                </Card>
             </div>
 
             {/* Calculation and Result Column */}
@@ -258,14 +205,6 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                             <div className="flex justify-between">
                                 <span>Custo de Insumos p/ Prato:</span>
                                 <span className="font-bold">R$ {(result.totalIngredientCost ?? 0).toFixed(2)}</span>
-                            </div>
-                             <div className="flex justify-between">
-                                <span>Custo Fixo p/ Prato:</span>
-                                <span className="font-bold">R$ {(result.totalFixedCostPerDish ?? 0).toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-xl font-bold border-t border-primary/20 pt-4 mt-4">
-                                <span>CUSTO TOTAL POR PRATO:</span>
-                                <span>R$ {(result.totalCostPerDish ?? 0).toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-2xl font-extrabold text-primary border-t-2 border-primary pt-4 mt-4">
                                 <span>PREÇO DE VENDA SUGERIDO:</span>

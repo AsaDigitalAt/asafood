@@ -9,17 +9,9 @@ export interface Ingredient {
   plateWeight: number;
 }
 
-// Shared type for a fixed cost
-export interface FixedCost {
-  id: number;
-  name: string;
-  monthlyCost: number;
-}
-
 // Type for the data sent to the webhook
 export interface CalculationPayload {
   ingredients: Ingredient[];
-  fixedCosts: FixedCost[];
   dishesPerMonth: number;
   profitMargin: number;
   taxes: number;
@@ -28,8 +20,6 @@ export interface CalculationPayload {
 // Type for the data returned by the webhook on success
 export interface CalculationResult {
     totalIngredientCost: number;
-    totalFixedCostPerDish: number;
-    totalCostPerDish: number;
     suggestedPrice: number;
 }
 
