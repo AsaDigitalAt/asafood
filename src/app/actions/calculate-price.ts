@@ -9,38 +9,28 @@ export interface Ingredient {
   plateWeight: number;
 }
 
-// Shared type for a fixed cost
-export interface FixedCost {
-  id: number;
-  name: string;
-  monthlyCost: number;
-}
-
 // Type for the data sent to the webhook
 export interface CalculationPayload {
+  productName: string;
   ingredients: Ingredient[];
-  fixedCosts: FixedCost[];
-  dishesPerMonth: number;
   profitMargin: number;
+  taxes: number;
 }
 
 // Type for the data returned by the webhook on success
 export interface CalculationResult {
-    totalIngredientCost: number;
-    totalFixedCostPerDish: number;
-    totalCostPerDish: number;
-    suggestedPrice: number;
+    [key: string]: any;
 }
 
 // Type for the state returned by the server action
 export type PriceCalculationState = {
-  data: CalculationResult | null;
+  data: CalculationResult[] | null;
   error: string | null;
 };
 
 
 export async function calculateNewPrice(payload: CalculationPayload): Promise<PriceCalculationState> {
-  const webhookUrl = 'https://unreleasible-pocked-azucena.ngrok-free.dev/webhook/preconovo';
+  const webhookUrl = 'https://unreleasible-pocked-azucena.ngrok-free.dev/webhook-test/preconovo';
 
   try {
     const response = await fetch(webhookUrl, {
@@ -58,7 +48,9 @@ export async function calculateNewPrice(payload: CalculationPayload): Promise<Pr
       throw new Error(`Erro no Webhook (${response.status}): ${errorText || response.statusText}`);
     }
 
-    const data: CalculationResult = await response.json();
+    const rawData = await response.json();
+    // Ensure the data is always an array for consistent handling on the client
+    const data: CalculationResult[] = Array.isArray(rawData) ? rawData : [rawData];
     return { data, error: null };
 
   } catch (error: any) {
