@@ -30,7 +30,7 @@ export type PriceCalculationState = {
 
 
 export async function calculateNewPrice(payload: CalculationPayload): Promise<PriceCalculationState> {
-  const webhookUrl = 'https://unreleasible-pocked-azucena.ngrok-free.dev/webhook-test/preconovo';
+  const webhookUrl = 'https://unreleasible-pocked-azucena.ngrok-free.dev/webhook/preconovo';
 
   try {
     const response = await fetch(webhookUrl, {
