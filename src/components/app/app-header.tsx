@@ -134,7 +134,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
     <header className={cn(
       "fixed top-0 left-0 w-full p-6 md:px-12 md:py-10 flex justify-between items-center z-50 transition-all duration-500",
       isLoggedIn ? "opacity-100" : "opacity-0 pointer-events-none",
-      "bg-transparent" // Always transparent to avoid the strip effect
+      "bg-transparent"
     )}>
       <div className="flex items-center gap-6">
         {/* Menu */}
@@ -143,9 +143,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
             onClick={() => setMenuOpen(!isMenuOpen)}
             className={cn(
               "border w-14 h-14 rounded-2xl flex flex-col justify-center items-center gap-1.5 cursor-pointer transition-all duration-300 backdrop-blur-md",
-              isHubView 
-                ? "bg-white/10 border-white/20 hover:bg-white/20" 
-                : "bg-white/10 border-white/20 hover:bg-white/20" // Uniform header buttons for better legibility
+              "bg-white/10 border-white/20 hover:bg-white/20"
             )}
           >
             <span className="w-6 h-0.5 rounded-full bg-white"></span>
@@ -161,10 +159,10 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
             <NavItem view="hub" icon={<LayoutGrid className="w-5 h-5" />} text="Início (Hub)" />
             <NavItem view="diagnosis" icon={<BarChart3 className="w-5 h-5" />} text="Diagnóstico" />
             <NavItem view="action-plan" icon={<Rocket className="w-5 h-5" />} text="Meu Plano de Ação" />
-            <NavItem view="menu-analysis" icon={<BookOpenCheck className="w-5 h-5" />} text="Análise de Cardápio" locked={true} />
             <NavItem view="price-calculator" icon={<Calculator className="w-5 h-5" />} text="Calculadora de Preços" />
             <NavItem view="restaurant" icon={<Store className="w-5 h-5" />} text="Meu Restaurante" />
             <NavItem view="admin" icon={<Shield className="w-5 h-5" />} text="Painel do Administrador" adminOnly={true} />
+            <NavItem view="menu-analysis" icon={<BookOpenCheck className="w-5 h-5" />} text="Análise de Cardápio" locked={true} />
           </nav>
         </div>
         {/* Brand */}
