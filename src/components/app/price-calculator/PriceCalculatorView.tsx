@@ -436,7 +436,10 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                             <CardTitle>Insights do Custo</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <p>{insights.impactoImpostoResumo}</p>
+                            <p className="text-muted-foreground">{insights.impactoImpostoResumo}</p>
+                            {insights.impactoRetencaoResumo && (
+                                <p className="font-bold text-primary animate-pulse">{insights.impactoRetencaoResumo}</p>
+                            )}
                             <div>
                                 <h4 className="font-bold mb-2">Maiores Custos (Ingredientes):</h4>
                                 <div className="space-y-2">
