@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -6,7 +7,7 @@ import { AppHeader } from "@/components/app/app-header";
 import { LoginView } from "@/components/app/login-view";
 import { DiagnosisView } from "@/components/app/diagnosis-view";
 import EmptyStateView from "@/components/app/empty-state-view";
-import { Rocket, Store, Shield } from "lucide-react";
+import { Store } from "lucide-react";
 import LoadingScreen from "@/components/app/loading-screen";
 import { DashboardView } from "@/components/app/dashboard/dashboard-view";
 import { useUser } from "@/firebase";
@@ -14,19 +15,20 @@ import AdminDashboard from "@/components/app/admin/admin-dashboard";
 import ActionPlanView from "@/components/app/action-plan/action-plan-view";
 import MenuAnalysisView from "@/components/app/menu-analysis/menu-analysis-view";
 import PriceCalculatorView from "@/components/app/price-calculator/PriceCalculatorView";
+import { HubView } from "@/components/app/hub-view";
 
-type View = "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis" | "price-calculator";
+type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis" | "price-calculator";
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
-  const [currentView, setCurrentView] = useState<View>("diagnosis");
+  const [currentView, setCurrentView] = useState<View>("hub");
   const [isLoading, setIsLoading] = useState(false);
   const [dashboardData, setDashboardData] = useState<FormState | null>(null);
 
   const handleNavigate = (newView: View) => {
     setCurrentView(newView);
     if(newView === 'diagnosis') {
-      setDashboardData(null); // Reset form when navigating back
+      setDashboardData(null); // Reset form when navigating back to diagnosis from menu
     }
   };
 
@@ -38,7 +40,7 @@ export default function Home() {
     setDashboardData(data);
     setIsLoading(false);
     if (!data.error) {
-      setCurrentView('diagnosis'); // Ensure view is diagnosis to show dashboard
+      setCurrentView('diagnosis'); // Stay in diagnosis to show the generated dashboard
     }
   };
 
@@ -52,25 +54,26 @@ export default function Home() {
     }
 
     switch (currentView) {
+      case "hub":
+        return <HubView onNavigate={handleNavigate} />;
       case "diagnosis":
         return dashboardData ? <DashboardView data={dashboardData} /> : <DiagnosisView onFormSubmitStart={handleFormSubmitStart} onFormSubmitEnd={handleFormSubmitEnd} />;
       case "action-plan":
-        return <ActionPlanView onBack={() => setCurrentView("diagnosis")} />;
+        return <ActionPlanView onBack={() => setCurrentView("hub")} />;
       case "menu-analysis":
-        return <MenuAnalysisView onBack={() => setCurrentView("diagnosis")} />;
+        return <MenuAnalysisView onBack={() => setCurrentView("hub")} />;
       case "price-calculator":
-        return <PriceCalculatorView onBack={() => setCurrentView("diagnosis")} />;
+        return <PriceCalculatorView onBack={() => setCurrentView("hub")} />;
       case "restaurant":
-        return <EmptyStateView icon={<Store className="w-16 h-16" />} title="Meu Restaurante" description="Em breve você poderá gerenciar os dados do seu estabelecimento aqui." onBack={() => setCurrentView("diagnosis")} />;
+        return <EmptyStateView icon={<Store className="w-16 h-16" />} title="Meu Restaurante" description="Em breve você poderá gerenciar os dados do seu estabelecimento aqui." onBack={() => setCurrentView("hub")} />;
       case "admin":
-        return <AdminDashboard onBack={() => setCurrentView("diagnosis")} />;
+        return <AdminDashboard onBack={() => setCurrentView("hub")} />;
       default:
-        return <LoginView />;
+        return <HubView onNavigate={handleNavigate} />;
     }
   };
   
   const handleLogout = () => {
-    // This will be implemented later with Firebase Auth
     window.location.reload();
   }
 
