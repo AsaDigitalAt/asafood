@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -10,7 +9,6 @@ import {
   BookOpenCheck, 
   Store, 
   ArrowRight,
-  User as UserIcon,
   Star
 } from "lucide-react";
 import { useUser, useMemoFirebase, useFirestore } from "@/firebase";
@@ -30,28 +28,28 @@ const ToolCard = ({ title, description, icon, onClick, locked, delay }: ToolCard
   <div 
     onClick={!locked ? onClick : undefined}
     className={cn(
-      "group relative overflow-hidden glass-card rounded-3xl p-8 transition-all duration-500 border-white/10",
-      locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-white/40 hover:bg-white/5 hover:-translate-y-1",
+      "group relative overflow-hidden bg-white/5 border border-white/10 rounded-[2rem] p-8 transition-all duration-500 backdrop-blur-sm",
+      locked ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-white/30 hover:bg-white/10 hover:-translate-y-1",
       "animate-fade-up",
       delay
     )}
   >
     <div className="flex flex-col h-full justify-between gap-6">
       <div className="flex justify-between items-start">
-        <div className="p-4 rounded-2xl bg-white/10 text-white transition-colors group-hover:bg-white/20">
+        <div className="p-4 rounded-2xl bg-white/10 text-white transition-all duration-500 group-hover:scale-110 group-hover:bg-white/20">
           {icon}
         </div>
         {locked ? (
-          <div className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-200 text-[10px] font-bold uppercase tracking-widest border border-amber-500/30">
+          <div className="px-3 py-1 rounded-full bg-white/10 text-white/50 text-[10px] font-bold uppercase tracking-widest border border-white/10">
             Em Breve
           </div>
         ) : (
-          <ArrowRight className="w-5 h-5 text-white/30 transition-transform duration-500 group-hover:translate-x-1 group-hover:text-white" />
+          <ArrowRight className="w-5 h-5 text-white/30 transition-all duration-500 group-hover:translate-x-1 group-hover:text-white" />
         )}
       </div>
       <div>
-        <h3 className="text-2xl font-bold text-white mb-2">{title}</h3>
-        <p className="text-white/60 text-sm leading-relaxed">{description}</p>
+        <h3 className="text-2xl font-extrabold text-white mb-2 tracking-tight">{title}</h3>
+        <p className="text-white/70 text-sm leading-relaxed font-medium">{description}</p>
       </div>
     </div>
   </div>
@@ -72,36 +70,36 @@ export function HubView({ onNavigate }: { onNavigate: (view: any) => void }) {
                    userProfile?.plan === 'desenvolvedor' ? 'Modo Desenvolvedor' : 'Plano AsaFood';
 
   return (
-    <div className="min-h-screen bg-primary pt-32 pb-20 px-4 md:px-10">
+    <div className="min-h-screen bg-primary pt-32 pb-20 px-6 md:px-12">
       <div className="max-w-7xl mx-auto">
         {/* Header Seção Usuário */}
         <header className="mb-16 animate-fade-up">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="px-3 py-1 rounded-full bg-white/10 text-white/80 text-[10px] font-bold uppercase tracking-widest border border-white/20">
-                  Bem-vindo de volta
+              <div className="flex items-center gap-3 mb-6">
+                <div className="px-4 py-1.5 rounded-full bg-white/10 text-white/90 text-[10px] font-bold uppercase tracking-[0.2em] border border-white/10 backdrop-blur-md">
+                  Bem-vindo à AsaFood
                 </div>
               </div>
-              <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tighter">
-                Olá, <span className="opacity-60">{user?.email?.split('@')[0]}</span>
+              <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-none">
+                Olá, <span className="text-white/40">{user?.email?.split('@')[0]}</span>
               </h1>
             </div>
             
-            <div className="flex items-center gap-6 bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md">
-               <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-white">
-                 <Star className="w-7 h-7 fill-white/20" />
+            <div className="flex items-center gap-6 bg-white/5 border border-white/10 p-6 md:p-8 rounded-[2.5rem] backdrop-blur-xl">
+               <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-white shadow-inner">
+                 <Star className="w-8 h-8 fill-white/20" />
                </div>
                <div>
-                 <span className="text-white/40 text-xs uppercase tracking-widest font-bold block mb-1">Status da Conta</span>
-                 <p className="text-white font-bold text-xl">{planName}</p>
+                 <span className="text-white/40 text-[10px] uppercase tracking-[0.2em] font-black block mb-1">Status da Conta</span>
+                 <p className="text-white font-extrabold text-2xl tracking-tight">{planName}</p>
                </div>
             </div>
           </div>
         </header>
 
         {/* Grid de Ferramentas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <ToolCard 
             title="Diagnóstico"
             description="Analise o funil do seu iFood e identifique gargalos que impedem suas vendas de crescerem."
