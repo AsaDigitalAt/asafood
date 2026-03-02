@@ -5,10 +5,9 @@ import { FieldValue } from 'firebase-admin/firestore';
 
 /**
  * Webhook para integração com XGrow.
- * Recebe notificações de venda e gerencia acesso dos usuários.
+ * URL para configurar na XGrow: https://<seu-dominio>/api/webhooks/xgrow
  */
 
-// Mapeamento de Planos XGrow para Asa Food
 const PLAN_MAPPING: Record<string, any> = {
   'plano_unico_id': {
     plan: 'plano_unico',
@@ -33,19 +32,16 @@ const PLAN_MAPPING: Record<string, any> = {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    console.log('XGrow Webhook received:', body);
-
     const { 
       email, 
       name, 
-      product_id, 
       plan_id, 
       status, 
       subscriber_id 
     } = body;
 
-    // Apenas processamos vendas aprovadas ou completas
-    if (status !== 'approved' && status !== 'completed' && status !== 'active') {
+    // Apenas processamos vendas aprovadas ou ativas
+    if (!['approved', 'completed', 'active'].includes(status)) {
       return NextResponse.json({ message: 'Status ignored' }, { status: 200 });
     }
 
@@ -53,16 +49,13 @@ export async function POST(request: Request) {
 
     let user;
     try {
-      // Tentar encontrar usuário existente por e-mail
       user = await adminAuth.getUserByEmail(email);
     } catch (e: any) {
       if (e.code === 'auth/user-not-found') {
-        // Criar novo usuário no Authentication
-        // Senha temporária ou link de reset pode ser enviado
         user = await adminAuth.createUser({
           email,
           displayName: name,
-          password: Math.random().toString(36).slice(-10), // Senha aleatória inicial
+          password: Math.random().toString(36).slice(-10),
         });
       } else {
         throw e;
@@ -72,14 +65,12 @@ export async function POST(request: Request) {
     const uid = user.uid;
     const userRef = adminDb.collection('users').doc(uid);
 
-    // Estrutura de documento robusta
     const userData = {
       email,
       name: name || email.split('@')[0],
       plan: planConfig.plan,
       planStatus: 'active',
       subscriberId: subscriber_id || null,
-      productId: product_id || null,
       pricingEnabled: planConfig.pricingEnabled,
       limits: {
         diagnosticsMonthly: planConfig.diagnosticsLimit,
@@ -88,38 +79,26 @@ export async function POST(request: Request) {
       usage: {
         reportsThisCycle: 0,
         pricingThisCycle: 0,
-        cycleStart: FieldValue.serverTimestamp(),
+        cycleStart: FieldValue.serverTimestamp(), // Inicia o ciclo de 30 dias
       },
+      lastPurchaseAt: FieldValue.serverTimestamp(), // Registra a última confirmação
       lastLoginAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     };
 
-    // Criar ou atualizar o perfil no Firestore
     await userRef.set(userData, { merge: true });
 
-    // Criar um evento de auditoria
     await userRef.collection('usageEvents').add({
-      action: 'subscription_update',
+      action: 'subscription_confirmed',
       status: 'success',
       timestamp: FieldValue.serverTimestamp(),
-      metadata: { 
-        source: 'xgrow_webhook', 
-        plan: planConfig.plan,
-        originalStatus: status 
-      }
+      metadata: { source: 'xgrow_webhook', plan: planConfig.plan }
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      uid, 
-      message: 'Access granted/updated successfully' 
-    });
+    return NextResponse.json({ success: true, uid });
 
   } catch (error: any) {
-    console.error('Webhook Error:', error);
-    return NextResponse.json({ 
-      error: 'Internal Server Error', 
-      details: error.message 
-    }, { status: 500 });
+    console.error('XGrow Webhook Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
