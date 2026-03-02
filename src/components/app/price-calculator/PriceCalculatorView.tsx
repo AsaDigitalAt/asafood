@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Trash2, PlusCircle, ArrowLeft, Calculator, ListChecks, Loader2, Save, Edit, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { calculateNewPrice, type Ingredient, type CalculationPayload, type PriceCalculationState } from '@/app/actions/calculate-price';
@@ -58,6 +59,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [profitMargin, setProfitMargin] = useState<number>(30);
   const [taxes, setTaxes] = useState<number>(7);
+  const [deliveryType, setDeliveryType] = useState<'propria' | 'ifood'>('ifood');
   const [result, setResult] = useState<PriceCalculationResult | null>(null);
 
   // --- Firestore Data ---
@@ -75,6 +77,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
     setIngredients([{ id: Date.now(), name: '', totalCost: 0, totalWeight: 1000, plateWeight: 0 }]);
     setProfitMargin(30);
     setTaxes(7);
+    setDeliveryType('ifood');
     setResult(null);
     setStep('form');
     setView('calculation');
@@ -95,6 +98,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
       ingredients,
       profitMargin,
       taxes,
+      deliveryType,
     };
 
     try {
@@ -271,9 +275,29 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                     <CardHeader>
                         <CardTitle>Dados do Produto</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <Label htmlFor="product-name">Nome do Produto</Label>
-                        <Input id="product-name" placeholder="Ex: X-Tudo da Casa" value={productName} onChange={e => setProductName(e.target.value)} className="text-base" />
+                    <CardContent className="space-y-6">
+                        <div>
+                            <Label htmlFor="product-name">Nome do Produto</Label>
+                            <Input id="product-name" placeholder="Ex: X-Tudo da Casa" value={productName} onChange={e => setProductName(e.target.value)} className="text-base" />
+                        </div>
+
+                        <div>
+                            <Label className="uppercase text-xs tracking-widest font-bold mb-3 block">Tipo de Entrega</Label>
+                            <RadioGroup
+                                value={deliveryType}
+                                onValueChange={(v: any) => setDeliveryType(v)}
+                                className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                            >
+                                <Label htmlFor="propria" className="flex items-center justify-center gap-3 p-4 bg-card border border-border rounded-xl cursor-pointer hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary">
+                                    <RadioGroupItem value="propria" id="propria" />
+                                    Entrega Própria
+                                </Label>
+                                <Label htmlFor="ifood" className="flex items-center justify-center gap-3 p-4 bg-card border border-border rounded-xl cursor-pointer hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary">
+                                    <RadioGroupItem value="ifood" id="ifood" />
+                                    Entrega Parceira
+                                </Label>
+                            </RadioGroup>
+                        </div>
                     </CardContent>
                 </Card>
 

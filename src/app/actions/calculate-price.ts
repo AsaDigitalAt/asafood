@@ -15,6 +15,7 @@ export interface CalculationPayload {
   ingredients: Ingredient[];
   profitMargin: number;
   taxes: number;
+  deliveryType: 'propria' | 'ifood';
 }
 
 // Type for the data returned by the webhook on success
