@@ -1,25 +1,21 @@
 
 import * as admin from 'firebase-admin';
 
-const firebaseAdminConfig = {
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'studio-8790382792-31236',
-};
-
 /**
  * Inicializa o Admin SDK do Firebase para operações seguras no backend.
- * Configura explicitamente o Storage Bucket para evitar erros de referência nula.
+ * Utiliza variáveis de ambiente para garantir compatibilidade com o ambiente de execução.
  */
 export function getAdminApp() {
   if (admin.apps.length > 0) {
     return admin.apps[0]!;
   }
 
-  // No ambiente do Firebase App Hosting, o credential.applicationDefault() 
-  // já possui as permissões necessárias para o projeto.
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || 'studio-8790382792-31236';
+
   return admin.initializeApp({
     credential: admin.credential.applicationDefault(),
-    projectId: firebaseAdminConfig.projectId,
-    storageBucket: `${firebaseAdminConfig.projectId}.firebasestorage.app`,
+    projectId: projectId,
+    storageBucket: `${projectId}.firebasestorage.app`,
   });
 }
 

@@ -33,77 +33,80 @@ const diagnosisSchema = z.object({
 
 /**
  * Salva imagem no Storage e processa diagnóstico via Webhook.
- * A inicialização do Admin App garante que o Bucket do Storage esteja acessível.
  */
 export async function generateDiagnosis(formData: FormData): Promise<FormState> {
   const rawFormData = Object.fromEntries(formData.entries());
   const validatedFields = diagnosisSchema.safeParse(rawFormData);
 
   if (!validatedFields.success) {
-    return { error: "Campos inválidos", nome: '', statusGeral: '', conversions: {}, discounts: {}, problems: [], actions: [], priorities: [], aiGeneratedPlan: null };
+    console.error("Validação falhou:", validatedFields.error.format());
+    return { error: "Campos inválidos no formulário.", nome: '', statusGeral: '', conversions: {}, discounts: {}, problems: [], actions: [], priorities: [], aiGeneratedPlan: null };
   }
 
   const { uid, funnelImage, restaurantName } = validatedFields.data;
 
   try {
-    // 1. Inicializa App Admin e Bucket do Storage
     const adminApp = getAdminApp();
     const storage = getStorage(adminApp).bucket();
     
-    // Processamento do buffer da imagem
-    const buffer = Buffer.from(await funnelImage.arrayBuffer());
-    const fileName = `diagnostics/${uid}/${Date.now()}-${funnelImage.name}`;
-    const file = storage.file(fileName);
+    // 1. Processamento da Imagem
+    let imageUrl = "";
+    let fileName = "";
+    
+    if (funnelImage && funnelImage instanceof File) {
+        const buffer = Buffer.from(await funnelImage.arrayBuffer());
+        fileName = `diagnostics/${uid}/${Date.now()}-${funnelImage.name}`;
+        const file = storage.file(fileName);
 
-    // Salva a imagem no bucket
-    await file.save(buffer, {
-      metadata: { contentType: funnelImage.type },
-    });
+        await file.save(buffer, {
+          metadata: { contentType: funnelImage.type },
+        });
 
-    // Gera URL assinada para que o Webhook possa ler a imagem
-    const [imageUrl] = await file.getSignedUrl({
-      action: 'read',
-      expires: '03-01-2500',
-    });
+        const [url] = await file.getSignedUrl({
+          action: 'read',
+          expires: '03-01-2500',
+        });
+        imageUrl = url;
+    }
 
-    // 2. Chamada ao Webhook do n8n/Produção
+    // 2. Chamada ao Webhook
     const webhookUrl = 'https://unreleasible-pocked-azucena.ngrok-free.dev/webhook/asafood';
     
-    // Prepara os dados para o webhook (multipart/form-data)
     const webhookFormData = new FormData();
     Object.entries(validatedFields.data).forEach(([key, value]) => {
       if (key !== 'funnelImage') webhookFormData.append(key, String(value));
     });
-    // Adiciona o arquivo original e a URL de acesso direto
-    webhookFormData.append('funnelImage', funnelImage);
+    
+    if (funnelImage instanceof File) {
+        webhookFormData.append('funnelImage', funnelImage);
+    }
     webhookFormData.append('imageUrl', imageUrl);
 
     const response = await fetch(webhookUrl, {
         method: 'POST',
         body: webhookFormData,
         headers: {
-          'ngrok-skip-browser-warning': 'true', // Pula tela de aviso do ngrok se necessário
+          'ngrok-skip-browser-warning': 'true',
         }
     });
 
     if (!response.ok) {
-        throw new Error(`Erro na conexão com o serviço de análise (${response.status})`);
+        throw new Error(`Serviço de análise indisponível (Status ${response.status})`);
     }
     
     const rawResultData = await response.json();
     const result = processWebhookData(rawResultData);
 
-    // 3. Persistência dos resultados no Firestore com controle de cota
+    // 3. Persistência e Controle de Cota
     if (!result.error) {
       const userRef = adminDb.collection('users').doc(uid);
       
       await adminDb.runTransaction(async (transaction) => {
         const userDoc = await transaction.get(userRef);
-        if (!userDoc.exists) throw new Error("Usuário não encontrado.");
+        if (!userDoc.exists) throw new Error("Usuário não encontrado no banco de dados.");
 
         const currentUsage = userDoc.data()?.usage?.reportsThisCycle || 0;
         
-        // Salva o relatório na subcoleção do usuário
         const reportRef = userRef.collection('diagnosisReports').doc();
         transaction.set(reportRef, {
           ...result,
@@ -113,7 +116,6 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
           createdAt: FieldValue.serverTimestamp(),
         });
 
-        // Atualiza contador de uso global do usuário
         transaction.update(userRef, {
           'usage.reportsThisCycle': currentUsage + 1,
           'updatedAt': FieldValue.serverTimestamp(),
@@ -124,9 +126,9 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
     return result;
 
   } catch (e: any) {
-    console.error("Erro em generateDiagnosis:", e);
+    console.error("Erro crítico em generateDiagnosis:", e);
     return { 
-      error: e.message || "Ocorreu um erro interno ao processar sua imagem.", 
+      error: e.message || "Erro interno ao processar o diagnóstico.", 
       nome: '', 
       statusGeral: '', 
       conversions: {}, 
@@ -139,15 +141,14 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
   }
 }
 
-/**
- * Normaliza os dados vindos do webhook para o formato esperado pelo Dashboard.
- */
-function processWebhookData(jsonResponse: any[]): FormState {
-    const data = jsonResponse[0] || {};
+function processWebhookData(jsonResponse: any): FormState {
+    // Se a resposta for um array, pegamos o primeiro item
+    const data = Array.isArray(jsonResponse) ? jsonResponse[0] : jsonResponse;
+    if (!data) return { error: "Resposta vazia do serviço.", nome: '', statusGeral: '', conversions: {}, discounts: {}, problems: [], actions: [], priorities: [], aiGeneratedPlan: null };
+
     const htmlReport = data.Relatório || "";
     const output = data.output || {};
 
-    // Extração do status geral via regex simples para o cabeçalho
     const statusGeralMatch = htmlReport.match(/Status geral do funil:<\/b>\s*([^<]+)/i);
     const statusGeral = statusGeralMatch ? statusGeralMatch[1].trim() : "Em Análise";
 
