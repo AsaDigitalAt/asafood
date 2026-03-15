@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { adminDb } from '@/lib/firebase-admin';
+import { adminDb, getAdminApp } from '@/lib/firebase-admin';
 import { getStorage } from 'firebase-admin/storage';
 import { FieldValue } from 'firebase-admin/firestore';
 
@@ -33,6 +33,7 @@ const diagnosisSchema = z.object({
 
 /**
  * Salva imagem no Storage e processa diagnóstico via Webhook.
+ * A inicialização do Admin App garante que o Bucket do Storage esteja acessível.
  */
 export async function generateDiagnosis(formData: FormData): Promise<FormState> {
   const rawFormData = Object.fromEntries(formData.entries());
@@ -45,42 +46,54 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
   const { uid, funnelImage, restaurantName } = validatedFields.data;
 
   try {
-    // 1. Upload da Imagem para o Storage
-    const storage = getStorage().bucket();
+    // 1. Inicializa App Admin e Bucket do Storage
+    const adminApp = getAdminApp();
+    const storage = getStorage(adminApp).bucket();
+    
+    // Processamento do buffer da imagem
     const buffer = Buffer.from(await funnelImage.arrayBuffer());
     const fileName = `diagnostics/${uid}/${Date.now()}-${funnelImage.name}`;
     const file = storage.file(fileName);
 
+    // Salva a imagem no bucket
     await file.save(buffer, {
       metadata: { contentType: funnelImage.type },
     });
 
-    // Torna o arquivo acessível (opcional, dependendo de como o webhook lê)
+    // Gera URL assinada para que o Webhook possa ler a imagem
     const [imageUrl] = await file.getSignedUrl({
       action: 'read',
       expires: '03-01-2500',
     });
 
-    // 2. Chamada ao Webhook (Mantendo a estrutura de comunicação externa)
+    // 2. Chamada ao Webhook do n8n/Produção
     const webhookUrl = 'https://unreleasible-pocked-azucena.ngrok-free.dev/webhook/asafood';
+    
+    // Prepara os dados para o webhook (multipart/form-data)
     const webhookFormData = new FormData();
     Object.entries(validatedFields.data).forEach(([key, value]) => {
       if (key !== 'funnelImage') webhookFormData.append(key, String(value));
     });
-    webhookFormData.append('funnelImage', funnelImage); // Envia o arquivo original
-    webhookFormData.append('imageUrl', imageUrl);      // Envia também a URL do Storage
+    // Adiciona o arquivo original e a URL de acesso direto
+    webhookFormData.append('funnelImage', funnelImage);
+    webhookFormData.append('imageUrl', imageUrl);
 
     const response = await fetch(webhookUrl, {
         method: 'POST',
         body: webhookFormData,
+        headers: {
+          'ngrok-skip-browser-warning': 'true', // Pula tela de aviso do ngrok se necessário
+        }
     });
 
-    if (!response.ok) throw new Error(`Webhook Error: ${response.status}`);
+    if (!response.ok) {
+        throw new Error(`Erro na conexão com o serviço de análise (${response.status})`);
+    }
     
     const rawResultData = await response.json();
     const result = processWebhookData(rawResultData);
 
-    // 3. Persistência no Firestore
+    // 3. Persistência dos resultados no Firestore com controle de cota
     if (!result.error) {
       const userRef = adminDb.collection('users').doc(uid);
       
@@ -90,7 +103,7 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
 
         const currentUsage = userDoc.data()?.usage?.reportsThisCycle || 0;
         
-        // Salva o relatório
+        // Salva o relatório na subcoleção do usuário
         const reportRef = userRef.collection('diagnosisReports').doc();
         transaction.set(reportRef, {
           ...result,
@@ -100,7 +113,7 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
           createdAt: FieldValue.serverTimestamp(),
         });
 
-        // Incrementa uso
+        // Atualiza contador de uso global do usuário
         transaction.update(userRef, {
           'usage.reportsThisCycle': currentUsage + 1,
           'updatedAt': FieldValue.serverTimestamp(),
@@ -112,15 +125,29 @@ export async function generateDiagnosis(formData: FormData): Promise<FormState> 
 
   } catch (e: any) {
     console.error("Erro em generateDiagnosis:", e);
-    return { error: e.message, nome: '', statusGeral: '', conversions: {}, discounts: {}, problems: [], actions: [], priorities: [], aiGeneratedPlan: null };
+    return { 
+      error: e.message || "Ocorreu um erro interno ao processar sua imagem.", 
+      nome: '', 
+      statusGeral: '', 
+      conversions: {}, 
+      discounts: {}, 
+      problems: [], 
+      actions: [], 
+      priorities: [], 
+      aiGeneratedPlan: null 
+    };
   }
 }
 
+/**
+ * Normaliza os dados vindos do webhook para o formato esperado pelo Dashboard.
+ */
 function processWebhookData(jsonResponse: any[]): FormState {
     const data = jsonResponse[0] || {};
     const htmlReport = data.Relatório || "";
     const output = data.output || {};
 
+    // Extração do status geral via regex simples para o cabeçalho
     const statusGeralMatch = htmlReport.match(/Status geral do funil:<\/b>\s*([^<]+)/i);
     const statusGeral = statusGeralMatch ? statusGeralMatch[1].trim() : "Em Análise";
 
