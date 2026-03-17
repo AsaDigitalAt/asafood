@@ -161,7 +161,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
-  const { data: userProfile } = useDoc<any>(userDocRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<any>(userDocRef);
 
   const isSuspended = userProfile?.planStatus !== 'active';
   
@@ -190,11 +190,14 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     }
   }, [user, form]);
   
+  // Lógica de limite robusta
   const usageCount = userProfile?.usage?.reportsThisCycle ?? 0;
   const plan = userProfile?.plan || 'plano_acelerador';
-  const usageLimit = planLimits[plan] || 0;
+  const usageLimit = planLimits[plan] ?? 0;
   const isDeveloper = plan === 'desenvolvedor';
-  const isLimitReached = !isDeveloper && usageCount >= usageLimit;
+  
+  // Só considera limite atingido se o perfil terminou de carregar e o plano existe
+  const isLimitReached = !isProfileLoading && !!userProfile && !isDeveloper && usageCount >= usageLimit;
 
   const onFormSubmit = async (values: z.infer<typeof diagnosisSchema>) => {
     if (!user || !firestore || !storage) return;
@@ -260,12 +263,12 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
       <HeroSection />
       <Marquee />
       <section className="bg-background px-4 py-24 md:py-32 max-w-4xl mx-auto">
-        {(isSuspended || isLimitReached) && (
+        {(isSuspended || isLimitReached) && !isProfileLoading && (
              <Alert variant="destructive" className="mb-12 danger-bg border-destructive/30 text-red-400">
                 <ShieldAlert className="h-5 w-5 !text-red-400" />
                 <AlertTitle className="font-bold">{isSuspended ? "Plano Inativo" : "Limite Atingido"}</AlertTitle>
                 <AlertDescription>
-                    {isSuspended ? "Seu plano está inativo. Contate o suporte." : `Limite de ${usageLimit} diagnósticos atingido.`}
+                    {isSuspended ? "Seu plano está inativo. Contate o suporte." : `Você atingiu seu limite mensal de ${usageLimit} diagnósticos.`}
                 </AlertDescription>
             </Alert>
         )}
@@ -352,7 +355,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
                 <Button 
                   type="submit" 
                   className="w-full h-16 rounded-full text-lg font-bold uppercase tracking-widest"
-                  disabled={form.formState.isSubmitting || isSuspended || isLimitReached}
+                  disabled={form.formState.isSubmitting || isSuspended || isLimitReached || isProfileLoading}
                 >
                   {form.formState.isSubmitting ? <Loader2 className="animate-spin" /> : "Gerar Diagnóstico"}
                 </Button>

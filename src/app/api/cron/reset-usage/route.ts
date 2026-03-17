@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -9,7 +8,6 @@ import { FieldValue } from 'firebase-admin/firestore';
  */
 
 export async function GET(request: Request) {
-  // Verificação de segurança simples (opcional: usar uma secret no header)
   const authHeader = request.headers.get('authorization');
   if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -22,7 +20,7 @@ export async function GET(request: Request) {
     // Busca usuários cujo ciclo começou há mais de 30 dias
     const usersSnapshot = await adminDb.collection('users')
       .where('usage.cycleStart', '<=', thirtyDaysAgo)
-      .where('planStatus', '==', 'active')
+      .where('subscription.status', '==', 'active')
       .get();
 
     const batch = adminDb.batch();
