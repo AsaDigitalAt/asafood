@@ -18,7 +18,6 @@ import { doc } from "firebase/firestore";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
-// Novos utilitários de fluxo
 import { uploadDiagnosticImage } from "@/lib/uploadDiagnosticImage";
 import { runFullDiagnostic } from "@/lib/diagnosticFlow";
 
@@ -155,7 +154,7 @@ const planLimits: Record<string, number> = {
 
 export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisViewProps) {
   const { toast } = useToast();
-  const { firestore } = useFirebase();
+  const { firestore, storage } = useFirebase();
   const { user } = useUser();
 
   const userDocRef = useMemoFirebase(() => {
@@ -198,7 +197,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
   const isLimitReached = !isDeveloper && usageCount >= usageLimit;
 
   const onFormSubmit = async (values: z.infer<typeof diagnosisSchema>) => {
-    if (!user || !firestore) return;
+    if (!user || !firestore || !storage) return;
     if (isSuspended || isLimitReached) {
         toast({ variant: "destructive", title: "Ação Bloqueada", description: isSuspended ? "Plano inativo." : "Limite mensal atingido." });
         return;
@@ -207,10 +206,8 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     onFormSubmitStart();
 
     try {
-        // Passo 1: Upload da Imagem no Storage (Client Side)
-        const uploadRes = await uploadDiagnosticImage(values.funnelImage);
+        const uploadRes = await uploadDiagnosticImage(storage, values.funnelImage);
 
-        // Passos 2-4: Executar fluxo completo via diagnosticFlow (Fetch autenticado)
         const { final } = await runFullDiagnostic({
             restaurantName: values.restaurantName,
             foodCategory: values.foodCategory,
@@ -226,7 +223,6 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
             imageOriginalName: uploadRes.imageOriginalName
         });
 
-        // Mapeamos a resposta final para o FormState esperado pela DashboardView
         const result: FormState = {
             nome: final.nome || values.restaurantName,
             statusGeral: final.statusGeral || "Análise Concluída",
@@ -368,4 +364,3 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     </>
   );
 }
-

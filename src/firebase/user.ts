@@ -17,6 +17,7 @@ export const createUserProfile = async (app: FirebaseApp, uid: string, email: st
             planStatus: 'active',
             usage: {
                 reportsThisCycle: 0,
+                pricingThisCycle: 0,
                 cycleStart: serverTimestamp()
             },
             createdAt: serverTimestamp(),
@@ -39,10 +40,15 @@ export const upsertUserProfileOnLogin = async (app: FirebaseApp, user: User) => 
     try {
         const docSnap = await getDoc(userDocRef);
         if (docSnap.exists()) {
-            // Document exists, just update last login
-            await updateDoc(userDocRef, {
+            const data = docSnap.data();
+            // Migração: se não tiver tenantId, define como uid
+            const updates: any = {
                 lastLoginAt: serverTimestamp(),
-            });
+            };
+            if (!data.tenantId) {
+                updates.tenantId = user.uid;
+            }
+            await updateDoc(userDocRef, updates);
         } else {
             // Document doesn't exist, create it on first login
             await createUserProfile(app, user.uid, user.email);

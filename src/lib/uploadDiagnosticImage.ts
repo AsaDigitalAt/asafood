@@ -1,11 +1,12 @@
 import { getAuth } from "firebase/auth";
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL, FirebaseStorage } from "firebase/storage";
 
 /**
- * Faz upload da imagem do diagnóstico para o Storage seguindo path determinístico:
- * diagnostics/uploads/{uid}/{timestamp}_{filename}
+ * Faz upload da imagem do diagnóstico para o Storage seguindo path determinístico.
+ * Agora aceita a instância de storage do provider para garantir consistência de Auth.
  */
 export async function uploadDiagnosticImage(
+  storage: FirebaseStorage,
   file: File,
   onProgress?: (pct: number) => void
 ) {
@@ -18,7 +19,6 @@ export async function uploadDiagnosticImage(
   const safeName = file.name.replace(/[^\w.\-]+/g, "_");
   const storagePath = `diagnostics/uploads/${uid}/${timestamp}_${safeName}`;
 
-  const storage = getStorage();
   const storageRef = ref(storage, storagePath);
 
   const metadata = {
@@ -40,7 +40,10 @@ export async function uploadDiagnosticImage(
           onProgress(Math.round(pct));
         }
       },
-      (err) => reject(err),
+      (err) => {
+        console.error("Erro durante upload no Storage:", err);
+        reject(err);
+      },
       () => resolve()
     );
   });
