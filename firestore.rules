@@ -17,7 +17,11 @@ service cloud.firestore {
     
     // Check if the user is a member of the tenant
     function isTenantMember(tenantId) {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId == tenantId;
+      return isSignedIn() && (
+        request.auth.uid == tenantId || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId == tenantId)
+      );
     }
 
     // --- Collection Rules ---
@@ -28,20 +32,20 @@ service cloud.firestore {
     }
     
     match /users/{userId} {
+      // Allow user to read and update their own profile (necessary for client-side upsert/login)
       allow get: if isOwner(userId) || isAdmin();
+      allow create, update: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Only Admin SDK / Webhooks should create/update plan critical fields
-      allow create, update: if isAdmin();
       allow delete: if false;
 
-      // Permissões para subcoleções de precificação e diagnósticos legados
+      // Permissions for price calculations and legacy reports
       match /priceCalculations/{calculationId} {
         allow read, write: if isOwner(userId) || isAdmin();
       }
       
       match /diagnosisReports/{reportId} {
         allow read: if isOwner(userId) || isAdmin();
-        allow write: if false;
+        allow write: if false; // Reports are only written via backend
       }
     }
 
@@ -62,7 +66,7 @@ service cloud.firestore {
     }
 
     match /billing_events/{eventId} {
-      allow read, write: if false; // Somente via Admin SDK / Webhooks
+      allow read, write: if false; // Only via Admin SDK / Webhooks
     }
   }
 }
