@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -80,57 +79,40 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
     icon,
     text,
     adminOnly = false,
-    locked = false,
   }: {
     view: View;
     icon: React.ReactNode;
     text: string;
     adminOnly?: boolean;
-    locked?: boolean;
   }) => {
     if (adminOnly && !isAdmin) return null;
-  
-    const isClickable = !locked;
   
     return (
       <div
         className={cn(
-          "flex items-center justify-between gap-4 p-4 rounded-xl font-bold text-sm transition-all duration-300",
-          isClickable
-            ? "cursor-pointer text-white/60 hover:bg-white/10 hover:text-white"
-            : "cursor-not-allowed text-white/20",
-          currentView === view &&
-            isClickable &&
-            "bg-white/10 text-white"
+          "flex items-center justify-between gap-4 p-4 rounded-xl font-bold text-sm transition-all duration-300 cursor-pointer text-white/60 hover:bg-white/10 hover:text-white",
+          currentView === view && "bg-white/10 text-white"
         )}
         onClick={() => {
-          if (isClickable) {
-            onNavigate(view);
-            setMenuOpen(false);
-          }
+          onNavigate(view);
+          setMenuOpen(false);
         }}
       >
         <div className="flex items-center gap-4">
           {icon}
           <span>{text}</span>
         </div>
-        {locked && (
-          <Lock className="h-4 w-4 flex-shrink-0 text-white/30" />
-        )}
       </div>
     );
   };
   
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || '...';
   
-  const planName = userProfile?.plan ? planLabels[userProfile.plan] : "Plano Acelerador";
+  const planName = userProfile?.plan ? planLabels[userProfile.plan] : "Carregando...";
   const usageCount = userProfile?.usage?.reportsThisCycle ?? 0;
-  // Fallback para 4 se o plano não for identificado
   const usageLimit = userProfile?.plan ? (planLimits[userProfile.plan] ?? 4) : 4;
   const isDeveloper = userProfile?.plan === 'desenvolvedor';
   const usageText = isDeveloper ? `${usageCount} / ∞` : `${usageCount} / ${usageLimit}`;
-
-  const isHubView = currentView === 'hub';
 
   return (
     <header className={cn(
@@ -139,7 +121,6 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
       "bg-transparent"
     )}>
       <div className="flex items-center gap-6">
-        {/* Menu */}
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setMenuOpen(!isMenuOpen)}
@@ -164,10 +145,9 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
             <NavItem view="price-calculator" icon={<Calculator className="w-5 h-5" />} text="Calculadora de Preços" />
             <NavItem view="restaurant" icon={<Store className="w-5 h-5" />} text="Meu Restaurante" />
             <NavItem view="admin" icon={<Shield className="w-5 h-5" />} text="Painel do Administrador" adminOnly={true} />
-            <NavItem view="menu-analysis" icon={<BookOpenCheck className="w-5 h-5" />} text="Análise de Cardápio" locked={true} />
+            <NavItem view="menu-analysis" icon={<BookOpenCheck className="w-5 h-5" />} text="Análise de Cardápio" />
           </nav>
         </div>
-        {/* Brand */}
         <div onClick={() => onNavigate('hub')} className="cursor-pointer transition-transform hover:scale-105 active:scale-95">
           <Image
             src="https://firebasestorage.googleapis.com/v0/b/base-arquivos.firebasestorage.app/o/Logo%20ASA%20OFF.png?alt=media&token=62ef02f9-1b75-4a7a-b496-b56184407e2f"
@@ -179,7 +159,6 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
         </div>
       </div>
 
-      {/* User Profile */}
       <div ref={profileRef} className="relative">
         <div onClick={() => setProfileOpen(!isProfileOpen)} className="flex items-center gap-4 cursor-pointer">
           <div className="relative group">

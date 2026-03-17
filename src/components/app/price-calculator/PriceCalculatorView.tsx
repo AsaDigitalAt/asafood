@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Trash2, PlusCircle, ArrowLeft, Calculator, ListChecks, Loader2, Save, Edit, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { Trash2, PlusCircle, ArrowLeft, Calculator, ListChecks, Loader2, Save, Edit, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { type Ingredient, type CalculationPayload } from '@/app/actions/calculate-price';
+import { type Ingredient } from '@/app/actions/calculate-price';
 import { runPricingCalculation } from '@/lib/pricingFlow';
 import { useFirebase, useUser, useMemoFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
@@ -60,6 +60,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   const [deliveryType, setDeliveryType] = useState<'propria' | 'ifood'>('ifood');
   const [result, setResult] = useState<PriceCalculationResult | null>(null);
 
+  // Perfil do usuário para validação de plano no momento do clique
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'users', user.uid);
@@ -69,12 +70,13 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   const isSuspended = userProfile?.planStatus !== 'active' && !!userProfile;
   const pricingEnabled = userProfile?.features?.pricingEnabled !== false;
 
+  // Busca o histórico do usuário
   const calculationsQuery = useMemoFirebase(() => {
       if (!user || !firestore) return null;
       return query(collection(firestore, 'users', user.uid, 'priceCalculations'), orderBy('createdAt', 'desc'));
   }, [firestore, user]);
   
-  const { data: savedCalculations, isLoading: areCalculationsLoading, error: calculationsError } = useCollection<SavedCalculation>(calculationsQuery);
+  const { data: savedCalculations, isLoading: areCalculationsLoading } = useCollection<SavedCalculation>(calculationsQuery);
 
   const handleNewCalculation = () => {
     setProductName('');
@@ -89,11 +91,12 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   };
 
   const handleCalculatePrice = async () => {
+    // A restrição agora ocorre apenas no momento de disparar o cálculo
     if (isSuspended || !pricingEnabled) {
         toast({ 
           variant: "destructive", 
-          title: "Acesso Bloqueado", 
-          description: isSuspended ? "Sua assinatura está inativa ou pendente." : "Esta ferramenta não faz parte do seu plano atual." 
+          title: "Ação Bloqueada", 
+          description: isSuspended ? "Seu plano está inativo. Regularize sua assinatura." : "Esta ferramenta não faz parte do seu plano atual." 
         });
         return;
     }
@@ -219,6 +222,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
             </div>
         </div>
 
+        {/* Alerta informativo - não bloqueia a página */}
         {(isSuspended || !pricingEnabled) && !isProfileLoading && (
              <Alert variant="destructive" className="mb-8 danger-bg border-destructive/30 text-red-400">
                 <ShieldAlert className="h-5 w-5 !text-red-400" />

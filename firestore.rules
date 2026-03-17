@@ -15,15 +15,6 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
     
-    // Check if the user is a member of the tenant
-    function isTenantMember(tenantId) {
-      return isSignedIn() && (
-        request.auth.uid == tenantId || 
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId == tenantId)
-      );
-    }
-
     // --- Collection Rules ---
 
     // Admin Roles
@@ -32,7 +23,8 @@ service cloud.firestore {
       allow list, write: if false;
     }
     
-    // User Data Tree - Permissão total para o dono em qualquer profundidade
+    // User Data Tree - Permissão total e explícita para o dono
+    // Esta regra garante que o usuário acesse seu perfil e todas as subcoleções (diagnósticos, cálculos, etc)
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
 
@@ -41,20 +33,16 @@ service cloud.firestore {
       }
     }
 
-    // Multi-tenant structures
+    // Tenancy-based structures (for shared diagnostics/products if used)
     match /tenants/{tenantId} {
-      allow read: if isTenantMember(tenantId) || isAdmin();
+      allow read, write: if isOwner(tenantId) || isAdmin();
       
-      match /diagnostics/{diagnosticId} {
-        allow read: if isTenantMember(tenantId) || isAdmin();
-      }
-
-      match /products/{productId} {
-        allow read: if isTenantMember(tenantId) || isAdmin();
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(tenantId) || isAdmin();
       }
     }
 
-    // Billing events
+    // Billing events (Admin only)
     match /billing_events/{eventId} {
       allow read: if isAdmin();
     }
