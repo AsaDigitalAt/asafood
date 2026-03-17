@@ -2,10 +2,8 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     // Permite que usuários autenticados façam upload apenas para sua própria pasta
-    // O path deve coincidir exatamente com o definido no uploadDiagnosticImage.ts
-    match /diagnostics/uploads/{userId}/{allPaths=**} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId;
+    match /diagnostics/uploads/{userId}/{fileName} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }

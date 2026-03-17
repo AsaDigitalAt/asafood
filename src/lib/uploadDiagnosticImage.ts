@@ -10,12 +10,15 @@ export async function uploadDiagnosticImage(
   file: File,
   onProgress?: (pct: number) => void
 ) {
-  const auth = getAuth();
+  // Get auth from the app associated with the storage instance
+  const auth = getAuth(storage.app);
   const user = auth.currentUser;
+  
   if (!user) throw new Error("Você precisa estar logado para enviar a imagem.");
 
   const uid = user.uid;
   const timestamp = Date.now();
+  // Sanitize filename to avoid path issues
   const safeName = file.name.replace(/[^\w.\-]+/g, "_");
   const storagePath = `diagnostics/uploads/${uid}/${timestamp}_${safeName}`;
 
