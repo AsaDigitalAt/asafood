@@ -6,22 +6,23 @@ import { FieldValue } from 'firebase-admin/firestore';
 /**
  * Webhook para integração com XGrow.
  * Mapeia os IDs de produto da XGrow para as configurações de plano do Asa Food.
+ * IDs baseados no payload real: 102562 (Único), 102564 (Duplo), 102566 (Acelerador)
  */
 
 const PLAN_MAPPING: Record<string, any> = {
-  '102562': { // Identificado no log como Plano Único
+  '102562': {
     plan: 'plano_unico',
     diagnosticsLimit: 1,
     pricingEnabled: false,
     pricingLimit: 0,
   },
-  '102563': { // ID fictício para Plano Duplo (Ajustar se souber o real)
+  '102564': {
     plan: 'plano_duplo',
     diagnosticsLimit: 2,
     pricingEnabled: true,
     pricingLimit: 20,
   },
-  '102564': { // ID fictício para Plano Acelerador (Ajustar se souber o real)
+  '102566': {
     plan: 'plano_acelerador',
     diagnosticsLimit: 4,
     pricingEnabled: true,
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    // Mapeamento dos campos específicos enviados pela XGrow no payload de "Compra Aprovada"
+    // Extração baseada no payload real da XGrow (visto no print)
     const email = body.subscriber_email;
     const name = body.subscriber_name;
     const planId = String(body.subscriber_plan_id);
@@ -41,7 +42,9 @@ export async function POST(request: Request) {
     const paymentStatus = body.payment_status;
     const subscriberId = body.subscriber_id;
 
-    // Validação de segurança: se não houver email, não podemos prosseguir
+    // Log para depuração em ambiente de desenvolvimento (opcional)
+    console.log('XGrow Webhook Received:', { email, planId, eventType, paymentStatus });
+
     if (!email) {
       return NextResponse.json({ 
         ok: false, 
@@ -49,14 +52,21 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Apenas processamos se o evento for de aprovação de pagamento
-    const isApproved = eventType === 'onApprovePayment' || paymentStatus === 'paid';
-    if (!isApproved) {
-      return NextResponse.json({ ok: true, message: 'Evento ignorado (não é aprovação/pagamento)' }, { status: 200 });
+    // Validação do Plano
+    const planConfig = PLAN_MAPPING[planId];
+    if (!planConfig) {
+      return NextResponse.json({ 
+        ok: false, 
+        error: "Plano inválido ou não reconhecido.",
+        receivedPlanId: planId 
+      }, { status: 400 });
     }
 
-    // Busca a configuração do plano ou define o Acelerador como fallback
-    const planConfig = PLAN_MAPPING[planId] || PLAN_MAPPING['102564'];
+    // Apenas processamos se o evento for de aprovação de pagamento ou status pago
+    const isApproved = eventType === 'onApprovePayment' || paymentStatus === 'paid' || paymentStatus === 'approved';
+    if (!isApproved) {
+      return NextResponse.json({ ok: true, message: 'Evento ignorado (não é uma aprovação definitiva)' }, { status: 200 });
+    }
 
     let user;
     try {
@@ -64,11 +74,11 @@ export async function POST(request: Request) {
       user = await adminAuth.getUserByEmail(email);
     } catch (e: any) {
       if (e.code === 'auth/user-not-found') {
-        // Cria novo usuário se não existir
+        // Cria novo usuário se não existir. Senha padrão é gerada mas o usuário pode resetar.
         user = await adminAuth.createUser({
           email,
           displayName: name || email.split('@')[0],
-          password: Math.random().toString(36).slice(-10), // Senha aleatória inicial
+          password: Math.random().toString(36).slice(-10) + 'A1!', 
         });
       } else {
         throw e;
@@ -78,11 +88,11 @@ export async function POST(request: Request) {
     const uid = user.uid;
     const userRef = adminDb.collection('users').doc(uid);
 
-    // Prepara os dados do usuário seguindo a arquitetura multi-tenant e de cotas
+    // Estrutura de dados seguindo a arquitetura multi-tenant e de cotas
     const userData = {
       email,
       name: name || email.split('@')[0],
-      tenantId: uid, // Inicialmente cada usuário é seu próprio tenant
+      tenantId: uid, // Por padrão, o tenantId é o próprio UID para novos usuários
       plan: planConfig.plan,
       planStatus: 'active',
       subscriberId: subscriberId || null,
@@ -100,10 +110,10 @@ export async function POST(request: Request) {
       updatedAt: FieldValue.serverTimestamp(),
     };
 
-    // Salva ou atualiza os dados no Firestore
+    // Salva ou atualiza os dados no Firestore de forma definitiva
     await userRef.set(userData, { merge: true });
 
-    // Registra o evento de uso para auditoria
+    // Registro de Auditoria
     await userRef.collection('usageEvents').add({
       action: 'subscription_confirmed',
       status: 'success',
@@ -111,14 +121,16 @@ export async function POST(request: Request) {
       metadata: { 
         source: 'xgrow_webhook', 
         plan: planConfig.plan, 
-        xgrowPlanId: planId 
+        xgrowPlanId: planId,
+        subscriberId: subscriberId
       }
     });
 
     return NextResponse.json({ 
       ok: true, 
       message: 'Usuário processado com sucesso',
-      uid: uid 
+      uid: uid,
+      plan: planConfig.plan
     });
 
   } catch (error: any) {
