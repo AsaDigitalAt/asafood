@@ -1,28 +1,49 @@
 import { ENDPOINTS } from "./endpoints";
 import { authedPost } from "./authedFetch";
 
-export async function createDiagnostic(body: Record<string, any>) {
-  return authedPost(ENDPOINTS.createDiagnostic, body);
-}
+/**
+ * Orquestra o fluxo completo de diagnóstico chamando as Cloud Functions 2nd Gen.
+ * O backend deriva o UID/Tenant do token de autorização.
+ */
+export async function runFullDiagnostic(input: {
+  restaurantName: string;
+  foodCategory: string;
+  deliveryType: string;
+  currentMonthRevenue: number;
+  currentMonthDiscounts: number;
+  previousMonthRevenue: number;
+  previousMonthDiscounts: number;
+  email: string;
+  storagePath: string;
+  imageContentType: string;
+  imageOriginalName: string;
+}) {
+  // 1. Criar o documento do diagnóstico (Status: queued)
+  const createResponse = await authedPost(ENDPOINTS.createDiagnostic, {
+    restaurantName: input.restaurantName,
+    nicho: input.foodCategory,
+    tipoEntrega: input.deliveryType,
+    fatAtual: input.currentMonthRevenue,
+    descAtual: input.currentMonthDiscounts,
+    fatAnterior: input.previousMonthRevenue,
+    descAnterior: input.previousMonthDiscounts,
+    email: input.email,
+    image: {
+      storagePath: input.storagePath,
+      contentType: input.imageContentType,
+      originalName: input.imageOriginalName,
+    },
+  });
 
-export async function processDiagnostic(diagnosticId: string) {
-  return authedPost(ENDPOINTS.processDiagnostic, { diagnosticId });
-}
+  const diagnosticId = createResponse.diagnosticId;
+  if (!diagnosticId) throw new Error("Falha ao iniciar diagnóstico: ID não retornado.");
 
-export async function generatePlan(diagnosticId: string) {
-  return authedPost(ENDPOINTS.generatePlan, { diagnosticId });
-}
+  // 2. Processar a imagem (OCR / Extração de Métricas)
+  await authedPost(ENDPOINTS.processDiagnostic, { diagnosticId });
 
-export async function runFullDiagnostic(body: Record<string, any>) {
-  // 1) cria
-  const created = await createDiagnostic(body);
-  const diagnosticId = created.diagnosticId as string;
+  // 3. Gerar o Plano de Ação (IA)
+  const finalResponse = await authedPost(ENDPOINTS.generatePlan, { diagnosticId });
 
-  // 2) processa imagem (extrai números)
-  await processDiagnostic(diagnosticId);
-
-  // 3) gera plano final
-  const final = await generatePlan(diagnosticId);
-
-  return { created, final };
+  // O backend retorna o objeto 'final' consolidado
+  return finalResponse;
 }

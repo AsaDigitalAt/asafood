@@ -1,9 +1,9 @@
 import { getAuth } from "firebase/auth";
-import { getStorage, ref, uploadBytesResumable } from "firebase/storage";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 /**
- * Faz upload da imagem do diagnóstico para o Storage e retorna o storagePath
- * que o backend usa para ler a imagem.
+ * Faz upload da imagem do diagnóstico para o Storage seguindo path determinístico:
+ * diagnostics/uploads/{uid}/{timestamp}_{filename}
  */
 export async function uploadDiagnosticImage(
   file: File,
@@ -14,39 +14,43 @@ export async function uploadDiagnosticImage(
   if (!user) throw new Error("Você precisa estar logado para enviar a imagem.");
 
   const uid = user.uid;
-
-  // path recomendado (fácil de controlar em rules)
+  const timestamp = Date.now();
   const safeName = file.name.replace(/[^\w.\-]+/g, "_");
-  const ts = Date.now();
-  const storagePath = `diagnostics_uploads/${uid}/${ts}-${safeName}`;
+  const storagePath = `diagnostics/uploads/${uid}/${timestamp}_${safeName}`;
 
   const storage = getStorage();
   const storageRef = ref(storage, storagePath);
 
-  const task = uploadBytesResumable(storageRef, file, {
+  const metadata = {
     contentType: file.type || "image/jpeg",
     customMetadata: {
       uid,
       originalName: file.name,
     },
-  });
+  };
+
+  const task = uploadBytesResumable(storageRef, file, metadata);
 
   await new Promise<void>((resolve, reject) => {
     task.on(
       "state_changed",
       (snap) => {
-        if (!onProgress) return;
-        const pct = (snap.bytesTransferred / snap.totalBytes) * 100;
-        onProgress(Math.round(pct));
+        if (onProgress) {
+          const pct = (snap.bytesTransferred / snap.totalBytes) * 100;
+          onProgress(Math.round(pct));
+        }
       },
       (err) => reject(err),
       () => resolve()
     );
   });
 
+  const downloadURL = await getDownloadURL(storageRef);
+
   return {
     storagePath,
-    imageContentType: file.type || "image/jpeg",
+    imageContentType: metadata.contentType,
     imageOriginalName: file.name,
+    downloadURL,
   };
 }
