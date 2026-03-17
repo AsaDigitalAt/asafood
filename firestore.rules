@@ -26,49 +26,43 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
-    // Regra para Administradores
+    // Admin Roles - Allows checking if a user is admin
     match /roles_admin/{userId} {
       allow get: if isSignedIn();
       allow list, write: if false;
     }
     
-    // Regras de Usuário (Isolamento por UID)
+    // User Data Tree - Full recursive access for the owner or admin
     match /users/{userId} {
-      // Permite leitura e escrita completa do próprio nó de usuário
       allow read, write: if isOwner(userId) || isAdmin();
 
-      // Regras explícitas para subcoleções para evitar ambiguidades de herança
-      match /priceCalculations/{calculationId} {
-        allow read, write: if isOwner(userId) || isAdmin();
-      }
-      
-      match /diagnosisReports/{reportId} {
-        allow read: if isOwner(userId) || isAdmin();
-      }
-
-      match /usageEvents/{eventId} {
+      match /{allSubcollections=**} {
         allow read, write: if isOwner(userId) || isAdmin();
       }
     }
 
-    // Estrutura multi-tenant para diagnósticos e produtos
+    // Multi-tenant structures (tenants/{tenantId}/...)
     match /tenants/{tenantId} {
       allow read: if isTenantMember(tenantId) || isAdmin();
       
       match /diagnostics/{diagnosticId} {
         allow read: if isTenantMember(tenantId) || isAdmin();
-        allow write: if false; // Apenas via Admin SDK (Functions)
       }
 
       match /products/{productId} {
         allow read: if isTenantMember(tenantId) || isAdmin();
-        allow write: if false;
       }
     }
 
-    // Eventos de faturamento e webhooks (Apenas Admin)
+    // Billing and Webhook deduplication events
     match /billing_events/{eventId} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin();
+      // Writes are restricted to Admin SDK in Cloud Functions
+    }
+    
+    // Legacy support (optional, can be removed if not used)
+    match /billing_events_legacy/{eventId} {
+       allow read: if isAdmin();
     }
   }
 }

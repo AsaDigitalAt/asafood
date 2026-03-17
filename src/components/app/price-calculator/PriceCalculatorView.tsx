@@ -73,16 +73,15 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<any>(userDocRef);
 
   const isSuspended = userProfile?.planStatus === 'inactive' || userProfile?.planStatus === 'past_due';
-  const pricingEnabled = userProfile?.features?.pricingEnabled !== false;
+  // If profile is loading or features not defined, we default to enabled to allow viewing the form
+  const pricingEnabled = userProfile ? userProfile?.features?.pricingEnabled !== false : true;
 
   // --- Firestore Data ---
   const calculationsQuery = useMemoFirebase(() => {
       if (!user || !firestore) return null;
-      // Usamos path absoluto para garantir compatibilidade com as regras
       return query(collection(firestore, 'users', user.uid, 'priceCalculations'), orderBy('createdAt', 'desc'));
   }, [firestore, user]);
   
-  // Capturamos erro aqui para evitar que a página inteira trave, mas com as regras corrigidas o erro não deve ocorrer
   const { data: savedCalculations, isLoading: areCalculationsLoading, error: calculationsError } = useCollection<SavedCalculation>(calculationsQuery);
 
 
