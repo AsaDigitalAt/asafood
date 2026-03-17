@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Trash2, PlusCircle, ArrowLeft, Calculator, ListChecks, Loader2, Save, Edit, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { calculateNewPrice, type Ingredient, type CalculationPayload, type PriceCalculationState } from '@/app/actions/calculate-price';
+import { type Ingredient, type CalculationPayload, type PriceCalculationState } from '@/app/actions/calculate-price';
+import { runPricingCalculation } from '@/lib/pricingFlow';
 import { useFirebase, useUser, useMemoFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
@@ -30,7 +31,7 @@ interface PriceCalculatorViewProps {
 }
 
 // --- Types ---
-type PriceCalculationResult = PriceCalculationState['data'];
+type PriceCalculationResult = any[];
 type View = 'initial' | 'calculation' | 'view_prices';
 type CalculationStep = 'form' | 'result';
 type SavedCalculation = {
@@ -102,16 +103,13 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
     };
 
     try {
-      const resultState = await calculateNewPrice(payload);
-
-      if (resultState.error) {
-        throw new Error(resultState.error);
-      }
+      // Migrado para o novo fluxo autenticado de Cloud Functions
+      const data = await runPricingCalculation(payload);
       
-      const webhookResponse = resultState.data?.[0];
+      const webhookResponse = data?.[0];
 
       if (!webhookResponse || !webhookResponse.output) {
-        throw new Error("Resposta do webhook inválida ou vazia.");
+        throw new Error("Resposta do servidor inválida ou vazia.");
       }
       
       if(webhookResponse.output.erros && webhookResponse.output.erros.length > 0) {
@@ -122,7 +120,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
         toast({ title: "Avisos da Análise", description: webhookResponse.output.avisos.join(', ') });
       }
 
-      setResult(resultState.data);
+      setResult(data);
       setStep('result');
       toast({
         title: "Cálculo bem-sucedido!",
@@ -176,11 +174,9 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   const handleViewSaved = (calculation: SavedCalculation) => {
     setProductName(calculation.productName);
     setResult([calculation.calculationData]); // Wrap in array to match structure
-    // We don't have the original ingredients, so we can't let them "refazer"
-    // We show the result in a read-only like state
     setStep('result');
     setView('calculation');
-    setIsFromSaved(true); // Flag to hide "refazer" and change buttons
+    setIsFromSaved(true); 
   };
 
 
