@@ -12,6 +12,7 @@ export const createUserProfile = async (app: FirebaseApp, uid: string, email: st
     try {
         await setDoc(userDocRef, {
             email: email,
+            tenantId: uid, // Inicia o tenantId como o próprio UID do usuário para garantir isolamento inicial
             plan: 'plano_acelerador',
             planStatus: 'active',
             usage: {

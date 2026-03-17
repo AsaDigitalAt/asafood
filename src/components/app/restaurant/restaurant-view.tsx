@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -53,15 +52,15 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
   }, [firestore, user]);
   const { data: userProfile } = useDoc<any>(userDocRef);
 
-  // Latest Diagnostics
+  // Latest Diagnostics (Migrated to tenants/{tenantId}/diagnostics)
   const reportsQuery = useMemoFirebase(() => {
-    if (!user) return null;
+    if (!firestore || !userProfile?.tenantId) return null;
     return query(
-      collection(firestore, `users/${user.uid}/diagnosisReports`), 
+      collection(firestore, `tenants/${userProfile.tenantId}/diagnostics`), 
       orderBy('createdAt', 'desc'),
       limit(3)
     );
-  }, [firestore, user]);
+  }, [firestore, userProfile?.tenantId]);
   const { data: reports } = useCollection<any>(reportsQuery);
 
   // Latest Price Calculations
@@ -179,7 +178,7 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
                       onClick={() => onNavigate('action-plan')}
                       className="group flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all"
                     >
-                      <span className="text-white font-bold text-sm truncate pr-4">{report.nome}</span>
+                      <span className="text-white font-bold text-sm truncate pr-4">{report.nome || report.input?.restaurantName}</span>
                       <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white transition-colors" />
                     </div>
                   )) : (
