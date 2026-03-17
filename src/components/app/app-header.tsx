@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -122,9 +123,10 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
   
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || '...';
   
-  const planName = userProfile?.plan ? planLabels[userProfile.plan] : "Carregando...";
+  const planName = userProfile?.plan ? planLabels[userProfile.plan] : "Plano Acelerador";
   const usageCount = userProfile?.usage?.reportsThisCycle ?? 0;
-  const usageLimit = userProfile?.plan ? planLimits[userProfile.plan] : 0;
+  // Fallback para 4 se o plano não for identificado
+  const usageLimit = userProfile?.plan ? (planLimits[userProfile.plan] ?? 4) : 4;
   const isDeveloper = userProfile?.plan === 'desenvolvedor';
   const usageText = isDeveloper ? `${usageCount} / ∞` : `${usageCount} / ${usageLimit}`;
 

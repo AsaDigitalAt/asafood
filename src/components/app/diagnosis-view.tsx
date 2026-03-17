@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -163,7 +164,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
   }, [firestore, user]);
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<any>(userDocRef);
 
-  const isSuspended = userProfile?.planStatus !== 'active';
+  const isSuspended = userProfile?.planStatus !== 'active' && !!userProfile;
   
   const form = useForm<z.infer<typeof diagnosisSchema>>({
     resolver: zodResolver(diagnosisSchema),
@@ -193,7 +194,8 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
   // Lógica de limite robusta
   const usageCount = userProfile?.usage?.reportsThisCycle ?? 0;
   const plan = userProfile?.plan || 'plano_acelerador';
-  const usageLimit = planLimits[plan] ?? 0;
+  // Se o plano não for identificado, o padrão agora é 4 diagnósticos
+  const usageLimit = planLimits[plan] ?? 4;
   const isDeveloper = plan === 'desenvolvedor';
   
   // Só considera limite atingido se o perfil terminou de carregar e o plano existe
