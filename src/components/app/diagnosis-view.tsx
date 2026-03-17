@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -8,16 +7,20 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { BarChart3, CheckCircle, Loader2, UploadCloud, ChevronDown, ShieldAlert, Mail } from "lucide-react";
+import { BarChart3, CheckCircle, Loader2, UploadCloud, ChevronDown, ShieldAlert } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from 'next/image';
-import { generateDiagnosis, FormState } from "@/app/actions/generate-diagnosis";
+import type { FormState } from "@/app/actions/generate-diagnosis";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useFirebase, useUser, useMemoFirebase, FirestorePermissionError, errorEmitter } from "@/firebase";
-import { collection, addDoc, serverTimestamp, doc, updateDoc } from "firebase/firestore";
+import { useFirebase, useUser, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+
+// Novos utilitários de fluxo
+import { uploadDiagnosticImage } from "@/lib/uploadDiagnosticImage";
+import { runFullDiagnostic } from "@/lib/diagnosticFlow";
 
 const diagnosisSchema = z.object({
   restaurantName: z.string().min(1, "O nome do restaurante é obrigatório."),
@@ -203,42 +206,56 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
 
     onFormSubmitStart();
 
-    const formData = new FormData();
-    Object.entries(values).forEach(([key, value]) => {
-        formData.append(key, value);
-    });
-
-    let usageEventId: string | null = null;
     try {
-        const usageEventsColRef = collection(firestore, `users/${user.uid}/usageEvents`);
-        const usageEventData = {
-            userId: user.uid,
-            action: 'generate_diagnosis',
-            status: 'started',
-            timestamp: serverTimestamp(),
-            metadata: { requestPayload: { ...values, funnelImage: values.funnelImage.name } }
-        };
-        const usageEventRef = await addDoc(usageEventsColRef, usageEventData);
-        usageEventId = usageEventRef.id;
+        // Passo 1: Upload da Imagem no Storage (Client Side)
+        const uploadRes = await uploadDiagnosticImage(values.funnelImage);
 
-        const result = await generateDiagnosis(formData);
-        
-        const eventDocRef = doc(firestore, `users/${user.uid}/usageEvents`, usageEventId);
-        updateDoc(eventDocRef, {
-            status: result.error ? 'failure' : 'success',
-            'metadata.responsePayload': result.error ? { error: result.error } : { success: true },
+        // Passos 2-4: Executar fluxo completo via diagnosticFlow (Fetch autenticado)
+        const { final } = await runFullDiagnostic({
+            restaurantName: values.restaurantName,
+            foodCategory: values.foodCategory,
+            deliveryType: values.deliveryType,
+            currentMonthRevenue: values.currentMonthRevenue,
+            currentMonthDiscounts: values.currentMonthDiscounts,
+            previousMonthRevenue: values.previousMonthRevenue,
+            previousMonthDiscounts: values.previousMonthDiscounts,
+            email: values.email,
+            uid: values.uid,
+            storagePath: uploadRes.storagePath,
+            imageContentType: uploadRes.imageContentType,
+            imageOriginalName: uploadRes.imageOriginalName
         });
-        
+
+        // Mapeamos a resposta final para o FormState esperado pela DashboardView
+        const result: FormState = {
+            nome: final.nome || values.restaurantName,
+            statusGeral: final.statusGeral || "Análise Concluída",
+            conversions: final.conversions || final.output?.conversoes || {},
+            discounts: final.discounts || final.output?.analise_descontos || {},
+            problems: final.problems || final.output?.principais_problemas || [],
+            actions: final.actions || final.output?.acoes_imediatas || [],
+            priorities: final.priorities || final.output?.prioridades_hoje || [],
+            aiGeneratedPlan: final.aiGeneratedPlan || final.output?.plano_de_acao_ia || null
+        };
+
         onFormSubmitEnd(result);
 
-        if (result?.error) {
-            toast({ variant: "destructive", title: "Erro na Análise", description: result.error });
-        }
     } catch (e: any) {
-        console.error("Erro no formulário:", e);
-        const errorMessage = e.message || 'Erro ao processar o diagnóstico.';
-        toast({ variant: "destructive", title: "Erro Inesperado", description: errorMessage });
-        onFormSubmitEnd({ error: errorMessage, nome: '', statusGeral: '', conversions: {}, discounts: {}, problems: [], actions: [], priorities: [], aiGeneratedPlan: null });
+        console.error("Erro no fluxo de diagnóstico:", e);
+        const errorMessage = e.message || 'Erro inesperado ao processar o diagnóstico.';
+        toast({ variant: "destructive", title: "Erro na Operação", description: errorMessage });
+        
+        onFormSubmitEnd({ 
+            error: errorMessage, 
+            nome: '', 
+            statusGeral: '', 
+            conversions: {}, 
+            discounts: {}, 
+            problems: [], 
+            actions: [], 
+            priorities: [], 
+            aiGeneratedPlan: null 
+        });
     }
   };
   
@@ -351,3 +368,4 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     </>
   );
 }
+
