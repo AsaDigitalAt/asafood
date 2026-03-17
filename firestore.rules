@@ -32,31 +32,27 @@ service cloud.firestore {
     }
     
     match /users/{userId} {
-      // Allow user to read and update their own profile (necessary for client-side upsert/login)
-      allow get: if isOwner(userId) || isAdmin();
-      allow create, update: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
-      allow delete: if false;
+      // Permitir leitura e escrita do próprio perfil
+      allow read, write: if isOwner(userId) || isAdmin();
 
-      // Permissions for price calculations and legacy reports
+      // Permitir que o usuário liste e gerencie seus próprios cálculos de preço
       match /priceCalculations/{calculationId} {
         allow read, write: if isOwner(userId) || isAdmin();
       }
       
+      // Reports legados (leitura apenas)
       match /diagnosisReports/{reportId} {
         allow read: if isOwner(userId) || isAdmin();
-        allow write: if false; // Reports are only written via backend
       }
     }
 
-    // Multi-tenant architecture for diagnostics and products
+    // Estrutura multi-tenant para diagnósticos
     match /tenants/{tenantId} {
       allow read: if isTenantMember(tenantId) || isAdmin();
       
       match /diagnostics/{diagnosticId} {
         allow read: if isTenantMember(tenantId) || isAdmin();
-        // Client cannot write directly to diagnostics, must go through Cloud Functions
-        allow write: if false;
+        allow write: if false; // Escrita apenas via Admin SDK
       }
 
       match /products/{productId} {
@@ -66,7 +62,7 @@ service cloud.firestore {
     }
 
     match /billing_events/{eventId} {
-      allow read, write: if false; // Only via Admin SDK / Webhooks
+      allow read, write: if false; // Apenas via Admin SDK / Webhooks
     }
   }
 }

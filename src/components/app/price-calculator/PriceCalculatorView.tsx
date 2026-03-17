@@ -6,13 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Trash2, PlusCircle, ArrowLeft, Calculator, ListChecks, Loader2, Save, Edit, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Trash2, PlusCircle, ArrowLeft, Calculator, ListChecks, Loader2, Save, Edit, CheckCircle, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { type Ingredient, type CalculationPayload, type PriceCalculationState } from '@/app/actions/calculate-price';
 import { runPricingCalculation } from '@/lib/pricingFlow';
 import { useFirebase, useUser, useMemoFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
+import { useDoc } from '@/firebase/firestore/use-doc';
 import { format } from 'date-fns';
 import {
   AlertDialog,
@@ -25,6 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface PriceCalculatorViewProps {
     onBack: () => void;
@@ -63,6 +65,16 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   const [deliveryType, setDeliveryType] = useState<'propria' | 'ifood'>('ifood');
   const [result, setResult] = useState<PriceCalculationResult | null>(null);
 
+  // --- Profile Verification ---
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<any>(userDocRef);
+
+  const isSuspended = userProfile?.planStatus !== 'active' && !!userProfile;
+  const pricingEnabled = userProfile?.features?.pricingEnabled !== false; // Padrão verdadeiro se não definido
+
   // --- Firestore Data ---
   const calculationsQuery = useMemoFirebase(() => {
       if (!user || !firestore) return null;
@@ -73,7 +85,6 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
 
   // --- Handlers ---
   const handleNewCalculation = () => {
-    // Reset all form fields
     setProductName('');
     setIngredients([{ id: Date.now(), name: '', totalCost: 0, totalWeight: 1000, plateWeight: 0 }]);
     setProfitMargin(30);
@@ -86,6 +97,11 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   };
 
   const handleCalculatePrice = async () => {
+    if (isSuspended || !pricingEnabled) {
+        toast({ variant: "destructive", title: "Acesso Bloqueado", description: isSuspended ? "Seu plano está inativo." : "Esta ferramenta não está inclusa no seu plano atual." });
+        return;
+    }
+
     if (!productName.trim()) {
         toast({ variant: "destructive", title: "Campo Obrigatório", description: "Por favor, preencha o nome do produto." });
         return;
@@ -103,9 +119,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
     };
 
     try {
-      // Migrado para o novo fluxo autenticado de Cloud Functions
       const data = await runPricingCalculation(payload);
-      
       const webhookResponse = data?.[0];
 
       if (!webhookResponse || !webhookResponse.output) {
@@ -116,44 +130,30 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
         throw new Error(webhookResponse.output.erros.join(', '));
       }
       
-      if(webhookResponse.output.avisos && webhookResponse.output.avisos.length > 0) {
-        toast({ title: "Avisos da Análise", description: webhookResponse.output.avisos.join(', ') });
-      }
-
       setResult(data);
       setStep('result');
-      toast({
-        title: "Cálculo bem-sucedido!",
-        description: "O dashboard de precificação foi gerado.",
-      });
+      toast({ title: "Cálculo bem-sucedido!", description: "O dashboard de precificação foi gerado." });
 
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro no Cálculo",
-        description: error.message || "Não foi possível conectar ao serviço de cálculo de preços.",
-      });
+      toast({ variant: "destructive", title: "Erro no Cálculo", description: error.message || "Não foi possível conectar ao serviço." });
     } finally {
       setIsCalculating(false);
     }
   };
 
   const handleSaveCalculation = async () => {
-    if (!user || !firestore || !result) {
-        toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível salvar. Usuário ou resultado não encontrado.' });
-        return;
-    }
+    if (!user || !firestore || !result) return;
     setIsSaving(true);
     try {
         const docToSave = {
             userId: user.uid,
             productName: productName,
-            calculationData: result[0], // Save the first object from the array
+            calculationData: result[0],
             createdAt: serverTimestamp(),
         };
         await addDoc(collection(firestore, `users/${user.uid}/priceCalculations`), docToSave);
         toast({ title: 'Sucesso!', description: `O produto '${productName}' foi salvo.` });
-        setView('view_prices'); // Go to the list of saved calculations
+        setView('view_prices');
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'Erro ao Salvar', description: error.message });
     } finally {
@@ -173,14 +173,13 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   
   const handleViewSaved = (calculation: SavedCalculation) => {
     setProductName(calculation.productName);
-    setResult([calculation.calculationData]); // Wrap in array to match structure
+    setResult([calculation.calculationData]);
     setStep('result');
     setView('calculation');
     setIsFromSaved(true); 
   };
 
 
-  // --- Ingredient Form Helpers ---
   const addIngredient = () => {
     setIngredients([
       ...ingredients,
@@ -192,9 +191,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
     setIngredients(
       ingredients.map(ing => {
         if (ing.id === id) {
-          if (field === 'name') {
-            return { ...ing, name: value };
-          }
+          if (field === 'name') return { ...ing, name: value };
           const numericValue = parseFloat(value);
           return { ...ing, [field]: isNaN(numericValue) ? 0 : numericValue };
         }
@@ -211,7 +208,6 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
     if (ingredient.totalWeight === 0) return 0;
     return (ingredient.totalCost / ingredient.totalWeight) * ingredient.plateWeight;
   };
-
 
   // --- Render Functions ---
   const renderInitial = () => (
@@ -264,8 +260,18 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                 <p className="text-lg text-muted-foreground">Preencha os dados para encontrar o preço ideal.</p>
             </div>
         </div>
+
+        {(isSuspended || !pricingEnabled) && !isProfileLoading && (
+             <Alert variant="destructive" className="mb-8 danger-bg border-destructive/30 text-red-400">
+                <ShieldAlert className="h-5 w-5 !text-red-400" />
+                <AlertTitle className="font-bold">{isSuspended ? "Plano Inativo" : "Ferramenta Bloqueada"}</AlertTitle>
+                <AlertDescription>
+                    {isSuspended ? "Seu plano está inativo. Regularize sua assinatura." : "Esta ferramenta não está inclusa no seu plano. Faça um upgrade para liberar."}
+                </AlertDescription>
+            </Alert>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Forms Column */}
             <div className="space-y-8">
                 <Card className="glass-card">
                     <CardHeader>
@@ -276,28 +282,20 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                             <Label htmlFor="product-name">Nome do Produto</Label>
                             <Input id="product-name" placeholder="Ex: X-Tudo da Casa" value={productName} onChange={e => setProductName(e.target.value)} className="text-base" />
                         </div>
-
                         <div>
                             <Label className="uppercase text-xs tracking-widest font-bold mb-3 block">Tipo de Entrega</Label>
-                            <RadioGroup
-                                value={deliveryType}
-                                onValueChange={(v: any) => setDeliveryType(v)}
-                                className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-                            >
+                            <RadioGroup value={deliveryType} onValueChange={(v: any) => setDeliveryType(v)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <Label htmlFor="propria" className="flex items-center justify-center gap-3 p-4 bg-card border border-border rounded-xl cursor-pointer hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary">
-                                    <RadioGroupItem value="propria" id="propria" />
-                                    Entrega Própria
+                                    <RadioGroupItem value="propria" id="propria" /> Entrega Própria
                                 </Label>
                                 <Label htmlFor="ifood" className="flex items-center justify-center gap-3 p-4 bg-card border border-border rounded-xl cursor-pointer hover:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:border-primary">
-                                    <RadioGroupItem value="ifood" id="ifood" />
-                                    Entrega Parceira
+                                    <RadioGroupItem value="ifood" id="ifood" /> Entrega Parceira
                                 </Label>
                             </RadioGroup>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Ingredients Card */}
                 <Card className="glass-card">
                     <CardHeader>
                         <CardTitle>Insumos do Prato</CardTitle>
@@ -315,19 +313,18 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                 </div>
-
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                                     <div>
                                         <Label htmlFor={`total-cost-${ing.id}`}>Custo Total (R$)</Label>
-                                        <Input id={`total-cost-${ing.id}`} type="number" placeholder="20,00" value={ing.totalCost || ''} onChange={e => updateIngredient(ing.id, 'totalCost', e.target.value)} />
+                                        <Input id={`total-cost-${ing.id}`} type="number" value={ing.totalCost || ''} onChange={e => updateIngredient(ing.id, 'totalCost', e.target.value)} />
                                     </div>
                                     <div>
                                         <Label htmlFor={`total-weight-${ing.id}`}>Peso Total (g/ml)</Label>
-                                        <Input id={`total-weight-${ing.id}`} type="number" placeholder="1000" value={ing.totalWeight || ''} onChange={e => updateIngredient(ing.id, 'totalWeight', e.target.value)} />
+                                        <Input id={`total-weight-${ing.id}`} type="number" value={ing.totalWeight || ''} onChange={e => updateIngredient(ing.id, 'totalWeight', e.target.value)} />
                                     </div>
                                     <div>
                                         <Label htmlFor={`plate-weight-${ing.id}`}>Qtd. no Prato (g/ml)</Label>
-                                        <Input id={`plate-weight-${ing.id}`} type="number" placeholder="150" value={ing.plateWeight || ''} onChange={e => updateIngredient(ing.id, 'plateWeight', e.target.value)} />
+                                        <Input id={`plate-weight-${ing.id}`} type="number" value={ing.plateWeight || ''} onChange={e => updateIngredient(ing.id, 'plateWeight', e.target.value)} />
                                     </div>
                                 </div>
                                 <div className="mt-4 pt-4 border-t border-border/50 flex justify-end items-center">
@@ -341,10 +338,8 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                         </Button>
                     </CardContent>
                 </Card>
-
             </div>
 
-            {/* Calculation and Result Column */}
             <div className="space-y-8">
                 <Card className="glass-card sticky top-32">
                     <CardHeader>
@@ -367,12 +362,13 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                                </div>
                            </div>
                         </div>
-                         <Button className="w-full h-12 text-lg font-bold" onClick={handleCalculatePrice} disabled={isCalculating}>
+                         <Button 
+                            className="w-full h-12 text-lg font-bold" 
+                            onClick={handleCalculatePrice} 
+                            disabled={isCalculating || isSuspended || !pricingEnabled}
+                        >
                             {isCalculating ? (
-                                <>
-                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                    Calculando...
-                                </>
+                                <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Calculando...</>
                             ) : (
                                 "Calcular Preço Ideal"
                             )}
@@ -387,7 +383,6 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   const renderResultDashboard = () => {
     const data = result?.[0]?.output;
     if (!data) return null;
-
     const { precoSugerido, custos, valores, inputs, insights } = data;
     
     return (
@@ -399,17 +394,11 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                         <span className="text-primary">{productName}</span>
                     </h1>
                 </header>
-
                 <div className="space-y-8">
-                     {/* Main Price */}
                     <Card className="bg-primary/10 border-primary/20 text-center p-8">
                         <CardDescription className="text-lg uppercase font-bold tracking-widest text-primary">Preço de Venda Sugerido</CardDescription>
-                        <CardTitle className="text-7xl font-extrabold text-primary">
-                            R$ {(precoSugerido ?? 0).toFixed(2)}
-                        </CardTitle>
+                        <CardTitle className="text-7xl font-extrabold text-primary">R$ {(precoSugerido ?? 0).toFixed(2)}</CardTitle>
                     </Card>
-
-                    {/* Costs Breakdown */}
                     <div className="grid md:grid-cols-3 gap-6">
                         <Card className="bg-card/80 p-6 text-center">
                             <CardDescription>Custo (CMV)</CardDescription>
@@ -424,18 +413,12 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                             <CardTitle className="text-3xl font-bold">R$ {(valores?.valorMargem ?? 0).toFixed(2)}</CardTitle>
                         </Card>
                     </div>
-
-                    {/* Insights */}
                     {insights && (
                     <Card className="glass-card">
-                         <CardHeader>
-                            <CardTitle>Insights do Custo</CardTitle>
-                        </CardHeader>
+                         <CardHeader><CardTitle>Insights do Custo</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
                             <p className="text-muted-foreground">{insights.impactoImpostoResumo}</p>
-                            {insights.impactoRetencaoResumo && (
-                                <p className="font-bold text-primary animate-pulse">{insights.impactoRetencaoResumo}</p>
-                            )}
+                            {insights.impactoRetencaoResumo && <p className="font-bold text-primary animate-pulse">{insights.impactoRetencaoResumo}</p>}
                             <div>
                                 <h4 className="font-bold mb-2">Maiores Custos (Ingredientes):</h4>
                                 <div className="space-y-2">
@@ -450,26 +433,17 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                         </CardContent>
                     </Card>
                     )}
-
-                    {/* Actions */}
                     <div className="flex flex-col md:flex-row justify-center gap-4 pt-8">
                         {!isFromSaved && (
-                             <Button variant="outline" size="lg" className="h-12" onClick={() => setStep('form')}>
-                                <Edit className="mr-2"/>
-                                Refazer Cálculo
-                            </Button>
+                             <Button variant="outline" size="lg" className="h-12" onClick={() => setStep('form')}><Edit className="mr-2"/> Refazer Cálculo</Button>
                         )}
                          <Button size="lg" className="h-12 bg-green-600 hover:bg-green-700" onClick={handleSaveCalculation} disabled={isSaving || isFromSaved}>
-                            {isSaving ? <Loader2 className="mr-2 animate-spin"/> : <Save className="mr-2" />}
-                            {isFromSaved ? 'Produto Salvo' : 'Aprovar e Salvar'}
+                            {isSaving ? <Loader2 className="mr-2 animate-spin"/> : <Save className="mr-2" />} {isFromSaved ? 'Produto Salvo' : 'Aprovar e Salvar'}
                         </Button>
                     </div>
                      {isFromSaved && (
                         <div className="text-center mt-4">
-                            <Button variant="link" onClick={() => setView('view_prices')}>
-                                <ArrowLeft className="mr-2"/>
-                                Voltar para a lista
-                            </Button>
+                            <Button variant="link" onClick={() => setView('view_prices')}><ArrowLeft className="mr-2"/> Voltar para a lista</Button>
                         </div>
                     )}
                 </div>
@@ -481,36 +455,26 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   const renderViewPrices = () => (
     <div className="max-w-5xl mx-auto px-4 py-24 md:py-32 opacity-0 animate-fade-up">
         <div className="flex items-center mb-12">
-                <Button onClick={() => setView('initial')} variant="outline" size="icon" className="h-12 w-12 rounded-full mr-6">
-                <ArrowLeft className="h-5 w-5" />
-            </Button>
+            <Button onClick={() => setView('initial')} variant="outline" size="icon" className="h-12 w-12 rounded-full mr-6"><ArrowLeft className="h-5 w-5" /></Button>
             <div className="text-left">
-                    <h1 className="text-4xl md:text-5xl font-extrabold mb-2">
-                    <span className="text-gradient">Cálculos </span> 
-                    <span className="text-primary">Salvos</span>
-                </h1>
+                <h1 className="text-4xl md:text-5xl font-extrabold mb-2"><span className="text-gradient">Cálculos </span> <span className="text-primary">Salvos</span></h1>
                 <p className="text-lg text-muted-foreground">Aqui estão os produtos que você já precificou.</p>
             </div>
         </div>
-
         {areCalculationsLoading && <p>Carregando produtos...</p>}
-        
         {(!savedCalculations || savedCalculations.length === 0) && !areCalculationsLoading && (
             <Card className="glass-card text-center p-16">
                  <p className="text-muted-foreground">Nenhum produto salvo ainda.</p>
                  <Button variant="link" className="mt-4" onClick={handleNewCalculation}>Calcular seu primeiro produto</Button>
             </Card>
         )}
-
         <div className="space-y-4">
             {savedCalculations && savedCalculations.map(calc => (
                 <Card key={calc.id} className="glass-card p-4 group cursor-pointer hover:border-primary" onClick={() => handleViewSaved(calc)}>
                     <div className="flex justify-between items-center">
                         <div>
                             <h3 className="text-lg font-bold group-hover:text-primary">{calc.productName}</h3>
-                            <p className="text-sm text-muted-foreground">
-                                Salvo em: {calc.createdAt ? format(calc.createdAt.toDate(), 'dd/MM/yyyy') : 'Data pendente'}
-                            </p>
+                            <p className="text-sm text-muted-foreground">Salvo em: {calc.createdAt ? format(calc.createdAt.toDate(), 'dd/MM/yyyy') : 'Data pendente'}</p>
                         </div>
                         <div className='flex items-center gap-4'>
                             <div className="text-right">
@@ -518,25 +482,10 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                                 <p className="text-xl font-bold">R$ {(calc.calculationData?.output?.precoSugerido ?? 0).toFixed(2)}</p>
                             </div>
                             <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                     <Button variant="ghost" size="icon" className="opacity-50 group-hover:opacity-100" onClick={(e) => e.stopPropagation()}>
-                                        <Trash2 className="h-5 w-5 text-destructive" />
-                                    </Button>
-                                </AlertDialogTrigger>
+                                <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="opacity-50 group-hover:opacity-100" onClick={(e) => e.stopPropagation()}><Trash2 className="h-5 w-5 text-destructive" /></Button></AlertDialogTrigger>
                                 <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                    <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Esta ação não pode ser desfeita. Isso removerá permanentemente o produto
-                                        <strong> {calc.productName}</strong>.
-                                    </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDeleteCalculation(calc.id)} className="bg-destructive hover:bg-destructive/90">
-                                        Sim, remover
-                                    </AlertDialogAction>
-                                    </AlertDialogFooter>
+                                    <AlertDialogHeader><AlertDialogTitle>Você tem certeza?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita. Isso removerá permanentemente o produto <strong> {calc.productName}</strong>.</AlertDialogDescription></AlertDialogHeader>
+                                    <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteCalculation(calc.id)} className="bg-destructive hover:bg-destructive/90">Sim, remover</AlertDialogAction></AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
                         </div>
@@ -549,13 +498,10 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
 
   const renderContent = () => {
     switch(view) {
-        case 'calculation':
-            return step === 'form' ? renderCalculationForm() : renderResultDashboard();
-        case 'view_prices':
-            return renderViewPrices();
+        case 'calculation': return step === 'form' ? renderCalculationForm() : renderResultDashboard();
+        case 'view_prices': return renderViewPrices();
         case 'initial':
-        default:
-            return renderInitial();
+        default: return renderInitial();
     }
   }
 
