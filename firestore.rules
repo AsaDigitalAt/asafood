@@ -26,33 +26,38 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
+    // Regra para Administradores
     match /roles_admin/{userId} {
       allow get: if isSignedIn();
       allow list, write: if false;
     }
     
+    // Regras de Usuário (Isolamento por UID)
     match /users/{userId} {
-      // Permitir leitura e escrita do próprio perfil
+      // Permite leitura e escrita completa do próprio nó de usuário
       allow read, write: if isOwner(userId) || isAdmin();
 
-      // Permitir que o usuário liste e gerencie seus próprios cálculos de preço
+      // Regras explícitas para subcoleções para evitar ambiguidades de herança
       match /priceCalculations/{calculationId} {
         allow read, write: if isOwner(userId) || isAdmin();
       }
       
-      // Reports legados (leitura apenas)
       match /diagnosisReports/{reportId} {
         allow read: if isOwner(userId) || isAdmin();
       }
+
+      match /usageEvents/{eventId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
     }
 
-    // Estrutura multi-tenant para diagnósticos
+    // Estrutura multi-tenant para diagnósticos e produtos
     match /tenants/{tenantId} {
       allow read: if isTenantMember(tenantId) || isAdmin();
       
       match /diagnostics/{diagnosticId} {
         allow read: if isTenantMember(tenantId) || isAdmin();
-        allow write: if false; // Escrita apenas via Admin SDK
+        allow write: if false; // Apenas via Admin SDK (Functions)
       }
 
       match /products/{productId} {
@@ -61,8 +66,9 @@ service cloud.firestore {
       }
     }
 
+    // Eventos de faturamento e webhooks (Apenas Admin)
     match /billing_events/{eventId} {
-      allow read, write: if false; // Apenas via Admin SDK / Webhooks
+      allow read, write: if isAdmin();
     }
   }
 }

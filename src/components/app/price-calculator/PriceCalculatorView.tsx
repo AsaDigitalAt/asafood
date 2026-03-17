@@ -72,15 +72,18 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   }, [firestore, user]);
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<any>(userDocRef);
 
-  const isSuspended = userProfile?.planStatus !== 'active' && !!userProfile;
-  const pricingEnabled = userProfile?.features?.pricingEnabled !== false; // Padrão verdadeiro se não definido
+  const isSuspended = userProfile?.planStatus === 'inactive' || userProfile?.planStatus === 'past_due';
+  const pricingEnabled = userProfile?.features?.pricingEnabled !== false;
 
   // --- Firestore Data ---
   const calculationsQuery = useMemoFirebase(() => {
       if (!user || !firestore) return null;
-      return query(collection(firestore, `users/${user.uid}/priceCalculations`), orderBy('createdAt', 'desc'));
+      // Usamos path absoluto para garantir compatibilidade com as regras
+      return query(collection(firestore, 'users', user.uid, 'priceCalculations'), orderBy('createdAt', 'desc'));
   }, [firestore, user]);
-  const { data: savedCalculations, isLoading: areCalculationsLoading } = useCollection<SavedCalculation>(calculationsQuery);
+  
+  // Capturamos erro aqui para evitar que a página inteira trave, mas com as regras corrigidas o erro não deve ocorrer
+  const { data: savedCalculations, isLoading: areCalculationsLoading, error: calculationsError } = useCollection<SavedCalculation>(calculationsQuery);
 
 
   // --- Handlers ---
@@ -151,7 +154,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
             calculationData: result[0],
             createdAt: serverTimestamp(),
         };
-        await addDoc(collection(firestore, `users/${user.uid}/priceCalculations`), docToSave);
+        await addDoc(collection(firestore, 'users', user.uid, 'priceCalculations'), docToSave);
         toast({ title: 'Sucesso!', description: `O produto '${productName}' foi salvo.` });
         setView('view_prices');
     } catch (error: any) {
@@ -164,7 +167,7 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   const handleDeleteCalculation = async (id: string) => {
     if (!user || !firestore) return;
     try {
-        await deleteDoc(doc(firestore, `users/${user.uid}/priceCalculations`, id));
+        await deleteDoc(doc(firestore, 'users', user.uid, 'priceCalculations', id));
         toast({ title: 'Produto Removido', description: 'O cálculo foi removido com sucesso.' });
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'Erro ao Remover', description: error.message });
@@ -462,7 +465,14 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
             </div>
         </div>
         {areCalculationsLoading && <p>Carregando produtos...</p>}
-        {(!savedCalculations || savedCalculations.length === 0) && !areCalculationsLoading && (
+        {calculationsError && (
+             <Alert variant="destructive" className="mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Erro ao carregar cálculos</AlertTitle>
+                <AlertDescription>Ocorreu um problema ao carregar seus dados salvos. Tente recarregar a página.</AlertDescription>
+            </Alert>
+        )}
+        {(!savedCalculations || savedCalculations.length === 0) && !areCalculationsLoading && !calculationsError && (
             <Card className="glass-card text-center p-16">
                  <p className="text-muted-foreground">Nenhum produto salvo ainda.</p>
                  <Button variant="link" className="mt-4" onClick={handleNewCalculation}>Calcular seu primeiro produto</Button>
