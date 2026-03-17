@@ -26,13 +26,13 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
-    // Admin Roles - Allows checking if a user is admin
+    // Admin Roles
     match /roles_admin/{userId} {
       allow get: if isSignedIn();
       allow list, write: if false;
     }
     
-    // User Data Tree - Full recursive access for the owner or admin
+    // User Data Tree - Permissão total para o dono em qualquer profundidade
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
 
@@ -41,7 +41,7 @@ service cloud.firestore {
       }
     }
 
-    // Multi-tenant structures (tenants/{tenantId}/...)
+    // Multi-tenant structures
     match /tenants/{tenantId} {
       allow read: if isTenantMember(tenantId) || isAdmin();
       
@@ -54,15 +54,9 @@ service cloud.firestore {
       }
     }
 
-    // Billing and Webhook deduplication events
+    // Billing events
     match /billing_events/{eventId} {
       allow read: if isAdmin();
-      // Writes are restricted to Admin SDK in Cloud Functions
-    }
-    
-    // Legacy support (optional, can be removed if not used)
-    match /billing_events_legacy/{eventId} {
-       allow read: if isAdmin();
     }
   }
 }
