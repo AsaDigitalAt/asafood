@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { BarChart3, CheckCircle, Loader2, UploadCloud, ChevronDown, ShieldAlert } from "lucide-react";
+import { BarChart3, CheckCircle, Loader2, UploadCloud, ChevronDown, ShieldAlert, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from 'next/image';
 import type { FormState } from "@/app/actions/generate-diagnosis";
@@ -38,7 +38,7 @@ const diagnosisSchema = z.object({
   uid: z.string().min(1, "UID do usuário é obrigatório."),
 });
 
-const HeroSection = () => (
+const HeroSection = ({ onBack }: { onBack: () => void }) => (
     <div className="relative bg-primary text-primary-foreground min-h-screen flex flex-col justify-center items-center text-center overflow-hidden p-4">
         <Image
             src="https://firebasestorage.googleapis.com/v0/b/base-arquivos.firebasestorage.app/o/Camada%202.png?alt=media&token=b5e254f5-2ef5-4d35-9c71-ee095ed5795a"
@@ -54,6 +54,14 @@ const HeroSection = () => (
             height={400}
             className="absolute bottom-0 right-0 w-auto h-auto max-w-[300px] md:max-w-[400px] translate-x-1/4 translate-y-1/4 opacity-100"
         />
+        {/* Botão de voltar ao hub */}
+        <button
+            onClick={onBack}
+            className="absolute top-6 left-6 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-primary-foreground/80 hover:bg-white/20 hover:text-primary-foreground transition-all text-sm font-bold backdrop-blur-sm"
+        >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+        </button>
         <div className="relative z-10 max-w-4xl mx-auto opacity-0 animate-fade-up">
             <h1 className="text-6xl md:text-8xl font-extrabold tracking-tighter">
                 Diagnóstico de Performance
@@ -142,11 +150,12 @@ const UploadCard = ({ name, title, description, icon, form }: { name: "funnelIma
 };
 
 interface DiagnosisViewProps {
+  onBack: () => void;
   onFormSubmitStart: () => void;
   onFormSubmitEnd: (data: FormState) => void;
 }
 
-export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisViewProps) {
+export function DiagnosisView({ onBack, onFormSubmitStart, onFormSubmitEnd }: DiagnosisViewProps) {
   const { toast } = useToast();
   const { firestore, storage } = useFirebase();
   const { user } = useUser();
@@ -235,7 +244,7 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
   
   return (
     <>
-      <HeroSection />
+      <HeroSection onBack={onBack} />
       <Marquee />
       <section className="bg-background px-4 py-24 md:py-32 max-w-4xl mx-auto">
         {/* Restrição apenas informada no Card (não restringe acesso da página) */}

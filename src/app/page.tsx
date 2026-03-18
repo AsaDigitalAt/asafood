@@ -56,7 +56,7 @@ export default function Home() {
       case "hub":
         return <HubView onNavigate={handleNavigate} />;
       case "diagnosis":
-        return dashboardData ? <DashboardView data={dashboardData} /> : <DiagnosisView onFormSubmitStart={handleFormSubmitStart} onFormSubmitEnd={handleFormSubmitEnd} />;
+        return dashboardData ? <DashboardView data={dashboardData} /> : <DiagnosisView onBack={() => setCurrentView("hub")} onFormSubmitStart={handleFormSubmitStart} onFormSubmitEnd={handleFormSubmitEnd} />;
       case "action-plan":
         return <ActionPlanView onBack={() => setCurrentView("hub")} />;
       case "menu-analysis":

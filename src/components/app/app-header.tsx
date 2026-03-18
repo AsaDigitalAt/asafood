@@ -79,21 +79,25 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
     icon,
     text,
     adminOnly = false,
+    locked = false,
   }: {
     view: View;
     icon: React.ReactNode;
     text: string;
     adminOnly?: boolean;
+    locked?: boolean;
   }) => {
     if (adminOnly && !isAdmin) return null;
   
     return (
       <div
         className={cn(
-          "flex items-center justify-between gap-4 p-4 rounded-xl font-bold text-sm transition-all duration-300 cursor-pointer text-white/60 hover:bg-white/10 hover:text-white",
-          currentView === view && "bg-white/10 text-white"
+          "flex items-center justify-between gap-4 p-4 rounded-xl font-bold text-sm transition-all duration-300",
+          locked ? "text-white/40 cursor-not-allowed" : "cursor-pointer text-white/60 hover:bg-white/10 hover:text-white",
+          currentView === view && !locked && "bg-white/10 text-white"
         )}
         onClick={() => {
+          if (locked) return;
           onNavigate(view);
           setMenuOpen(false);
         }}
@@ -102,6 +106,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
           {icon}
           <span>{text}</span>
         </div>
+        {locked && <Lock className="w-4 h-4 text-orange-300/80" />}
       </div>
     );
   };
@@ -145,7 +150,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
             <NavItem view="price-calculator" icon={<Calculator className="w-5 h-5" />} text="Calculadora de Preços" />
             <NavItem view="restaurant" icon={<Store className="w-5 h-5" />} text="Meu Restaurante" />
             <NavItem view="admin" icon={<Shield className="w-5 h-5" />} text="Painel do Administrador" adminOnly={true} />
-            <NavItem view="menu-analysis" icon={<BookOpenCheck className="w-5 h-5" />} text="Análise de Cardápio" />
+            <NavItem view="menu-analysis" icon={<BookOpenCheck className="w-5 h-5" />} text="Análise de Cardápio" locked={true} />
           </nav>
         </div>
         <div onClick={() => onNavigate('hub')} className="cursor-pointer transition-transform hover:scale-105 active:scale-95">

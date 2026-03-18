@@ -9,7 +9,8 @@ import { FormState } from '@/app/actions/generate-diagnosis';
 import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
 import EmptyStateView from '@/components/app/empty-state-view';
-import { Rocket, ArrowRight } from 'lucide-react';
+import { Rocket, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { mapPlanV3ToFormState, mapSaudeGeral } from '@/lib/diagnosticPlanMapper';
 
 interface ActionPlanListProps {
@@ -73,12 +74,17 @@ export default function ActionPlanList({ onSelectReport, onBack }: ActionPlanLis
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-24 md:py-32 opacity-0 animate-fade-up">
-            <div className="text-center mb-12">
-                 <h1 className="text-4xl md:text-5xl font-extrabold mb-3">
-                    <span className="text-gradient">Meus Planos</span>{' '}
-                    <span className="text-primary">de Ação</span>
-                </h1>
-                <p className="text-lg text-muted-foreground">Aqui está o histórico de todos os seus diagnósticos gerados.</p>
+            <div className="flex items-center mb-12">
+                <Button onClick={onBack} variant="outline" size="icon" className="h-12 w-12 rounded-full mr-6">
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="text-left">
+                    <h1 className="text-4xl md:text-5xl font-extrabold mb-2">
+                        <span className="text-gradient">Meus Planos</span>{' '}
+                        <span className="text-primary">de Ação</span>
+                    </h1>
+                    <p className="text-lg text-muted-foreground">Aqui está o histórico de todos os seus diagnósticos gerados.</p>
+                </div>
             </div>
             <div className="space-y-6">
                 {reports.map((report: any) => {
