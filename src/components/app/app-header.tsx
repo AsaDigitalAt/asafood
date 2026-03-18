@@ -108,10 +108,10 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
   
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || '...';
   
-  const planName = userProfile?.plan ? planLabels[userProfile.plan] : "Carregando...";
-  const usageCount = userProfile?.usage?.reportsThisCycle ?? 0;
-  const usageLimit = userProfile?.plan ? (planLimits[userProfile.plan] ?? 4) : 4;
-  const isDeveloper = userProfile?.plan === 'desenvolvedor';
+  const planName = userProfile?.plan ? planLabels[userProfile.plan] ?? userProfile.plan : "Carregando...";
+  const usageCount = userProfile?.usage?.diagnosticsUsed ?? 0;
+  const isDeveloper = userProfile?.plan === 'desenvolvedor' || userProfile?.role === 'developer';
+  const usageLimit = isDeveloper ? Infinity : (userProfile?.quota?.diagnosticsMax ?? planLimits[userProfile?.plan] ?? 0);
   const usageText = isDeveloper ? `${usageCount} / ∞` : `${usageCount} / ${usageLimit}`;
 
   return (

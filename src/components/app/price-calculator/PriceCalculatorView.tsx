@@ -13,6 +13,7 @@ import { runPricingCalculation } from '@/lib/pricingFlow';
 import { useFirebase, useUser, useMemoFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
+import { useAccessControl } from '@/hooks/use-access-control';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { format } from 'date-fns';
 import {
@@ -60,15 +61,8 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
   const [deliveryType, setDeliveryType] = useState<'propria' | 'ifood'>('ifood');
   const [result, setResult] = useState<PriceCalculationResult | null>(null);
 
-  // Perfil do usuário para validação de plano no momento do clique
-  const userDocRef = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<any>(userDocRef);
-
-  const isSuspended = userProfile?.planStatus !== 'active' && !!userProfile;
-  const pricingEnabled = userProfile?.features?.pricingEnabled !== false;
+  // Perfil do usuário verificado via hook global
+  const { isDeveloper, pricing, isSuspended, isLoading } = useAccessControl();
 
   // Busca o histórico do usuário
   const calculationsQuery = useMemoFirebase(() => {
@@ -92,11 +86,11 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
 
   const handleCalculatePrice = async () => {
     // A restrição agora ocorre apenas no momento de disparar o cálculo
-    if (isSuspended || !pricingEnabled) {
+    if (!isLoading && !pricing.canGenerate && !isDeveloper) {
         toast({ 
           variant: "destructive", 
           title: "Ação Bloqueada", 
-          description: isSuspended ? "Seu plano está inativo. Regularize sua assinatura." : "Esta ferramenta não faz parte do seu plano atual." 
+          description: isSuspended ? "Seu plano está inativo. Regularize sua assinatura para prosseguir." : "Você atingiu o limite ou este recurso não faz parte do seu plano." 
         });
         return;
     }
@@ -221,17 +215,6 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
                 </h1>
             </div>
         </div>
-
-        {/* Alerta informativo - não bloqueia a página */}
-        {(isSuspended || !pricingEnabled) && !isProfileLoading && (
-             <Alert variant="destructive" className="mb-8 danger-bg border-destructive/30 text-red-400">
-                <ShieldAlert className="h-5 w-5 !text-red-400" />
-                <AlertTitle className="font-bold">{isSuspended ? "Assinatura Pendente" : "Plano Restrito"}</AlertTitle>
-                <AlertDescription>
-                    {isSuspended ? "Regularize sua conta para gerar novos cálculos." : "Esta ferramenta está disponível nos planos Superiores."}
-                </AlertDescription>
-            </Alert>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div className="space-y-8">

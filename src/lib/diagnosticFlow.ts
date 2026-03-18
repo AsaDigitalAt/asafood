@@ -44,6 +44,6 @@ export async function runFullDiagnostic(input: {
   // 3. Gerar o Plano de Ação (IA)
   const finalResponse = await authedPost(ENDPOINTS.generatePlan, { diagnosticId });
 
-  // O backend retorna o objeto 'final' consolidado
-  return finalResponse;
+  // Mapeia a resposta do backend para o shape esperado pelo frontend
+  return { final: finalResponse.plan };
 }

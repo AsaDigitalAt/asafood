@@ -21,7 +21,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp),
+    firestore: getFirestore(firebaseApp, 'asafood'),  // banco nomeado — igual ao Admin SDK do backend
     storage: getStorage(firebaseApp)
   };
 }

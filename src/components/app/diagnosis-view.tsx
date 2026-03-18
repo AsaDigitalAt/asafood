@@ -17,6 +17,8 @@ import { useFirebase, useUser, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useAccessControl } from "@/hooks/use-access-control";
+import { mapPlanV3ToFormState } from "@/lib/diagnosticPlanMapper";
 
 import { uploadDiagnosticImage } from "@/lib/uploadDiagnosticImage";
 import { runFullDiagnostic } from "@/lib/diagnosticFlow";
@@ -144,31 +146,11 @@ interface DiagnosisViewProps {
   onFormSubmitEnd: (data: FormState) => void;
 }
 
-const planLimits: Record<string, number> = {
-  convidado: 10,
-  plano_unico: 1,
-  plano_duplo: 2,
-  plano_acelerador: 4,
-  desenvolvedor: Infinity,
-};
-
 export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisViewProps) {
   const { toast } = useToast();
   const { firestore, storage } = useFirebase();
   const { user } = useUser();
-
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<any>(userDocRef);
-
-  const isSuspended = userProfile?.planStatus !== 'active' && !!userProfile;
-  const usageCount = userProfile?.usage?.reportsThisCycle ?? 0;
-  const plan = userProfile?.plan || 'plano_acelerador';
-  const usageLimit = planLimits[plan] ?? 4;
-  const isDeveloper = plan === 'desenvolvedor';
-  const isLimitReached = !isDeveloper && usageCount >= usageLimit;
+  const { isDeveloper, isSuspended, diagnostics, isLoading } = useAccessControl();
 
   const form = useForm<z.infer<typeof diagnosisSchema>>({
     resolver: zodResolver(diagnosisSchema),
@@ -199,11 +181,11 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
     if (!user || !firestore || !storage) return;
 
     // A restrição agora ocorre apenas no momento de disparar a geração
-    if (isSuspended || isLimitReached) {
+    if (!diagnostics.canGenerate && !isDeveloper) {
         toast({ 
           variant: "destructive", 
           title: "Ação Bloqueada", 
-          description: isSuspended ? "Seu plano está inativo." : `Você atingiu seu limite mensal de ${usageLimit} diagnósticos.` 
+          description: isSuspended ? "Seu plano está inativo." : "Você atingiu seu limite mensal de diagnósticos ou seu plano não dá direito." 
         });
         return;
     }
@@ -222,22 +204,13 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
             previousMonthRevenue: values.previousMonthRevenue,
             previousMonthDiscounts: values.previousMonthDiscounts,
             email: values.email,
-            uid: values.uid,
             storagePath: uploadRes.storagePath,
             imageContentType: uploadRes.imageContentType,
             imageOriginalName: uploadRes.imageOriginalName
         });
 
-        const result: FormState = {
-            nome: final.nome || values.restaurantName,
-            statusGeral: final.statusGeral || "Análise Concluída",
-            conversions: final.conversions || final.output?.conversoes || {},
-            discounts: final.discounts || final.output?.analise_descontos || {},
-            problems: final.problems || final.output?.principais_problemas || [],
-            actions: final.actions || final.output?.acoes_imediatas || [],
-            priorities: final.priorities || final.output?.prioridades_hoje || [],
-            aiGeneratedPlan: final.aiGeneratedPlan || final.output?.plano_de_acao_ia || null
-        };
+        // Delega o mapeamento v3 → FormState ao utilitário compartilhado
+        const result = mapPlanV3ToFormState(final, values.restaurantName);
 
         onFormSubmitEnd(result);
 
@@ -265,13 +238,13 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
       <HeroSection />
       <Marquee />
       <section className="bg-background px-4 py-24 md:py-32 max-w-4xl mx-auto">
-        {/* Aviso informativo - não bloqueia a página */}
-        {(isSuspended || isLimitReached) && !isProfileLoading && (
-             <Alert variant="destructive" className="mb-12 danger-bg border-destructive/30 text-red-400">
-                <ShieldAlert className="h-5 w-5 !text-red-400" />
-                <AlertTitle className="font-bold">{isSuspended ? "Plano Inativo" : "Limite Atingido"}</AlertTitle>
+        {/* Restrição apenas informada no Card (não restringe acesso da página) */}
+        {!isLoading && !diagnostics.canGenerate && !isDeveloper && (
+            <Alert variant="destructive" className="mb-4 bg-red-500/10 border-red-500/20 text-red-500">
+                <ShieldAlert className="h-4 w-4" />
+                <AlertTitle>Seu Limite foi atingido</AlertTitle>
                 <AlertDescription>
-                    {isSuspended ? "Seu plano está inativo. Contate o suporte para regularizar." : `Você atingiu seu limite mensal de ${usageLimit} diagnósticos.`}
+                    Você já utilizou toda sua cota de diagnósticos do ciclo atual ou seu plano expirou. Faça o upgrade para continuar gerando análises.
                 </AlertDescription>
             </Alert>
         )}
@@ -344,13 +317,13 @@ export function DiagnosisView({ onFormSubmitStart, onFormSubmitEnd }: DiagnosisV
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-card border p-6 rounded-3xl space-y-4">
                     <h3 className="font-bold">Mês Atual</h3>
-                    <FormField control={form.control} name="currentMonthRevenue" render={({ field }) => (<FormItem><FormControl><Input type="number" placeholder="Faturamento" {...field} className="rounded-full" /></FormControl></FormItem>)} />
-                    <FormField control={form.control} name="currentMonthDiscounts" render={({ field }) => (<FormItem><FormControl><Input type="number" placeholder="Descontos" {...field} className="rounded-full" /></FormControl></FormItem>)} />
+                    <FormField control={form.control} name="currentMonthRevenue" render={({ field }) => (<FormItem><FormLabel className="ml-1 uppercase text-xs font-bold tracking-wider text-muted-foreground">Faturamento Bruto (R$)</FormLabel><FormControl><Input type="number" placeholder="0" {...field} className="rounded-full" /></FormControl></FormItem>)} />
+                    <FormField control={form.control} name="currentMonthDiscounts" render={({ field }) => (<FormItem><FormLabel className="ml-1 uppercase text-xs font-bold tracking-wider text-muted-foreground">Descontos (R$)</FormLabel><FormControl><Input type="number" placeholder="0" {...field} className="rounded-full" /></FormControl></FormItem>)} />
                   </div>
                   <div className="bg-card border p-6 rounded-3xl space-y-4">
                     <h3 className="font-bold">Mês Anterior</h3>
-                    <FormField control={form.control} name="previousMonthRevenue" render={({ field }) => (<FormItem><FormControl><Input type="number" placeholder="Faturamento" {...field} className="rounded-full" /></FormControl></FormItem>)} />
-                    <FormField control={form.control} name="previousMonthDiscounts" render={({ field }) => (<FormItem><FormControl><Input type="number" placeholder="Descontos" {...field} className="rounded-full" /></FormControl></FormItem>)} />
+                    <FormField control={form.control} name="previousMonthRevenue" render={({ field }) => (<FormItem><FormLabel className="ml-1 uppercase text-xs font-bold tracking-wider text-muted-foreground">Faturamento Bruto (R$)</FormLabel><FormControl><Input type="number" placeholder="0" {...field} className="rounded-full" /></FormControl></FormItem>)} />
+                    <FormField control={form.control} name="previousMonthDiscounts" render={({ field }) => (<FormItem><FormLabel className="ml-1 uppercase text-xs font-bold tracking-wider text-muted-foreground">Descontos (R$)</FormLabel><FormControl><Input type="number" placeholder="0" {...field} className="rounded-full" /></FormControl></FormItem>)} />
                   </div>
               </div>
 

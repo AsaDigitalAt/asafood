@@ -1,7 +1,7 @@
 'use client';
 
 import { useFirebase, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, where } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';
@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
 import EmptyStateView from '@/components/app/empty-state-view';
 import { Rocket, ArrowRight } from 'lucide-react';
+import { mapPlanV3ToFormState, mapSaudeGeral } from '@/lib/diagnosticPlanMapper';
 
 interface ActionPlanListProps {
     onSelectReport: (report: FormState) => void;
@@ -20,11 +21,10 @@ type DiagnosisReport = any & {
     createdAt: { toDate: () => Date };
 };
 
-const getStatusClass = (status?: string) => {
-    const s = status ? status.toLowerCase() : '';
-    if (s.includes('critico') || s.includes('ruim') || s.includes('risco')) return 'danger-bg !text-foreground border-secondary';
-    if (s.includes('atenção') || s.includes('medio')) return 'warning-bg !text-amber-400 border-amber-500/30';
-    if (s.includes('bom') || s.includes('otimo') || s.includes('ideal')) return 'success-bg !text-green-400 border-green-500/30';
+const getStatusClass = (saudeGeral?: string) => {
+    if (saudeGeral === 'critico') return 'danger-bg !text-foreground border-secondary';
+    if (saudeGeral === 'misto')   return 'warning-bg !text-amber-400 border-amber-500/30';
+    if (saudeGeral === 'saudavel') return 'success-bg !text-green-400 border-green-500/30';
     return 'warning-bg !text-amber-400 border-amber-500/30';
 };
 
@@ -39,7 +39,8 @@ export default function ActionPlanList({ onSelectReport, onBack }: ActionPlanLis
     }, [firestore, user]);
     const { data: userProfile } = useDoc<any>(userDocRef);
 
-    // Depois, buscamos os diagnósticos do tenant
+    // Busca os diagnósticos do tenant, mais recentes primeiro
+    // Filtragem por status=completed feita client-side (evita índice composto)
     const reportsQuery = useMemoFirebase(() => {
         if (!firestore || !userProfile?.tenantId) return null;
         return query(
@@ -48,7 +49,8 @@ export default function ActionPlanList({ onSelectReport, onBack }: ActionPlanLis
         );
     }, [firestore, userProfile?.tenantId]);
 
-    const { data: reports, isLoading } = useCollection<DiagnosisReport>(reportsQuery);
+    const { data: allReports, isLoading } = useCollection<DiagnosisReport>(reportsQuery);
+    const reports = allReports?.filter((r: any) => r.status === 'completed') ?? [];
 
     if (isLoading) {
         return (
@@ -63,54 +65,51 @@ export default function ActionPlanList({ onSelectReport, onBack }: ActionPlanLis
     }
 
     const handleSelect = (report: any) => {
-        // Mapeia o formato do Firestore para o FormState esperado pela DashboardView
-        const mappedReport: FormState = {
-            nome: report.input?.restaurantName || report.nome,
-            statusGeral: report.result?.statusGeral || report.statusGeral || "Concluído",
-            conversions: report.result?.conversions || report.conversions || {},
-            discounts: report.result?.discounts || report.discounts || {},
-            problems: report.result?.problems || report.problems || [],
-            actions: report.result?.actions || report.actions || [],
-            priorities: report.result?.priorities || report.priorities || [],
-            aiGeneratedPlan: report.result?.plan || report.aiGeneratedPlan || null
-        };
-        onSelectReport(mappedReport);
-    }
+        // Usa o mapper compartilhado para converter o schema v3 → FormState
+        const plan = report.result?.plan ?? {};
+        const nome = report.input?.restaurantName || report.nome || '';
+        onSelectReport(mapPlanV3ToFormState(plan, nome));
+    };
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-24 md:py-32 opacity-0 animate-fade-up">
             <div className="text-center mb-12">
                  <h1 className="text-4xl md:text-5xl font-extrabold mb-3">
-                    <span className="text-gradient">Meus Planos</span> 
-                    <span className="text-primary"> de Ação</span>
+                    <span className="text-gradient">Meus Planos</span>{' '}
+                    <span className="text-primary">de Ação</span>
                 </h1>
                 <p className="text-lg text-muted-foreground">Aqui está o histórico de todos os seus diagnósticos gerados.</p>
             </div>
             <div className="space-y-6">
-                {reports.map((report: any) => (
-                    <Card 
-                        key={report.id} 
-                        className="p-6 glass-card hover:border-primary transition-all cursor-pointer group" 
-                        onClick={() => handleSelect(report)}
-                    >
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                                    {report.input?.restaurantName || report.nome}
-                                </h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Gerado em: {report.createdAt ? format(report.createdAt.toDate(), 'dd/MM/yyyy HH:mm') : 'Data desconhecida'}
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className={`py-1 px-3 rounded-full text-xs font-bold border ${getStatusClass(report.result?.statusGeral || report.statusGeral)}`}>
-                                    {report.result?.statusGeral || report.statusGeral || "Finalizado"}
+                {reports.map((report: any) => {
+                    const saudeGeral = report.result?.plan?.funilVendas?.saudeGeral;
+                    const statusLabel = mapSaudeGeral(saudeGeral);
+
+                    return (
+                        <Card
+                            key={report.id}
+                            className="p-6 glass-card hover:border-primary transition-all cursor-pointer group"
+                            onClick={() => handleSelect(report)}
+                        >
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                                        {report.input?.restaurantName || report.nome}
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Gerado em: {report.createdAt ? format(report.createdAt.toDate(), 'dd/MM/yyyy HH:mm') : 'Data desconhecida'}
+                                    </p>
                                 </div>
-                                <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-primary transition-transform group-hover:translate-x-1" />
+                                <div className="flex items-center gap-4">
+                                    <div className={`py-1 px-3 rounded-full text-xs font-bold border ${getStatusClass(saudeGeral)}`}>
+                                        {statusLabel}
+                                    </div>
+                                    <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-primary transition-transform group-hover:translate-x-1" />
+                                </div>
                             </div>
-                        </div>
-                    </Card>
-                ))}
+                        </Card>
+                    );
+                })}
             </div>
         </div>
     );
