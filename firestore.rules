@@ -15,143 +15,36 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
     
-    function getPlanLimit(plan) {
-      return {
-        'convidado': 10,
-        'plano_unico': 1,
-        'plano_duplo': 2,
-        'plano_acelerador': 4,
-        'desenvolvedor': 999
-      }[plan];
-    }
-    
-    function isWithinMonthlyLimit(userId) {
-      // A user can create a report if:
-      // 1. Their user profile exists.
-      // 2. AND (they are a developer OR their usage is within the plan's limit).
-      return exists(/databases/$(database)/documents/users/$(userId)) && (
-        get(/databases/$(database)/documents/users/$(userId)).data.plan == 'desenvolvedor'
-        ||
-        (
-          // Calculate reports this cycle. Defaults to 0 if 'usage' field doesn't exist or it's a new month.
-          (
-            'usage' in get(/databases/$(database)/documents/users/$(userId)).data &&
-            get(/databases/$(database)/documents/users/$(userId)).data.usage.cycleStart.month() == request.time.month()
-              ? get(/databases/$(database)/documents/users/$(userId)).data.usage.reportsThisCycle
-              : 0
-          )
-          < getPlanLimit(get(/databases/$(database)/documents/users/$(userId)).data.plan)
-        )
-      );
-    }
-
-    // --- Validation Functions ---
-    function isCreatingOwnUser() {
-      let data = request.resource.data;
-      return data.email == request.auth.token.email
-          && data.plan == 'plano_acelerador'
-          && data.planStatus == 'active'
-          && data.usage.reportsThisCycle == 0
-          && data.createdAt is timestamp
-          && data.lastLoginAt is timestamp
-          && data.usage.cycleStart is timestamp;
-    }
-
-    function isUpdatingOwnProfile() {
-      return (
-        // 1. Immutable fields check
-        request.resource.data.email == resource.data.email &&
-        request.resource.data.createdAt == resource.data.createdAt &&
-        request.resource.data.plan == resource.data.plan &&
-        request.resource.data.planStatus == resource.data.planStatus &&
-
-        // 2. lastLoginAt check: can be unchanged or updated to now
-        (request.resource.data.lastLoginAt == resource.data.lastLoginAt || request.resource.data.lastLoginAt == request.time) &&
-
-        // 3. usage update logic
-        (
-          // Case 1: 'usage' field is not being updated.
-          request.resource.data.usage == resource.data.usage ||
-          // Case 2: 'usage' field IS being updated. It must be a valid increment or reset.
-          (
-            // Subcase A: First time usage is set for a user
-            (resource.data.get('usage', null) == null && request.resource.data.usage.reportsThisCycle == 1 && request.resource.data.usage.cycleStart == request.time) ||
-            // Subcase B: Usage already exists, check increment or reset
-            (
-              resource.data.get('usage', null) != null &&
-              (
-                // B1: Incrementing report count by 1 for the same cycle
-                (request.resource.data.usage.reportsThisCycle == resource.data.get('usage').reportsThisCycle + 1 && request.resource.data.usage.cycleStart.toMillis() == resource.data.get('usage').cycleStart.toMillis()) ||
-                // B2: Resetting for a new month
-                (request.resource.data.usage.reportsThisCycle == 0 && request.resource.data.usage.cycleStart.month() != resource.data.get('usage').cycleStart.month() && request.resource.data.usage.cycleStart.year() == request.time.year())
-              )
-            )
-          )
-        )
-      );
-    }
-    
-    function isAdminUpdatingUser() {
-      let data = request.resource.data;
-       // Admin can change plan and status, but not immutable fields like createdAt.
-      return data.createdAt == resource.data.createdAt;
-    }
-
-    function isValidUsageEvent(userId) {
-      let data = request.resource.data;
-      // Also check if user is within their plan limit before allowing event creation
-      return data.userId == userId
-          && data.timestamp <= request.time
-          && isWithinMonthlyLimit(userId);
-    }
-
-    function isUpdatingOwnUsageEventStatus(userId) {
-        let data = request.resource.data;
-        // User must be the owner
-        return data.userId == userId
-            // Only allow updating status and metadata.
-            && data.action == resource.data.action
-            && data.timestamp == resource.data.timestamp;
-    }
-
-    function isValidDiagnosisReport(userId) {
-      let data = request.resource.data;
-      return data.userId == userId
-        && data.createdAt is timestamp;
-    }
-
     // --- Collection Rules ---
 
+    // Admin Roles
     match /roles_admin/{userId} {
       allow get: if isSignedIn();
       allow list, write: if false;
     }
     
+    // User Data Tree - Permissão total e explícita para o dono
+    // Esta regra garante que o usuário acesse seu perfil e todas as subcoleções (diagnósticos, cálculos, etc)
     match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
-      allow create: if isOwner(userId) && isCreatingOwnUser();
-      allow update: if (isOwner(userId) && isUpdatingOwnProfile()) || (isAdmin() && isAdminUpdatingUser());
-      allow delete: if false;
-      
-      // --- Subcollection Rules ---
-       match /usageEvents/{usageEventId} {
-        allow read: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && isValidUsageEvent(userId);
-        allow update: if isOwner(userId) && isUpdatingOwnUsageEventStatus(userId);
-        allow delete: if false;
-      }
-      
-      match /diagnosisReports/{reportId} {
-        allow read: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && isValidDiagnosisReport(userId) && isWithinMonthlyLimit(userId);
-        allow update, delete: if false;
-      }
+      allow read, write: if isOwner(userId) || isAdmin();
 
-      match /priceCalculations/{calculationId} {
-        allow read, create, delete: if isOwner(userId);
-        allow update: if false; // Calculations are immutable once saved
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(userId) || isAdmin();
       }
+    }
+
+    // Tenancy-based structures (for shared diagnostics/products if used)
+    match /tenants/{tenantId} {
+      allow read, write: if isOwner(tenantId) || isAdmin();
+      
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(tenantId) || isAdmin();
+      }
+    }
+
+    // Billing events (Admin only)
+    match /billing_events/{eventId} {
+      allow read: if isAdmin();
     }
   }
 }

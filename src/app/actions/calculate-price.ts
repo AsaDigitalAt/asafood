@@ -1,5 +1,10 @@
 'use server';
 
+/**
+ * @fileOverview Mantém as definições de tipo para compatibilidade.
+ * A lógica de execução foi movida para o cliente (pricingFlow) seguindo a nova arquitetura.
+ */
+
 // Shared type for an ingredient
 export interface Ingredient {
   id: number;
@@ -15,6 +20,7 @@ export interface CalculationPayload {
   ingredients: Ingredient[];
   profitMargin: number;
   taxes: number;
+  deliveryType: 'propria' | 'ifood';
 }
 
 // Type for the data returned by the webhook on success
@@ -28,36 +34,10 @@ export type PriceCalculationState = {
   error: string | null;
 };
 
-
+// Esta função foi desativada em favor da nova arquitetura de pricingFlow autenticada no cliente.
 export async function calculateNewPrice(payload: CalculationPayload): Promise<PriceCalculationState> {
-  const webhookUrl = 'https://unreleasible-pocked-azucena.ngrok-free.dev/webhook/preconovo';
-
-  try {
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      // Throwing an error here will be caught by the try/catch block
-      throw new Error(`Erro no Webhook (${response.status}): ${errorText || response.statusText}`);
-    }
-
-    const rawData = await response.json();
-    // Ensure the data is always an array for consistent handling on the client
-    const data: CalculationResult[] = Array.isArray(rawData) ? rawData : [rawData];
-    return { data, error: null };
-
-  } catch (error: any) {
-    console.error("Erro na Server Action 'calculateNewPrice':", error);
-    return {
+  return {
       data: null,
-      error: error.message || "Não foi possível conectar ao serviço de cálculo de preços.",
-    };
-  }
+      error: "Este endpoint foi desativado em favor da nova arquitetura de pricingFlow autenticada."
+  };
 }
