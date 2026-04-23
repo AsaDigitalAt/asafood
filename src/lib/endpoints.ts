@@ -4,4 +4,5 @@ export const ENDPOINTS = {
   generatePlan: "https://generateplan-enklxwrpjq-uc.a.run.app/",
   createPricing: "https://createpricing-enklxwrpjq-uc.a.run.app/",
   xgrowWebhook: "https://xgrowwebhook-enklxwrpjq-uc.a.run.app",
+  analyzeGratuita: "https://analyzegratuita-enklxwrpjq-uc.a.run.app",
 };
