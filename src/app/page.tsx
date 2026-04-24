@@ -15,8 +15,9 @@ import MenuAnalysisView from "@/components/app/menu-analysis/menu-analysis-view"
 import PriceCalculatorView from "@/components/app/price-calculator/PriceCalculatorView";
 import { HubView } from "@/components/app/hub-view";
 import { RestaurantView } from "@/components/app/restaurant/restaurant-view";
+import { FreeAnalysisView } from "@/components/app/free-analysis/free-analysis-view";
 
-type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis" | "price-calculator";
+type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis" | "price-calculator" | "free-analysis";
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
@@ -67,6 +68,8 @@ export default function Home() {
         return <RestaurantView onNavigate={handleNavigate} onBack={() => setCurrentView("hub")} />;
       case "admin":
         return <AdminDashboard onBack={() => setCurrentView("hub")} />;
+      case "free-analysis":
+        return <FreeAnalysisView onBack={() => setCurrentView("hub")} />;
       default:
         return <HubView onNavigate={handleNavigate} />;
     }

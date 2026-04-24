@@ -54,13 +54,11 @@ const HeroSection = ({ onBack }: { onBack: () => void }) => (
             height={400}
             className="absolute bottom-0 right-0 w-auto h-auto max-w-[300px] md:max-w-[400px] translate-x-1/4 translate-y-1/4 opacity-100"
         />
-        {/* Botão de voltar ao hub */}
         <button
             onClick={onBack}
-            className="absolute top-6 left-6 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-primary-foreground/80 hover:bg-white/20 hover:text-primary-foreground transition-all text-sm font-bold backdrop-blur-sm"
+            className="fixed top-24 md:top-[120px] left-6 md:left-[128px] z-50 flex justify-center items-center w-12 h-12 rounded-full bg-primary text-white hover:bg-primary/90 transition-colors border border-white/20 shadow-xl"
         >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar
+            <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="relative z-10 max-w-4xl mx-auto opacity-0 animate-fade-up">
             <h1 className="text-6xl md:text-8xl font-extrabold tracking-tighter">
