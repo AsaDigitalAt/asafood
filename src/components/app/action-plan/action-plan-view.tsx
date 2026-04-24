@@ -17,9 +17,9 @@ export default function ActionPlanView({ onBack }: ActionPlanViewProps) {
     if (selectedReport) {
         return (
             <div className="relative">
-                 <div className="absolute top-24 md:top-32 left-4 md:left-10 z-20">
-                    <Button 
-                        onClick={() => setSelectedReport(null)} 
+                <div className="absolute top-24 md:top-32 left-4 md:left-10 z-20 print:hidden">
+                    <Button
+                        onClick={() => setSelectedReport(null)}
                         variant="outline"
                         className="rounded-full bg-black/20 border-white/20 hover:bg-primary/10 hover:border-primary hover:text-primary h-12 px-6 uppercase font-bold tracking-wider"
                     >

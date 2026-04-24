@@ -7,7 +7,7 @@ import { FunnelMetrics } from "./funnel-metrics"
 import { ProblemsList } from "./problems-list"
 import { PrioritiesList } from "./priorities-list"
 import { Button } from "@/components/ui/button"
-import { MessageSquare } from "lucide-react"
+import { MessageSquare, Download } from "lucide-react"
 
 interface DashboardViewProps {
     data: FormState
@@ -58,7 +58,16 @@ export function DashboardView({ data }: DashboardViewProps) {
                         </div>
                     )}
                     
-                    <div className="text-center pt-8">
+                    <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-8 print:hidden">
+                         <Button
+                            size="lg"
+                            variant="outline"
+                            className="h-14 px-10 rounded-full font-bold uppercase tracking-wider border-white/20 hover:bg-white/10"
+                            onClick={() => window.print()}
+                         >
+                            <Download className="mr-3 h-5 w-5" />
+                            Exportar PDF
+                         </Button>
                          <Button
                             size="lg"
                             className="h-14 px-10 rounded-full font-bold uppercase tracking-wider bg-green-600 hover:bg-green-700 text-white"

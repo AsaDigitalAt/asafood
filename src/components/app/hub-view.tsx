@@ -9,7 +9,8 @@ import {
   BookOpenCheck, 
   Store, 
   ArrowRight,
-  Star
+  Star,
+  Zap
 } from "lucide-react";
 import { useUser, useMemoFirebase, useFirestore } from "@/firebase";
 import { useDoc } from "@/firebase/firestore/use-doc";
@@ -24,36 +25,59 @@ type ToolCardProps = {
   delay?: string;
 };
 
-const ToolCard = ({ title, description, icon, onClick, locked, delay }: ToolCardProps) => (
-  <div 
-    onClick={!locked ? onClick : undefined}
-    className={cn(
-      "group relative overflow-hidden bg-white/5 border border-white/10 rounded-[2rem] p-8 transition-all duration-500 backdrop-blur-sm",
-      locked ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-white/30 hover:bg-white/10 hover:-translate-y-1",
-      "animate-fade-up",
-      delay
-    )}
-  >
-    <div className="flex flex-col h-full justify-between gap-6">
-      <div className="flex justify-between items-start">
-        <div className="p-4 rounded-2xl bg-white/10 text-white transition-all duration-500 group-hover:scale-110 group-hover:bg-white/20">
-          {icon}
-        </div>
-        {locked ? (
-          <div className="px-3 py-1 rounded-full bg-white/10 text-white/50 text-[10px] font-bold uppercase tracking-widest border border-white/10">
-            Em Breve
+const ToolCard = ({ title, description, icon, onClick, locked, delay }: ToolCardProps) => {
+  const cardRef = React.useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    cardRef.current.style.setProperty('--mouse-x', `${x}px`);
+    cardRef.current.style.setProperty('--mouse-y', `${y}px`);
+  };
+
+  return (
+    <div 
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onClick={!locked ? onClick : undefined}
+      className={cn(
+        "group relative overflow-hidden bg-white/5 border border-white/10 rounded-[2rem] p-8 transition-all duration-500 backdrop-blur-sm",
+        locked ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-white/30 hover:-translate-y-1",
+        "animate-fade-up",
+        delay
+      )}
+    >
+      {/* Glow Effect */}
+      <div 
+        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100 rounded-[2rem]"
+        style={{
+          background: `radial-gradient(800px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(255,255,255,0.35), transparent 50%)`
+        }}
+      />
+
+      <div className="flex flex-col h-full justify-between gap-6 relative z-10">
+        <div className="flex justify-between items-start">
+          <div className="p-4 rounded-2xl bg-white/10 text-white transition-all duration-500 group-hover:scale-110 group-hover:bg-white/20">
+            {icon}
           </div>
-        ) : (
-          <ArrowRight className="w-5 h-5 text-white/30 transition-all duration-500 group-hover:translate-x-1 group-hover:text-white" />
-        )}
-      </div>
-      <div>
-        <h3 className="text-2xl font-extrabold text-white mb-2 tracking-tight">{title}</h3>
-        <p className="text-white/70 text-sm leading-relaxed font-medium">{description}</p>
+          {locked ? (
+            <div className="px-3 py-1 rounded-full bg-white/10 text-white/50 text-[10px] font-bold uppercase tracking-widest border border-white/10">
+              Em Breve
+            </div>
+          ) : (
+            <ArrowRight className="w-5 h-5 text-white/30 transition-all duration-500 group-hover:translate-x-1 group-hover:text-white" />
+          )}
+        </div>
+        <div>
+          <h3 className="text-2xl font-extrabold text-white mb-2 tracking-tight">{title}</h3>
+          <p className="text-white/70 text-sm leading-relaxed font-medium">{description}</p>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export function HubView({ onNavigate }: { onNavigate: (view: any) => void }) {
   const { user } = useUser();
@@ -122,6 +146,13 @@ export function HubView({ onNavigate }: { onNavigate: (view: any) => void }) {
             delay="[animation-delay:300ms]"
           />
           <ToolCard 
+            title="Análise Gratuita"
+            description="Receba uma análise personalizada do seu perfil no iFood, sem custos e sem compromisso."
+            icon={<Zap className="w-8 h-8" />}
+            onClick={() => onNavigate("free-analysis")}
+            delay="[animation-delay:350ms]"
+          />
+          <ToolCard 
             title="Análise de Cardápio"
             description="Deixe nossa IA avaliar suas fotos e descrições para tornar seu cardápio irresistível."
             icon={<BookOpenCheck className="w-8 h-8" />}
@@ -130,7 +161,7 @@ export function HubView({ onNavigate }: { onNavigate: (view: any) => void }) {
             delay="[animation-delay:400ms]"
           />
           <ToolCard 
-            title="Meu Restaurante"
+            title="Meu Perfil"
             description="Gerencie as informações básicas do seu estabelecimento e dados de faturamento mensal."
             icon={<Store className="w-8 h-8" />}
             onClick={() => onNavigate("restaurant")}

@@ -36,6 +36,7 @@ const planLimits: Record<string, number> = {
 export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: AppHeaderProps) {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const auth = useAuth();
@@ -55,6 +56,14 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
   }, [firestore, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
   const isAdmin = !!adminRole;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -119,11 +128,13 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
   const usageLimit = isDeveloper ? Infinity : (userProfile?.quota?.diagnosticsMax ?? planLimits[userProfile?.plan] ?? 0);
   const usageText = isDeveloper ? `${usageCount} / ∞` : `${usageCount} / ${usageLimit}`;
 
+  const forceSolidHeader = currentView === 'price-calculator' || currentView === 'action-plan';
+
   return (
     <header className={cn(
-      "fixed top-0 left-0 w-full p-6 md:px-12 md:py-10 flex justify-between items-center z-50 transition-all duration-500",
+      "fixed top-0 left-0 w-full px-6 md:px-12 flex justify-between items-center z-50 transition-all duration-500 print:hidden",
       isLoggedIn ? "opacity-100" : "opacity-0 pointer-events-none",
-      "bg-transparent"
+      (scrolled || forceSolidHeader) ? "bg-primary/95 backdrop-blur-xl py-4 shadow-2xl" : "bg-transparent py-6 md:py-10"
     )}>
       <div className="flex items-center gap-6">
         <div ref={menuRef} className="relative">

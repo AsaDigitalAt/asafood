@@ -24,7 +24,7 @@ type DiagnosisReport = any & {
 
 const getStatusClass = (saudeGeral?: string) => {
     if (saudeGeral === 'critico') return 'danger-bg !text-foreground border-secondary';
-    if (saudeGeral === 'misto')   return 'warning-bg !text-amber-400 border-amber-500/30';
+    if (saudeGeral === 'misto') return 'warning-bg !text-amber-400 border-amber-500/30';
     if (saudeGeral === 'saudavel') return 'success-bg !text-green-400 border-green-500/30';
     return 'warning-bg !text-amber-400 border-amber-500/30';
 };
