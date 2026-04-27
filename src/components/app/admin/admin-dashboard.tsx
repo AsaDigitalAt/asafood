@@ -30,17 +30,17 @@ interface AdminDashboardProps {
 }
 
 const planLabels: Record<UserProfile['plan'], string> = {
-  convidado: "Convidado",
-  plano_unico: "Plano Único",
-  plano_duplo: "Plano Duplo",
-  plano_acelerador: "Plano Acelerador",
-  desenvolvedor: "Desenvolvedor",
+    convidado: "Convidado",
+    plano_unico: "Plano Único",
+    plano_duplo: "Plano Duplo",
+    plano_acelerador: "Plano Acelerador",
+    desenvolvedor: "Desenvolvedor",
 };
 
 const planStatusLabels: Record<UserProfile['planStatus'], string> = {
-  active: "Ativo",
-  inactive: "Inativo",
-  past_due: "Pendente",
+    active: "Ativo",
+    inactive: "Inativo",
+    past_due: "Pendente",
 };
 
 export default function AdminDashboard({ onBack }: AdminDashboardProps) {
@@ -68,13 +68,13 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
     if (!isAdmin) {
         return (
             <div className="min-h-screen flex flex-col justify-center items-center text-center p-4">
-                 <div className="glass-card max-w-lg w-full p-10 md:p-16 rounded-3xl shadow-2xl opacity-0 animate-fade-up">
+                <div className="glass-card max-w-lg w-full p-10 md:p-16 rounded-3xl shadow-2xl opacity-0 animate-fade-up">
                     <div className="text-6xl mb-6 text-destructive/50">
                         <ShieldAlert />
                     </div>
                     <h2 className="text-3xl font-bold text-foreground mb-2">Acesso Negado</h2>
                     <p className="text-muted-foreground mb-8">Você não tem permissão para acessar esta página.</p>
-                    <Button 
+                    <Button
                         onClick={onBack}
                         variant="outline"
                         className="rounded-full bg-transparent border-foreground/20 hover:bg-primary/10 hover:border-primary hover:text-primary h-12 px-8 uppercase font-bold tracking-wider"
@@ -86,7 +86,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
             </div>
         );
     }
-    
+
     const handleFieldChange = (userId: string, field: 'plan' | 'planStatus', value: string) => {
         const userDocRef = doc(firestore, 'users', userId);
         updateDoc(userDocRef, { [field]: value }).catch((serverError) => {
@@ -103,17 +103,17 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
         <div className="max-w-7xl mx-auto px-4 py-24 md:py-32 opacity-0 animate-fade-up">
             <div className="glass-card rounded-3xl p-6 md:p-10 shadow-2xl">
                 <header className="text-center mb-12">
-                     <h1 className="text-4xl md:text-5xl font-extrabold mb-3">
-                        <span className="text-gradient">Painel do </span> 
+                    <h1 className="text-4xl md:text-5xl font-extrabold mb-3">
+                        <span className="text-gradient">Painel do </span>
                         <span className="text-primary">Administrador</span>
                     </h1>
                     <p className="text-lg text-muted-foreground">Gerenciamento de usuários e planos.</p>
                 </header>
-                
+
                 <div className="mb-12">
                     <h2 className="text-2xl font-bold mb-4 text-gradient">Usuários</h2>
                     {areUsersLoading ? <p>Carregando usuários...</p> : (
-                         <Table>
+                        <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Email</TableHead>
@@ -161,12 +161,12 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                                     </TableRow>
                                 ))}
                             </TableBody>
-                         </Table>
+                        </Table>
                     )}
                 </div>
 
                 <div>
-                     <Button onClick={onBack} variant="outline">
+                    <Button onClick={onBack} variant="outline">
                         <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o Diagnóstico
                     </Button>
                 </div>

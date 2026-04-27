@@ -2,12 +2,12 @@
 
 import React from 'react';
 import { cn } from "@/lib/utils";
-import { 
-  BarChart3, 
-  Rocket, 
-  Calculator, 
-  MessageSquare, 
-  Star, 
+import {
+  BarChart3,
+  Rocket,
+  Calculator,
+  MessageSquare,
+  Star,
   ArrowLeft,
   ChevronRight,
   User,
@@ -56,7 +56,7 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
   const reportsQuery = useMemoFirebase(() => {
     if (!firestore || !userProfile?.tenantId) return null;
     return query(
-      collection(firestore, `tenants/${userProfile.tenantId}/diagnostics`), 
+      collection(firestore, `tenants/${userProfile.tenantId}/diagnostics`),
       orderBy('createdAt', 'desc'),
       limit(3)
     );
@@ -67,7 +67,7 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
   const calcsQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
-      collection(firestore, `users/${user.uid}/priceCalculations`), 
+      collection(firestore, `users/${user.uid}/priceCalculations`),
       orderBy('createdAt', 'desc'),
       limit(3)
     );
@@ -83,25 +83,25 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
   return (
     <div className="min-h-screen bg-primary pt-32 pb-20 px-6 md:px-12">
       <div className="max-w-5xl mx-auto space-y-10">
-        
+
         {/* Header com Botão Voltar */}
         <header className="flex items-center gap-6 animate-fade-up">
-          <Button 
-            onClick={onBack} 
-            variant="outline" 
-            size="icon" 
+          <Button
+            onClick={onBack}
+            variant="outline"
+            size="icon"
             className="h-12 w-12 rounded-2xl bg-white/10 border-white/20 text-white hover:bg-white/20 transition-all"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
-            Meu <span className="text-white/40">Restaurante</span>
+            Meu <span className="text-white/40">Perfil</span>
           </h1>
         </header>
 
         {/* Grid de Informações Macro */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Card de Usuário/Perfil */}
           <div className="lg:col-span-1 space-y-8 animate-fade-up [animation-delay:100ms]">
             <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-xl">
@@ -130,19 +130,29 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
               </div>
             </div>
 
-            {/* Suporte */}
-            <Button 
-              onClick={() => window.open('https://wa.me/556193788529', '_blank')}
-              className="w-full h-20 rounded-[2rem] bg-white text-primary hover:bg-white/90 font-black text-lg gap-4 shadow-xl transition-all hover:scale-[1.02] active:scale-95"
-            >
-              <MessageSquare className="w-6 h-6" />
-              Falar com Especialista
-            </Button>
+            {/* Ações */}
+            <div className="flex flex-col gap-4">
+              <Button
+                onClick={() => window.open('https://wa.me/556193788529', '_blank')}
+                className="w-full h-20 rounded-[2rem] bg-white text-primary hover:bg-white/90 font-black text-lg gap-4 shadow-xl transition-all hover:scale-[1.02] active:scale-95"
+              >
+                <MessageSquare className="w-6 h-6" />
+                Falar com Especialista
+              </Button>
+
+              <Button
+                onClick={() => alert("Em breve: Página de planos!")}
+                className="w-full h-16 rounded-[2rem] bg-transparent border-2 border-white/20 text-white hover:bg-white/10 font-bold text-base gap-3 transition-all hover:scale-[1.02] active:scale-95"
+              >
+                <Rocket className="w-5 h-5" />
+                Fazer Upgrade de Plano
+              </Button>
+            </div>
           </div>
 
           {/* Seção de Dados e Histórico */}
           <div className="lg:col-span-2 space-y-8 animate-fade-up [animation-delay:200ms]">
-            
+
             {/* Card de Uso e Gerações */}
             <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-xl">
               <div className="flex justify-between items-end mb-6">
@@ -164,7 +174,7 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
 
             {/* Histórico Simplificado */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              
+
               {/* Últimos Diagnósticos */}
               <div className="space-y-4">
                 <div className="flex items-center gap-3 mb-2">
@@ -173,7 +183,7 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
                 </div>
                 <div className="space-y-3">
                   {reports && reports.length > 0 ? reports.map((report: any) => (
-                    <div 
+                    <div
                       key={report.id}
                       onClick={() => onNavigate('action-plan')}
                       className="group flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all"
@@ -202,7 +212,7 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
                 </div>
                 <div className="space-y-3">
                   {calculations && calculations.length > 0 ? calculations.map((calc: any) => (
-                    <div 
+                    <div
                       key={calc.id}
                       onClick={() => onNavigate('price-calculator')}
                       className="group flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all"
