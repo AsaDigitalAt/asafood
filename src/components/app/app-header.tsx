@@ -82,7 +82,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
     await auth.signOut();
     onLogout();
   };
-  
+
   const NavItem = ({
     view,
     icon,
@@ -97,7 +97,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
     locked?: boolean;
   }) => {
     if (adminOnly && !isAdmin) return null;
-  
+
     return (
       <div
         className={cn(
@@ -119,9 +119,9 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
       </div>
     );
   };
-  
+
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || '...';
-  
+
   const planName = userProfile?.plan ? planLabels[userProfile.plan] ?? userProfile.plan : "Carregando...";
   const usageCount = userProfile?.usage?.diagnosticsUsed ?? 0;
   const isDeveloper = userProfile?.plan === 'desenvolvedor' || userProfile?.role === 'developer';
@@ -149,7 +149,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
             <span className="w-4 h-0.5 rounded-full bg-white"></span>
             <span className="w-6 h-0.5 rounded-full bg-white"></span>
           </button>
-          
+
           <nav className={cn(
             "absolute top-18 left-0 bg-black/60 backdrop-blur-2xl rounded-3xl p-3 min-w-72 border border-white/10 shadow-2xl",
             "opacity-0 invisible -translate-y-5 transition-all duration-500",
@@ -159,7 +159,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
             <NavItem view="diagnosis" icon={<BarChart3 className="w-5 h-5" />} text="Diagnóstico" />
             <NavItem view="action-plan" icon={<Rocket className="w-5 h-5" />} text="Meu Plano de Ação" />
             <NavItem view="price-calculator" icon={<Calculator className="w-5 h-5" />} text="Calculadora de Preços" />
-            <NavItem view="restaurant" icon={<Store className="w-5 h-5" />} text="Meu Restaurante" />
+            <NavItem view="restaurant" icon={<Store className="w-5 h-5" />} text="Meu Perfil" />
             <NavItem view="admin" icon={<Shield className="w-5 h-5" />} text="Painel do Administrador" adminOnly={true} />
             <NavItem view="menu-analysis" icon={<BookOpenCheck className="w-5 h-5" />} text="Análise de Cardápio" locked={true} />
           </nav>
@@ -192,17 +192,17 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
           "opacity-0 invisible -translate-y-2 transition-all duration-500",
           isProfileOpen && "opacity-100 visible translate-y-0"
         )}>
-           <div className="p-3">
-             <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] block mb-2 font-black">Plano Atual</span>
-             <div className="flex items-center gap-3 text-white font-extrabold text-lg">
-               <Star className="w-5 h-5 fill-white/20 text-white/40" /> {planName}
-             </div>
+          <div className="p-3">
+            <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] block mb-2 font-black">Plano Atual</span>
+            <div className="flex items-center gap-3 text-white font-extrabold text-lg">
+              <Star className="w-5 h-5 fill-white/20 text-white/40" /> {planName}
+            </div>
           </div>
-           <div className="p-3">
-             <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] block mb-2 font-black">Gerações Mensais</span>
-             <div className="flex items-center gap-3 text-white font-extrabold text-lg">
-                {usageText}
-             </div>
+          <div className="p-3">
+            <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] block mb-2 font-black">Gerações Mensais</span>
+            <div className="flex items-center gap-3 text-white font-extrabold text-lg">
+              {usageText}
+            </div>
           </div>
           <div className="border-t border-white/10 my-3"></div>
           <button onClick={handleLogout} className="flex items-center gap-4 p-4 rounded-2xl text-sm font-black text-white/60 w-full text-left hover:bg-white/10 hover:text-white transition-all">
