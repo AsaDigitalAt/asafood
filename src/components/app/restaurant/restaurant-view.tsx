@@ -10,8 +10,8 @@ import {
   Star,
   ArrowLeft,
   ChevronRight,
-  User,
-  History
+  SearchCheck,
+  Infinity as InfinityIcon,
 } from "lucide-react";
 import { useUser, useMemoFirebase, useFirestore } from "@/firebase";
 import { useDoc } from "@/firebase/firestore/use-doc";
@@ -19,6 +19,7 @@ import { useCollection } from "@/firebase/firestore/use-collection";
 import { doc, collection, query, orderBy, limit } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useAccessControl } from "@/hooks/use-access-control";
 
 type RestaurantViewProps = {
   onBack: () => void;
@@ -27,8 +28,8 @@ type RestaurantViewProps = {
 
 const planLabels: Record<string, string> = {
   convidado: "Convidado",
-  plano_unico: "Plano Único",
-  plano_duplo: "Plano Duplo",
+  plano_unico: "Plano Essencial",
+  plano_duplo: "Plano Performance",
   plano_acelerador: "Plano Acelerador",
   desenvolvedor: "Desenvolvedor",
 };
@@ -75,10 +76,8 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
   const { data: calculations } = useCollection<any>(calcsQuery);
 
   const planName = userProfile?.plan ? planLabels[userProfile.plan] : "Plano AsaFood";
-  const usageCount = userProfile?.usage?.reportsThisCycle ?? 0;
-  const usageLimit = userProfile?.plan ? planLimits[userProfile.plan] : 0;
   const isDeveloper = userProfile?.plan === 'desenvolvedor';
-  const progressValue = isDeveloper ? 100 : (usageCount / usageLimit) * 100;
+  const { diagnostics, pricing, freeAnalysis } = useAccessControl();
 
   return (
     <div className="min-h-screen bg-primary pt-32 pb-20 px-6 md:px-12">
@@ -153,22 +152,95 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
           {/* Seção de Dados e Histórico */}
           <div className="lg:col-span-2 space-y-8 animate-fade-up [animation-delay:200ms]">
 
-            {/* Card de Uso e Gerações */}
-            <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-xl">
-              <div className="flex justify-between items-end mb-6">
-                <div>
-                  <span className="text-white/40 text-[10px] uppercase tracking-[0.2em] font-black block mb-1">Gerações Mensais</span>
-                  <h3 className="text-3xl font-black text-white">
-                    {usageCount} <span className="text-white/20">/</span> {isDeveloper ? '∞' : usageLimit}
-                  </h3>
-                </div>
+            {/* Card de Uso por Recurso */}
+            <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-xl space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="text-white/40 text-[10px] uppercase tracking-[0.2em] font-black">Uso de Recursos</span>
                 <div className="p-3 rounded-2xl bg-white/10 text-white">
-                  <Star className="w-6 h-6 fill-white/20" />
+                  <Star className="w-5 h-5 fill-white/20" />
                 </div>
               </div>
-              <Progress value={progressValue} className="h-4 bg-white/10 [&>div]:bg-white rounded-full" />
-              <p className="mt-4 text-xs text-white/50 font-medium">
-                Sua cota de diagnósticos reinicia automaticamente todo dia 1º de cada mês.
+
+              {/* Diagnóstico */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-white/50" />
+                    <span className="text-sm font-bold text-white/80">Diagnóstico</span>
+                  </div>
+                  <span className="text-sm font-black text-white">
+                    {isDeveloper ? (
+                      <span className="text-white/60">∞</span>
+                    ) : (
+                      <>{diagnostics.used}<span className="text-white/30"> / {diagnostics.max}</span></>
+                    )}
+                  </span>
+                </div>
+                <Progress
+                  value={isDeveloper ? 100 : diagnostics.max > 0 ? (diagnostics.used / diagnostics.max) * 100 : 0}
+                  className="h-2.5 bg-white/10 [&>div]:bg-white rounded-full"
+                />
+                {!isDeveloper && (
+                  <p className="text-[10px] text-white/30 font-medium">
+                    {diagnostics.remaining} restante{diagnostics.remaining !== 1 ? 's' : ''} neste ciclo
+                  </p>
+                )}
+              </div>
+
+              {/* Análise Geral */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <SearchCheck className="w-4 h-4 text-white/50" />
+                    <span className="text-sm font-bold text-white/80">Análise Geral</span>
+                  </div>
+                  <span className="text-sm font-black text-white">
+                    {isDeveloper ? (
+                      <span className="text-white/60">∞</span>
+                    ) : (
+                      <>{freeAnalysis.used}<span className="text-white/30"> / {freeAnalysis.max}</span></>
+                    )}
+                  </span>
+                </div>
+                <Progress
+                  value={isDeveloper ? 100 : freeAnalysis.max > 0 ? (freeAnalysis.used / freeAnalysis.max) * 100 : 0}
+                  className="h-2.5 bg-white/10 [&>div]:bg-white rounded-full"
+                />
+                {!isDeveloper && (
+                  <p className="text-[10px] text-white/30 font-medium">
+                    {freeAnalysis.remaining} restante{freeAnalysis.remaining !== 1 ? 's' : ''} neste ciclo
+                  </p>
+                )}
+              </div>
+
+              {/* Precificação */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calculator className="w-4 h-4 text-white/50" />
+                    <span className="text-sm font-bold text-white/80">Precificação</span>
+                  </div>
+                  <span className="text-sm font-black text-white">
+                    {isDeveloper ? (
+                      <span className="text-white/60">∞</span>
+                    ) : (
+                      <>{pricing.used}<span className="text-white/30"> / {pricing.max}</span></>
+                    )}
+                  </span>
+                </div>
+                <Progress
+                  value={isDeveloper ? 100 : pricing.max > 0 ? (pricing.used / pricing.max) * 100 : 0}
+                  className="h-2.5 bg-white/10 [&>div]:bg-white rounded-full"
+                />
+                {!isDeveloper && (
+                  <p className="text-[10px] text-white/30 font-medium">
+                    {pricing.remaining} restante{pricing.remaining !== 1 ? 's' : ''} neste ciclo
+                  </p>
+                )}
+              </div>
+
+              <p className="text-[10px] text-white/30 font-medium border-t border-white/10 pt-4">
+                Cotas reiniciam automaticamente todo dia 1º de cada mês.
               </p>
             </div>
 

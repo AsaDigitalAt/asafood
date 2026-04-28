@@ -16,6 +16,7 @@ import PriceCalculatorView from "@/components/app/price-calculator/PriceCalculat
 import { HubView } from "@/components/app/hub-view";
 import { RestaurantView } from "@/components/app/restaurant/restaurant-view";
 import { FreeAnalysisView } from "@/components/app/free-analysis/free-analysis-view";
+import { RenewalAlert } from "@/components/app/renewal-alert";
 
 type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis" | "price-calculator" | "free-analysis";
 

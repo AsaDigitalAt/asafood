@@ -146,7 +146,7 @@ export function HubView({ onNavigate }: { onNavigate: (view: any) => void }) {
             delay="[animation-delay:300ms]"
           />
           <ToolCard 
-            title="Análise Gratuita"
+            title="Análise Geral"
             description="Receba uma análise personalizada do seu perfil no iFood, sem custos e sem compromisso."
             icon={<Zap className="w-8 h-8" />}
             onClick={() => onNavigate("free-analysis")}

@@ -418,7 +418,7 @@ export function FreeAnalysisView({ onBack }: { onBack?: () => void }) {
             )}
             <div className="flex flex-col items-start text-left">
               <div className="px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-white/90 text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
-                Análise Gratuita
+                Análise Geral
               </div>
               <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-white leading-none mb-3">
                 Descubra o potencial do seu restaurante
@@ -509,7 +509,7 @@ export function FreeAnalysisView({ onBack }: { onBack?: () => void }) {
                   {pageState === "loading" ? (
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   ) : (
-                    "Quero minha análise gratuita"
+                    "Quero minha análise geral"
                   )}
                 </Button>
               </div>

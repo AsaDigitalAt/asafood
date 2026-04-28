@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { BarChart3, Rocket, Store, Star, LogOut, Shield, BookOpenCheck, Calculator, Lock, LayoutGrid } from "lucide-react";
+import { BarChart3, Rocket, Store, Star, LogOut, Shield, BookOpenCheck, Calculator, Lock, LayoutGrid, SearchCheck } from "lucide-react";
 import { useAuth, useUser, useMemoFirebase, useFirestore } from "@/firebase";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { doc } from "firebase/firestore";
 
-type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis" | "price-calculator";
+import { NotificationCenter } from "./notification-center";
+
+type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis" | "price-calculator" | "free-analysis";
 
 type AppHeaderProps = {
   currentView: View;
@@ -19,8 +21,8 @@ type AppHeaderProps = {
 
 const planLabels: Record<string, string> = {
   convidado: "Convidado",
-  plano_unico: "Plano Único",
-  plano_duplo: "Plano Duplo",
+  plano_unico: "Plano Essencial",
+  plano_duplo: "Plano Performance",
   plano_acelerador: "Plano Acelerador",
   desenvolvedor: "Desenvolvedor",
 };
@@ -151,12 +153,13 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
           </button>
 
           <nav className={cn(
-            "absolute top-18 left-0 bg-black/60 backdrop-blur-2xl rounded-3xl p-3 min-w-72 border border-white/10 shadow-2xl",
+            "absolute top-18 left-0 bg-black/85 backdrop-blur-2xl rounded-3xl p-3 min-w-72 border border-white/10 shadow-2xl",
             "opacity-0 invisible -translate-y-5 transition-all duration-500",
             isMenuOpen && "opacity-100 visible translate-y-0"
           )}>
-            <NavItem view="hub" icon={<LayoutGrid className="w-5 h-5" />} text="Início (Hub)" />
+            <NavItem view="hub" icon={<LayoutGrid className="w-5 h-5" />} text="Início" />
             <NavItem view="diagnosis" icon={<BarChart3 className="w-5 h-5" />} text="Diagnóstico" />
+            <NavItem view="free-analysis" icon={<SearchCheck className="w-5 h-5" />} text="Análise Geral" />
             <NavItem view="action-plan" icon={<Rocket className="w-5 h-5" />} text="Meu Plano de Ação" />
             <NavItem view="price-calculator" icon={<Calculator className="w-5 h-5" />} text="Calculadora de Preços" />
             <NavItem view="restaurant" icon={<Store className="w-5 h-5" />} text="Meu Perfil" />
@@ -175,40 +178,45 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
         </div>
       </div>
 
-      <div ref={profileRef} className="relative">
-        <div onClick={() => setProfileOpen(!isProfileOpen)} className="flex items-center gap-4 cursor-pointer">
-          <div className="relative group">
-            <div className={cn(
-              "w-14 h-14 rounded-full flex justify-center items-center font-bold transition-all duration-500 backdrop-blur-md",
-              "bg-white/20 border-2 border-white/30 text-white group-hover:border-white group-hover:bg-white/30"
-            )}>
-              {userInitials}
-            </div>
-            <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-[#FE1413] rounded-full"></span>
-          </div>
-        </div>
-        <div className={cn(
-          "absolute top-full right-0 mt-4 bg-black/60 backdrop-blur-2xl p-4 rounded-3xl whitespace-nowrap min-w-64 shadow-2xl border border-white/10",
-          "opacity-0 invisible -translate-y-2 transition-all duration-500",
-          isProfileOpen && "opacity-100 visible translate-y-0"
-        )}>
-          <div className="p-3">
-            <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] block mb-2 font-black">Plano Atual</span>
-            <div className="flex items-center gap-3 text-white font-extrabold text-lg">
-              <Star className="w-5 h-5 fill-white/20 text-white/40" /> {planName}
+      <div className="flex items-center gap-4 relative">
+        <NotificationCenter />
+        
+        <div ref={profileRef} className="relative">
+          <div onClick={() => setProfileOpen(!isProfileOpen)} className="flex items-center gap-4 cursor-pointer">
+            <div className="relative group">
+              <div className={cn(
+                "w-14 h-14 rounded-full flex justify-center items-center font-bold transition-all duration-500 backdrop-blur-md",
+                "bg-white/20 border-2 border-white/30 text-white group-hover:border-white group-hover:bg-white/30"
+              )}>
+                {userInitials}
+              </div>
+              <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-[#FE1413] rounded-full"></span>
             </div>
           </div>
-          <div className="p-3">
-            <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] block mb-2 font-black">Gerações Mensais</span>
-            <div className="flex items-center gap-3 text-white font-extrabold text-lg">
-              {usageText}
+
+          <div className={cn(
+            "absolute top-full right-0 mt-4 bg-black/60 backdrop-blur-2xl p-4 rounded-3xl whitespace-nowrap min-w-64 shadow-2xl border border-white/10",
+            "opacity-0 invisible -translate-y-2 transition-all duration-500",
+            isProfileOpen && "opacity-100 visible translate-y-0"
+          )}>
+            <div className="p-3">
+              <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] block mb-2 font-black">Plano Atual</span>
+              <div className="flex items-center gap-3 text-white font-extrabold text-lg">
+                <Star className="w-5 h-5 fill-white/20 text-white/40" /> {planName}
+              </div>
             </div>
+            <div className="p-3">
+              <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] block mb-2 font-black">Gerações Mensais</span>
+              <div className="flex items-center gap-3 text-white font-extrabold text-lg">
+                {usageText}
+              </div>
+            </div>
+            <div className="border-t border-white/10 my-3"></div>
+            <button onClick={handleLogout} className="flex items-center gap-4 p-4 rounded-2xl text-sm font-black text-white/60 w-full text-left hover:bg-white/10 hover:text-white transition-all">
+              <LogOut className="w-5 h-5" />
+              <span>Sair da Conta</span>
+            </button>
           </div>
-          <div className="border-t border-white/10 my-3"></div>
-          <button onClick={handleLogout} className="flex items-center gap-4 p-4 rounded-2xl text-sm font-black text-white/60 w-full text-left hover:bg-white/10 hover:text-white transition-all">
-            <LogOut className="w-5 h-5" />
-            <span>Sair da Conta</span>
-          </button>
         </div>
       </div>
     </header>
