@@ -34,7 +34,7 @@ export interface AccessControlStatus {
 
 const PLAN_LIMITS: Record<string, { diagnostics: number; freeAnalysis: number; pricing: number }> = {
   convidado: { diagnostics: 1, freeAnalysis: 3, pricing: 5 },
-  plano_unico: { diagnostics: 2, freeAnalysis: 10, pricing: 10 },
+  plano_unico: { diagnostics: 2, freeAnalysis: 10, pricing: 25 },
   plano_duplo: { diagnostics: 4, freeAnalysis: 25, pricing: 100 },
   plano_acelerador: { diagnostics: 10, freeAnalysis: 50, pricing: 200 },
 };
@@ -106,11 +106,11 @@ export function useAccessControl(): AccessControlStatus {
   const planKey = userData.plan || "convidado";
   const defaultQuota = PLAN_LIMITS[planKey] || PLAN_LIMITS.convidado;
   
-  // Quota pode vir do DB ou do fallback fixo baseado no plano
+  // Quota: Sempre usa o maior valor entre o banco de dados e a regra atual do plano
   const quota = {
-    diagnosticsMax: userData.quota?.diagnosticsMax ?? defaultQuota.diagnostics,
-    freeAnalysisMax: userData.quota?.freeAnalysisMax ?? defaultQuota.freeAnalysis,
-    productsMax: userData.quota?.productsMax ?? defaultQuota.pricing,
+    diagnosticsMax: Math.max(userData.quota?.diagnosticsMax || 0, defaultQuota.diagnostics),
+    freeAnalysisMax: Math.max(userData.quota?.freeAnalysisMax || 0, defaultQuota.freeAnalysis),
+    productsMax: Math.max(userData.quota?.productsMax || 0, defaultQuota.pricing),
   };
 
   const diagnosticsUsed = Number(usage.diagnosticsUsed || 0);

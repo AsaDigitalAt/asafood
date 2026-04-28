@@ -10,7 +10,7 @@ import { doc } from "firebase/firestore";
 
 import { NotificationCenter } from "./notification-center";
 
-type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis" | "price-calculator" | "free-analysis";
+type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis" | "price-calculator" | "free-analysis" | "my-analyses";
 
 type AppHeaderProps = {
   currentView: View;
@@ -160,6 +160,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
             <NavItem view="hub" icon={<LayoutGrid className="w-5 h-5" />} text="Início" />
             <NavItem view="diagnosis" icon={<BarChart3 className="w-5 h-5" />} text="Diagnóstico" />
             <NavItem view="free-analysis" icon={<SearchCheck className="w-5 h-5" />} text="Análise Geral" />
+            <NavItem view="my-analyses" icon={<SearchCheck className="w-5 h-5" />} text="Minhas Análises" />
             <NavItem view="action-plan" icon={<Rocket className="w-5 h-5" />} text="Meu Plano de Ação" />
             <NavItem view="price-calculator" icon={<Calculator className="w-5 h-5" />} text="Calculadora de Preços" />
             <NavItem view="restaurant" icon={<Store className="w-5 h-5" />} text="Meu Perfil" />
