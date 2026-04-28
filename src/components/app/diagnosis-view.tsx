@@ -57,7 +57,7 @@ const HeroSection = ({ onBack }: { onBack: () => void }) => (
         />
         <button
             onClick={onBack}
-            className="fixed top-24 md:top-[120px] left-6 md:left-[128px] z-50 flex justify-center items-center w-12 h-12 rounded-full bg-primary text-white hover:bg-primary/90 transition-colors border border-white/20 shadow-xl"
+            className="fixed top-24 md:top-[120px] left-6 md:left-[128px] z-40 flex justify-center items-center w-12 h-12 rounded-full bg-primary text-white hover:bg-primary/90 transition-colors border border-white/20 shadow-xl"
         >
             <ArrowLeft className="w-5 h-5" />
         </button>
