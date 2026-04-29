@@ -133,7 +133,7 @@ export function HubView({ onNavigate }: { onNavigate: (view: any) => void }) {
           />
           <ToolCard 
             title="Plano de Ação"
-            description="Acesse seus relatórios salvos e siga o passo a passo personalizado gerado pela nossa IA."
+            description="Acesse seus relatórios salvos e siga o passo a passo personalizado gerado pelo nosso time."
             icon={<Rocket className="w-8 h-8" />}
             onClick={() => onNavigate("action-plan")}
             delay="[animation-delay:200ms]"
@@ -154,7 +154,7 @@ export function HubView({ onNavigate }: { onNavigate: (view: any) => void }) {
           />
           <ToolCard 
             title="Análise de Cardápio"
-            description="Deixe nossa IA avaliar suas fotos e descrições para tornar seu cardápio irresistível."
+            description="Deixe nosso time avaliar suas fotos e descrições para tornar seu cardápio irresistível."
             icon={<BookOpenCheck className="w-8 h-8" />}
             onClick={() => onNavigate("menu-analysis")}
             locked={true}

@@ -64,7 +64,7 @@ const loadingMessages = [
   "Coletando dados do cardápio...",
   "Lendo as avaliações dos clientes...",
   "Cruzando métricas de performance...",
-  "Nossa IA está analisando os dados...",
+  "Nosso time está analisando os dados...",
   "Identificando oportunidades de melhoria...",
   "Preparando seu relatório personalizado...",
 ];

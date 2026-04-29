@@ -4,8 +4,11 @@ import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'Asa Food - iFood Optimizer',
-  description: 'Unlock your iFood sales potential with AI-powered diagnostics and action plans.',
+  title: 'AsaFood - Otimizador de Vendas iFood',
+  description: 'Aumente suas vendas no iFood com diagnósticos e planos de ação baseados em IA.',
+  icons: {
+    icon: 'https://firebasestorage.googleapis.com/v0/b/base-arquivos.firebasestorage.app/o/Logo%20ASA%20OFF.png?alt=media&token=62ef02f9-1b75-4a7a-b496-b56184407e2f',
+  },
 };
 
 export default function RootLayout({

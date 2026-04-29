@@ -94,7 +94,7 @@ const loadingMessages = [
   "Coletando dados do cardápio...",
   "Lendo as avaliações dos clientes...",
   "Cruzando métricas de performance...",
-  "Nossa IA está analisando os dados...",
+  "Nosso time está analisando os dados...",
   "Identificando oportunidades de melhoria...",
   "Preparando seu relatório personalizado...",
 ];
@@ -624,7 +624,7 @@ export default function AnalisePage() {
                 num: "02",
                 icon: <Bot className="w-6 h-6" />,
                 title: "Inteligência Artificial",
-                desc: "Nossa IA especializada analisa e processa as informações do seu perfil com profundidade de consultoria.",
+                desc: "Nosso time especializado analisa e processa as informações do seu perfil com profundidade de consultoria.",
               },
               {
                 num: "03",

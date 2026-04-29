@@ -51,7 +51,7 @@ export function DashboardView({ data }: DashboardViewProps) {
 
                     {data.aiGeneratedPlan && (
                          <div className="glass-card border border-primary/20 rounded-2xl p-6 md:p-8">
-                            <h3 className="text-2xl font-bold text-center mb-6 text-gradient">Plano de Ação Detalhado (IA)</h3>
+                            <h3 className="text-2xl font-bold text-center mb-6 text-gradient">Plano de Ação Detalhado (Time)</h3>
                             <div className="prose prose-invert prose-p:text-muted-foreground prose-strong:text-white max-w-none whitespace-pre-wrap">
                                 <p>{data.aiGeneratedPlan}</p>
                             </div>

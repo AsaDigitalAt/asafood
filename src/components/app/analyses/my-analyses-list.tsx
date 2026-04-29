@@ -56,7 +56,7 @@ export default function MyAnalysesList({ onSelectAnalysis, onBack }: MyAnalysesL
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div className="text-left">
-                    <h1 className="text-4xl md:text-5xl font-extrabold mb-2 text-white">
+                    <h1 className="text-4xl md:text-5xl font-extrabold mb-2 text-foreground">
                         <span className="text-gradient">Minhas</span>{' '}
                         <span className="text-primary">Análises</span>
                     </h1>
@@ -77,7 +77,7 @@ export default function MyAnalysesList({ onSelectAnalysis, onBack }: MyAnalysesL
                         >
                             <div className="flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors text-white">
+                                    <h3 className="text-xl font-bold text-foreground group-hover:text-red-600 transition-colors">
                                         {analysis.restaurantName || "Restaurante"}
                                     </h3>
                                     <p className="text-sm text-muted-foreground">
@@ -90,7 +90,7 @@ export default function MyAnalysesList({ onSelectAnalysis, onBack }: MyAnalysesL
                                             <span className={`text-2xl font-black ${notaColor}`}>
                                                 {nota.toFixed(1)}
                                             </span>
-                                            <span className="text-xs text-white/30 block">NOTA</span>
+                                            <span className="text-xs text-muted-foreground block">NOTA</span>
                                         </div>
                                     )}
                                     <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-primary transition-transform group-hover:translate-x-1" />

@@ -34,3 +34,4 @@ export default function ActionPlanView({ onBack }: ActionPlanViewProps) {
 
     return <ActionPlanList onSelectReport={setSelectedReport} onBack={onBack} />;
 }
+

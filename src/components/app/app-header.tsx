@@ -130,7 +130,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
   const usageLimit = isDeveloper ? Infinity : (userProfile?.quota?.diagnosticsMax ?? planLimits[userProfile?.plan] ?? 0);
   const usageText = isDeveloper ? `${usageCount} / ∞` : `${usageCount} / ${usageLimit}`;
 
-  const forceSolidHeader = currentView === 'price-calculator' || currentView === 'action-plan';
+  const forceSolidHeader = ['price-calculator', 'action-plan', 'my-analyses', 'admin'].includes(currentView);
 
   return (
     <header className={cn(
