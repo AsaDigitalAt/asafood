@@ -8,6 +8,7 @@ import { ProblemsList } from "./problems-list"
 import { PrioritiesList } from "./priorities-list"
 import { Button } from "@/components/ui/button"
 import { MessageSquare, Download } from "lucide-react"
+import { StarRating } from "./star-rating"
 
 interface DashboardViewProps {
     data: FormState
@@ -22,6 +23,18 @@ const getStatusClass = (status?: string) => {
 };
 
 export function DashboardView({ data }: DashboardViewProps) {
+    if (data?.error) {
+        return (
+            <div className="pt-32 text-center space-y-4 px-4">
+                <h2 className="text-2xl font-bold text-red-500">Erro ao carregar diagnóstico</h2>
+                <p className="text-muted-foreground">{data.error}</p>
+                <Button onClick={() => window.location.reload()} variant="outline" className="rounded-full">
+                    Tentar Novamente
+                </Button>
+            </div>
+        );
+    }
+
     if (!data || !data.nome) {
         return <div className="pt-32 text-center text-muted-foreground">Carregando dados do dashboard...</div>;
     }
@@ -47,7 +60,7 @@ export function DashboardView({ data }: DashboardViewProps) {
                     <DiscountAnalysis discounts={data.discounts} />
                     <ProblemsList problems={data.problems} />
                     <PrioritiesList priorities={data.priorities} />
-                    <ActionChecklist actions={data.actions} />
+                    <ActionChecklist actions={data.actions} analysisId={data.id} />
 
                     {data.aiGeneratedPlan && (
                          <div className="glass-card border border-primary/20 rounded-2xl p-6 md:p-8">
@@ -58,25 +71,33 @@ export function DashboardView({ data }: DashboardViewProps) {
                         </div>
                     )}
                     
-                    <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-8 print:hidden">
-                         <Button
-                            size="lg"
-                            variant="outline"
-                            className="h-14 px-10 rounded-full font-bold uppercase tracking-wider border-white/20 hover:bg-white/10"
-                            onClick={() => window.print()}
-                         >
-                            <Download className="mr-3 h-5 w-5" />
-                            Exportar PDF
-                         </Button>
-                         <Button
-                            size="lg"
-                            className="h-14 px-10 rounded-full font-bold uppercase tracking-wider bg-green-600 hover:bg-green-700 text-white"
-                            onClick={() => window.open('https://wa.me/556193788529', '_blank')}
-                         >
-                            <MessageSquare className="mr-3 h-5 w-5" />
-                            Falar com Especialista
-                         </Button>
-                    </div>
+                     <div className="pt-8 border-t border-white/10 print:hidden">
+                        <StarRating 
+                            analysisId={data.id} 
+                            analysisType="performance" 
+                            restaurantName={data.nome} 
+                        />
+                     </div>
+
+                     <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-12 print:hidden">
+                          <Button
+                             size="lg"
+                             variant="outline"
+                             className="h-14 px-10 rounded-full font-bold uppercase tracking-wider border-white/20 hover:bg-white/10"
+                             onClick={() => window.print()}
+                          >
+                             <Download className="mr-3 h-5 w-5" />
+                             Exportar PDF
+                          </Button>
+                          <Button
+                             size="lg"
+                             className="h-14 px-10 rounded-full font-bold uppercase tracking-wider bg-green-600 hover:bg-green-700 text-white"
+                             onClick={() => window.open('https://wa.me/556193788529', '_blank')}
+                          >
+                             <MessageSquare className="mr-3 h-5 w-5" />
+                             Falar com Especialista
+                          </Button>
+                     </div>
                 </div>
             </div>
         </div>

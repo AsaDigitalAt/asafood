@@ -27,7 +27,7 @@ import { runFullDiagnostic } from "@/lib/diagnosticFlow";
 const diagnosisSchema = z.object({
   restaurantName: z.string().min(1, "O nome do restaurante é obrigatório."),
   foodCategory: z.string().min(1, "O nicho de comida é obrigatório."),
-  deliveryType: z.enum(["propria", "ifood"], {
+  deliveryType: z.enum(["propria", "parceira"], {
     required_error: "Selecione o tipo de entrega.",
   }),
   currentMonthRevenue: z.coerce.number().min(0, "O faturamento deve ser positivo."),
@@ -190,7 +190,7 @@ export function DiagnosisView({ onBack, onFormSubmitStart, onFormSubmitEnd }: Di
     defaultValues: {
       restaurantName: "",
       foodCategory: "",
-      deliveryType: "ifood",
+      deliveryType: "parceira",
       currentMonthRevenue: 0,
       currentMonthDiscounts: 0,
       previousMonthRevenue: 0,
@@ -228,7 +228,7 @@ export function DiagnosisView({ onBack, onFormSubmitStart, onFormSubmitEnd }: Di
     try {
         const uploadRes = await uploadDiagnosticImage(storage, values.funnelImage);
 
-        const { final } = await runFullDiagnostic({
+        const { final, diagnosticId } = await runFullDiagnostic({
             restaurantName: values.restaurantName,
             foodCategory: values.foodCategory,
             deliveryType: values.deliveryType,
@@ -241,9 +241,9 @@ export function DiagnosisView({ onBack, onFormSubmitStart, onFormSubmitEnd }: Di
             imageContentType: uploadRes.imageContentType,
             imageOriginalName: uploadRes.imageOriginalName
         });
-
+        
         // Delega o mapeamento v3 → FormState ao utilitário compartilhado
-        const result = mapPlanV3ToFormState(final, values.restaurantName);
+        const result = mapPlanV3ToFormState(final, values.restaurantName, diagnosticId);
 
         onFormSubmitEnd(result);
 
@@ -395,7 +395,7 @@ export function DiagnosisView({ onBack, onFormSubmitStart, onFormSubmitEnd }: Di
                     <FormControl>
                       <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-2 gap-4">
                         <FormLabel htmlFor="propria" className="flex items-center justify-center p-5 border rounded-full cursor-pointer has-[[data-state=checked]]:bg-primary has-[[data-state=checked]]:text-white"><RadioGroupItem value="propria" id="propria" className="hidden" /> Entrega Própria</FormLabel>
-                        <FormLabel htmlFor="ifood" className="flex items-center justify-center p-5 border rounded-full cursor-pointer has-[[data-state=checked]]:bg-primary has-[[data-state=checked]]:text-white"><RadioGroupItem value="ifood" id="ifood" className="hidden" /> Entrega do iFood</FormLabel>
+                        <FormLabel htmlFor="parceira" className="flex items-center justify-center p-5 border rounded-full cursor-pointer has-[[data-state=checked]]:bg-primary has-[[data-state=checked]]:text-white"><RadioGroupItem value="parceira" id="parceira" className="hidden" /> Entrega do iFood</FormLabel>
                       </RadioGroup>
                     </FormControl>
                   </FormItem>

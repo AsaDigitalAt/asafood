@@ -1,23 +1,75 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { useFirebase, useUser, useMemoFirebase } from '@/firebase';
+import { doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { useDoc } from '@/firebase/firestore/use-doc';
 
-export const ActionChecklist = ({ actions }: { actions: any[] }) => {
+export const ActionChecklist = ({ actions, analysisId }: { actions: any[], analysisId?: string }) => {
     const [checkedItems, setCheckedItems] = useState<number[]>([]);
+    const { firestore } = useFirebase();
+    const { user } = useUser();
 
-    const toggleItem = (index: number) => {
-        setCheckedItems(prev => 
-            prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
-        );
+    const userDocRef = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return doc(firestore, 'users', user.uid);
+    }, [firestore, user]);
+    const { data: userProfile } = useDoc<any>(userDocRef);
+
+    useEffect(() => {
+        if (!firestore || !userProfile?.tenantId || !analysisId) return;
+        
+        const docRef = doc(firestore, `tenants/${userProfile.tenantId}/diagnostics`, analysisId);
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.checkedActions && Array.isArray(data.checkedActions)) {
+                    setCheckedItems(data.checkedActions);
+                }
+            }
+        });
+
+        return () => unsubscribe();
+    }, [firestore, userProfile?.tenantId, analysisId]);
+
+    const toggleItem = async (index: number) => {
+        const newChecked = checkedItems.includes(index) 
+            ? checkedItems.filter(i => i !== index) 
+            : [...checkedItems, index];
+            
+        setCheckedItems(newChecked); // Optimistic update
+
+        if (firestore && userProfile?.tenantId && analysisId) {
+            try {
+                const docRef = doc(firestore, `tenants/${userProfile.tenantId}/diagnostics`, analysisId);
+                await updateDoc(docRef, { checkedActions: newChecked });
+            } catch (error) {
+                console.error("Erro ao salvar progresso:", error);
+            }
+        }
     };
 
     if (!actions || actions.length === 0) return null;
 
+    const progressPercentage = Math.round((checkedItems.length / actions.length) * 100);
+
     return (
         <div className="glass-card rounded-2xl p-6 md:p-8">
-            <h3 className="text-2xl font-bold text-center mb-8 text-gradient">⚡ Plano de Ação Completo</h3>
+            <h3 className="text-2xl font-bold text-center mb-6 text-gradient">⚡ Plano de Ação Completo</h3>
+            
+            <div className="mb-8 space-y-2">
+                <div className="flex justify-between text-sm font-semibold text-muted-foreground">
+                    <span>Progresso do Plano</span>
+                    <span className={cn("transition-colors", progressPercentage === 100 ? "text-green-500 font-bold" : "")}>
+                        {progressPercentage}%
+                    </span>
+                </div>
+                <Progress value={progressPercentage} className={cn("h-3", progressPercentage === 100 ? "[&>div]:bg-green-500" : "")} />
+            </div>
+
             <div className="space-y-4">
                 {actions.map((action, index) => {
                     if (!action || !action.descricao) return null;
@@ -28,7 +80,7 @@ export const ActionChecklist = ({ actions }: { actions: any[] }) => {
                             onClick={() => toggleItem(index)}
                             className={cn(
                                 "bg-card/80 p-6 rounded-2xl flex items-start gap-4 cursor-pointer transition-all border border-transparent hover:bg-accent/5 hover:border-primary/20",
-                                isChecked && "opacity-60"
+                                isChecked && "opacity-60 bg-accent/5"
                             )}
                         >
                             <div className={cn(

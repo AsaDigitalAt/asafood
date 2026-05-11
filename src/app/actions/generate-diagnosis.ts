@@ -6,6 +6,7 @@
  */
 
 export type FormState = {
+  id?: string;
   nome: string;
   statusGeral: string;
   conversions: any;

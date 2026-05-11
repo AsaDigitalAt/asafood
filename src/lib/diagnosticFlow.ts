@@ -45,5 +45,5 @@ export async function runFullDiagnostic(input: {
   const finalResponse = await authedPost(ENDPOINTS.generatePlan, { diagnosticId });
 
   // Mapeia a resposta do backend para o shape esperado pelo frontend
-  return { final: finalResponse.plan };
+  return { final: finalResponse.plan, diagnosticId };
 }

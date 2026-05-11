@@ -34,11 +34,12 @@ export function mapSaudeGeral(saudeGeral?: string): string {
  * @param plan   - objeto `plan` retornado pelo backend (schema diagnostico_v3)
  * @param nome   - nome do restaurante (vem do formulário ou do Firestore input.restaurantName)
  */
-export function mapPlanV3ToFormState(plan: any, nome: string): FormState {
+export function mapPlanV3ToFormState(plan: any, nome: string, id?: string): FormState {
   const av   = plan?.funilVendas?.avaliacao ?? {};
   const desc = plan?.analiseDescontos       ?? {};
 
   return {
+    id,
     nome,
 
     statusGeral: mapSaudeGeral(plan?.funilVendas?.saudeGeral),

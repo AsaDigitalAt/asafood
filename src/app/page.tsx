@@ -18,8 +18,12 @@ import { RestaurantView } from "@/components/app/restaurant/restaurant-view";
 import { FreeAnalysisView } from "@/components/app/free-analysis/free-analysis-view";
 import MyAnalysesView from "@/components/app/analyses/my-analyses-view";
 import { RenewalAlert } from "@/components/app/renewal-alert";
+import { SurveyPopup } from "@/components/app/survey-popup";
 
-type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis" | "price-calculator" | "free-analysis" | "my-analyses";
+import DeveloperDashboard from "@/components/app/admin/developer-dashboard";
+import LeadsDashboard from "@/components/app/admin/leads-dashboard";
+
+type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "dev-dashboard" | "leads-dashboard" | "menu-analysis" | "price-calculator" | "free-analysis" | "my-analyses";
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
@@ -70,6 +74,10 @@ export default function Home() {
         return <RestaurantView onNavigate={handleNavigate} onBack={() => setCurrentView("hub")} />;
       case "admin":
         return <AdminDashboard onBack={() => setCurrentView("hub")} />;
+      case "dev-dashboard":
+        return <DeveloperDashboard onBack={() => setCurrentView("hub")} />;
+      case "leads-dashboard":
+        return <LeadsDashboard onBack={() => setCurrentView("hub")} />;
       case "free-analysis":
         return <FreeAnalysisView onBack={() => setCurrentView("hub")} />;
       case "my-analyses":
@@ -98,6 +106,8 @@ export default function Home() {
         <main>
           {renderContent()}
         </main>
+        
+        <SurveyPopup currentView={currentView} />
       </div>
     </>
   );

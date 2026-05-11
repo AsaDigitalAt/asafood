@@ -13,8 +13,10 @@ import {
   Trophy, 
   RefreshCw 
 } from "lucide-react";
+import { StarRating } from "@/components/app/dashboard/star-rating";
 
 export interface AnalysisReport {
+  id?: string;
   nomeRestaurante?: string;
   diagnosticoPrincipal?: string;
   avaliacaoGeral?: { nota: number | null; contexto: string };
@@ -226,6 +228,31 @@ export function ReportView({ report, onReset, showReset = true }: { report: Anal
             )}
           </div>
         )}
+
+        <div className="pt-12 border-t border-border print:hidden">
+            <StarRating 
+                analysisId={report.id} 
+                analysisType="general" 
+                restaurantName={report.nomeRestaurante || "Restaurante"} 
+            />
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-12 print:hidden">
+            <button
+                onClick={() => window.print()}
+                className="h-14 px-10 rounded-full font-bold uppercase tracking-wider border border-border bg-card text-foreground hover:bg-muted transition-all flex items-center justify-center gap-3"
+            >
+                <BarChart3 className="w-5 h-5" />
+                Exportar PDF
+            </button>
+            <button
+                onClick={() => window.open('https://wa.me/556193788529', '_blank')}
+                className="h-14 px-10 rounded-full font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white transition-all flex items-center justify-center gap-3"
+            >
+                <MessageSquare className="w-5 h-5" />
+                Falar com Especialista
+            </button>
+        </div>
       </div>
     </div>
   );

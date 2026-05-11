@@ -10,7 +10,7 @@ import { doc } from "firebase/firestore";
 
 import { NotificationCenter } from "./notification-center";
 
-type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "menu-analysis" | "price-calculator" | "free-analysis" | "my-analyses";
+type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "dev-dashboard" | "leads-dashboard" | "menu-analysis" | "price-calculator" | "free-analysis" | "my-analyses";
 
 type AppHeaderProps = {
   currentView: View;
@@ -130,13 +130,11 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
   const usageLimit = isDeveloper ? Infinity : (userProfile?.quota?.diagnosticsMax ?? planLimits[userProfile?.plan] ?? 0);
   const usageText = isDeveloper ? `${usageCount} / ∞` : `${usageCount} / ${usageLimit}`;
 
-  const forceSolidHeader = ['price-calculator', 'action-plan', 'my-analyses', 'admin'].includes(currentView);
-
   return (
     <header className={cn(
       "fixed top-0 left-0 w-full px-6 md:px-12 flex justify-between items-center z-50 transition-all duration-500 print:hidden",
       isLoggedIn ? "opacity-100" : "opacity-0 pointer-events-none",
-      (scrolled || forceSolidHeader) ? "bg-primary/95 backdrop-blur-xl py-4 shadow-2xl" : "bg-transparent py-6 md:py-10"
+      "bg-primary/95 backdrop-blur-xl py-4 shadow-2xl"
     )}>
       <div className="flex items-center gap-6">
         <div ref={menuRef} className="relative">
@@ -166,6 +164,13 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
             <NavItem view="restaurant" icon={<Store className="w-5 h-5" />} text="Meu Perfil" />
             <NavItem view="admin" icon={<Shield className="w-5 h-5" />} text="Painel do Administrador" adminOnly={true} />
             <NavItem view="menu-analysis" icon={<BookOpenCheck className="w-5 h-5" />} text="Análise de Cardápio" locked={true} />
+            {isDeveloper && (
+              <>
+                <div className="border-t border-white/10 my-2"></div>
+                <NavItem view="dev-dashboard" icon={<Shield className="w-5 h-5 text-red-500" />} text="Painel do Desenvolvedor" />
+                <NavItem view="leads-dashboard" icon={<SearchCheck className="w-5 h-5 text-emerald-500" />} text="Central de Leads" />
+              </>
+            )}
           </nav>
         </div>
         <div onClick={() => onNavigate('hub')} className="cursor-pointer transition-transform hover:scale-105 active:scale-95">

@@ -70,6 +70,18 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline tracking-tighter;
   }
+
+  @media print {
+    html, body {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      overflow: visible !important;
+      height: auto !important;
+    }
+    .print\:hidden {
+      display: none !important;
+    }
+  }
 }
 
 @layer utilities {
