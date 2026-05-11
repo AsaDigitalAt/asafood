@@ -8,6 +8,12 @@ export const metadata: Metadata = {
   description: 'Aumente suas vendas no iFood com diagnósticos e planos de ação baseados em IA.',
   icons: {
     icon: 'https://firebasestorage.googleapis.com/v0/b/studio-8790382792-31236.firebasestorage.app/o/diagnostics%2Fuploads%2FL7jV9uB1qaW0M7TpRLpe7Z5muiB2%2Flogoaba.png?alt=media&token=04692041-acfe-4377-8794-0930d8506a0a',
+    apple: 'https://firebasestorage.googleapis.com/v0/b/studio-8790382792-31236.firebasestorage.app/o/diagnostics%2Fuploads%2FL7jV9uB1qaW0M7TpRLpe7Z5muiB2%2Flogoaba.png?alt=media&token=04692041-acfe-4377-8794-0930d8506a0a',
+  },
+  appleWebApp: {
+    title: 'AsaFood',
+    capable: true,
+    statusBarStyle: 'black-translucent',
   },
 };
 
