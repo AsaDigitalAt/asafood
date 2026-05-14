@@ -297,8 +297,26 @@ export default function PriceCalculatorView({ onBack }: PriceCalculatorViewProps
     return (
         <div className="max-w-5xl mx-auto px-4 py-24 md:py-32 opacity-0 animate-fade-up">
             <div className="glass-card rounded-3xl p-6 md:p-10 shadow-2xl">
-                <header className="text-center mb-12">
-                     <h1 className="text-4xl font-extrabold mb-3">Preço Ideal: <span className="text-primary">{productName}</span></h1>
+                <header className="text-center mb-12 relative flex items-center justify-center">
+                     <Button 
+                        onClick={() => isFromSaved ? setView('view_prices') : setStep('form')} 
+                        variant="outline" 
+                        size="icon" 
+                        className="absolute left-0 h-12 w-12 rounded-full hidden md:flex"
+                     >
+                        <ArrowLeft className="h-5 w-5" />
+                     </Button>
+                     <div className="w-full flex justify-between items-center md:hidden mb-6">
+                         <Button 
+                            onClick={() => isFromSaved ? setView('view_prices') : setStep('form')} 
+                            variant="outline" 
+                            size="icon" 
+                            className="h-10 w-10 rounded-full shrink-0"
+                         >
+                            <ArrowLeft className="h-4 w-4" />
+                         </Button>
+                     </div>
+                     <h1 className="text-3xl md:text-4xl font-extrabold mb-0 md:mb-3 flex-1 text-center md:text-center mt-2 md:mt-0">Preço Ideal: <span className="text-primary block md:inline">{productName}</span></h1>
                 </header>
                 <div className="space-y-8">
                     <div className="bg-primary/10 border-primary/20 rounded-3xl text-center p-10">

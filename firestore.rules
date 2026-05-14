@@ -40,10 +40,10 @@ service cloud.firestore {
 
     // Tenancy-based structures (for shared diagnostics/products if used)
     match /tenants/{tenantId} {
-      allow read, write: if isOwner(tenantId) || isAdmin();
+      allow read, write: if isOwner(tenantId) || isAdmin() || isDeveloper();
       
       match /{allSubcollections=**} {
-        allow read, write: if isOwner(tenantId) || isAdmin();
+        allow read, write: if isOwner(tenantId) || isAdmin() || isDeveloper();
       }
     }
 

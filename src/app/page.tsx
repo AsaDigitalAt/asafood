@@ -22,8 +22,9 @@ import { SurveyPopup } from "@/components/app/survey-popup";
 
 import DeveloperDashboard from "@/components/app/admin/developer-dashboard";
 import LeadsDashboard from "@/components/app/admin/leads-dashboard";
+import MarketIntelligenceDashboard from "@/components/app/admin/market-intelligence-dashboard";
 
-type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "dev-dashboard" | "leads-dashboard" | "menu-analysis" | "price-calculator" | "free-analysis" | "my-analyses";
+type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "dev-dashboard" | "leads-dashboard" | "market-intelligence" | "menu-analysis" | "price-calculator" | "free-analysis" | "my-analyses";
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
@@ -78,6 +79,8 @@ export default function Home() {
         return <DeveloperDashboard onBack={() => setCurrentView("hub")} />;
       case "leads-dashboard":
         return <LeadsDashboard onBack={() => setCurrentView("hub")} />;
+      case "market-intelligence":
+        return <MarketIntelligenceDashboard onBack={() => setCurrentView("hub")} />;
       case "free-analysis":
         return <FreeAnalysisView onBack={() => setCurrentView("hub")} />;
       case "my-analyses":

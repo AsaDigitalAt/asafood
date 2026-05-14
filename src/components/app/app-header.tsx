@@ -3,14 +3,15 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { BarChart3, Rocket, Store, Star, LogOut, Shield, BookOpenCheck, Calculator, Lock, LayoutGrid, SearchCheck } from "lucide-react";
+import { BarChart3, Rocket, Store, Star, LogOut, Shield, BookOpenCheck, Calculator, Lock, LayoutGrid, SearchCheck, ChevronRight, ChevronLeft } from "lucide-react";
 import { useAuth, useUser, useMemoFirebase, useFirestore } from "@/firebase";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { doc } from "firebase/firestore";
+import { useAccessControl } from "@/hooks/use-access-control";
 
 import { NotificationCenter } from "./notification-center";
 
-type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "dev-dashboard" | "leads-dashboard" | "menu-analysis" | "price-calculator" | "free-analysis" | "my-analyses";
+type View = "hub" | "login" | "diagnosis" | "action-plan" | "restaurant" | "admin" | "dev-dashboard" | "leads-dashboard" | "market-intelligence" | "menu-analysis" | "price-calculator" | "free-analysis" | "my-analyses";
 
 type AppHeaderProps = {
   currentView: View;
@@ -27,23 +28,17 @@ const planLabels: Record<string, string> = {
   desenvolvedor: "Desenvolvedor",
 };
 
-const planLimits: Record<string, number> = {
-  convidado: 10,
-  plano_unico: 1,
-  plano_duplo: 2,
-  plano_acelerador: 4,
-  desenvolvedor: Infinity,
-};
-
 export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: AppHeaderProps) {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
+  const [activeUsageIndex, setActiveUsageIndex] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const auth = useAuth();
   const { user } = useUser();
   const firestore = useFirestore();
+  const accessControl = useAccessControl();
 
   const userDocRef = useMemoFirebase(() => {
     if (!user) return null;
@@ -123,12 +118,37 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
   };
 
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || '...';
-
   const planName = userProfile?.plan ? planLabels[userProfile.plan] ?? userProfile.plan : "Carregando...";
-  const usageCount = userProfile?.usage?.diagnosticsUsed ?? 0;
   const isDeveloper = userProfile?.plan === 'desenvolvedor' || userProfile?.role === 'developer';
-  const usageLimit = isDeveloper ? Infinity : (userProfile?.quota?.diagnosticsMax ?? planLimits[userProfile?.plan] ?? 0);
-  const usageText = isDeveloper ? `${usageCount} / ∞` : `${usageCount} / ${usageLimit}`;
+
+  const usages = [
+    { 
+      label: "Diagnósticos", 
+      used: accessControl.diagnostics.used, 
+      max: accessControl.isDeveloper ? "∞" : accessControl.diagnostics.max, 
+      icon: <BarChart3 className="w-4 h-4" />,
+      color: "text-blue-400",
+      bg: "bg-blue-400/10"
+    },
+    { 
+      label: "Análise Geral", 
+      used: accessControl.freeAnalysis.used, 
+      max: accessControl.isDeveloper ? "∞" : accessControl.freeAnalysis.max, 
+      icon: <SearchCheck className="w-4 h-4" />,
+      color: "text-emerald-400",
+      bg: "bg-emerald-400/10"
+    },
+    { 
+      label: "Precificação", 
+      used: accessControl.pricing.used, 
+      max: accessControl.isDeveloper ? "∞" : accessControl.pricing.max, 
+      icon: <Calculator className="w-4 h-4" />,
+      color: "text-purple-400",
+      bg: "bg-purple-400/10"
+    },
+  ];
+
+  const currentUsage = usages[activeUsageIndex];
 
   return (
     <header className={cn(
@@ -169,6 +189,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
                 <div className="border-t border-white/10 my-2"></div>
                 <NavItem view="dev-dashboard" icon={<Shield className="w-5 h-5 text-red-500" />} text="Painel do Desenvolvedor" />
                 <NavItem view="leads-dashboard" icon={<SearchCheck className="w-5 h-5 text-emerald-500" />} text="Central de Leads" />
+                <NavItem view="market-intelligence" icon={<BarChart3 className="w-5 h-5 text-blue-500" />} text="Inteligência de Mercado" />
               </>
             )}
           </nav>
@@ -201,7 +222,7 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
           </div>
 
           <div className={cn(
-            "absolute top-full right-0 mt-4 bg-black/60 backdrop-blur-2xl p-4 rounded-3xl whitespace-nowrap min-w-64 shadow-2xl border border-white/10",
+            "absolute top-full right-0 mt-4 bg-black/60 backdrop-blur-2xl p-4 rounded-3xl min-w-72 shadow-2xl border border-white/10",
             "opacity-0 invisible -translate-y-2 transition-all duration-500",
             isProfileOpen && "opacity-100 visible translate-y-0"
           )}>
@@ -211,12 +232,31 @@ export function AppHeader({ currentView, onNavigate, isLoggedIn, onLogout }: App
                 <Star className="w-5 h-5 fill-white/20 text-white/40" /> {planName}
               </div>
             </div>
+            
             <div className="p-3">
-              <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] block mb-2 font-black">Gerações Mensais</span>
-              <div className="flex items-center gap-3 text-white font-extrabold text-lg">
-                {usageText}
+              <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] block mb-3 font-black">
+                Uso Mensal
+              </span>
+
+              <div className="flex flex-col gap-2">
+                {usages.map((usage, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-2xl bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <div className={cn("p-2 rounded-xl", usage.bg, usage.color)}>
+                        {usage.icon}
+                      </div>
+                      <div>
+                        <div className="text-[11px] text-white/60 font-medium">{usage.label}</div>
+                        <div className="flex items-baseline gap-1 text-white font-extrabold text-sm leading-none mt-0.5">
+                          {usage.used} <span className="text-[10px] text-white/40 font-normal">/ {usage.max}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+
             <div className="border-t border-white/10 my-3"></div>
             <button onClick={handleLogout} className="flex items-center gap-4 p-4 rounded-2xl text-sm font-black text-white/60 w-full text-left hover:bg-white/10 hover:text-white transition-all">
               <LogOut className="w-5 h-5" />

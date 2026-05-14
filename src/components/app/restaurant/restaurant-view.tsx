@@ -12,11 +12,14 @@ import {
   ChevronRight,
   SearchCheck,
   Infinity as InfinityIcon,
+  Edit2,
+  Check,
+  X
 } from "lucide-react";
 import { useUser, useMemoFirebase, useFirestore } from "@/firebase";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { useCollection } from "@/firebase/firestore/use-collection";
-import { doc, collection, query, orderBy, limit } from "firebase/firestore";
+import { doc, collection, query, orderBy, limit, updateDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useAccessControl } from "@/hooks/use-access-control";
@@ -45,6 +48,9 @@ const planLimits: Record<string, number> = {
 export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
   const { user } = useUser();
   const firestore = useFirestore();
+
+  const [isEditingName, setIsEditingName] = React.useState(false);
+  const [editedName, setEditedName] = React.useState("");
 
   // User Profile Data
   const userDocRef = useMemoFirebase(() => {
@@ -90,6 +96,16 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
   const isDeveloper = userProfile?.plan === 'desenvolvedor';
   const { diagnostics, pricing, freeAnalysis } = useAccessControl();
 
+  const handleSaveName = async () => {
+    if (!user || !editedName.trim()) return;
+    try {
+      await updateDoc(doc(firestore, 'users', user.uid), { name: editedName.trim() });
+      setIsEditingName(false);
+    } catch (e) {
+      console.error("Erro ao salvar nome:", e);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-primary pt-32 pb-20 px-6 md:px-12">
       <div className="max-w-5xl mx-auto space-y-10">
@@ -119,9 +135,41 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
                 <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center text-white text-3xl font-black mb-6 border-2 border-white/20">
                   {user?.email?.substring(0, 2).toUpperCase()}
                 </div>
-                <h2 className="text-2xl font-extrabold text-white mb-1">
-                  {user?.email?.split('@')[0]}
-                </h2>
+                <div className="flex items-center justify-center gap-3 mb-1">
+                  {isEditingName ? (
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="text" 
+                        value={editedName}
+                        onChange={(e) => setEditedName(e.target.value)}
+                        className="bg-white/10 border border-white/20 rounded-xl px-3 py-1 text-white font-extrabold text-xl focus:outline-none focus:border-white/50 w-full max-w-[200px] text-center"
+                        autoFocus
+                        onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
+                      />
+                      <button onClick={handleSaveName} className="p-1.5 rounded-full bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => setIsEditingName(false)} className="p-1.5 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <h2 className="text-2xl font-extrabold text-white">
+                        {userProfile?.name || user?.email?.split('@')[0]}
+                      </h2>
+                      <button 
+                        onClick={() => {
+                          setEditedName(userProfile?.name || user?.email?.split('@')[0] || "");
+                          setIsEditingName(true);
+                        }}
+                        className="p-1.5 rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
                 <p className="text-white/50 text-sm font-medium mb-8">
                   {user?.email}
                 </p>

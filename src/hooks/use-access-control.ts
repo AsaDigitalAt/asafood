@@ -67,16 +67,16 @@ export function useAccessControl(): AccessControlStatus {
 
   const isDeveloper = userData.plan === "desenvolvedor" || userData.role === "developer";
 
-  // Developer tem acesso ilimitado a tudo
+  // Developer tem acesso ilimitado a tudo, mas queremos ver o uso real
   if (isDeveloper) {
-    const unlimited = { canGenerate: true, used: 0, max: Infinity, remaining: Infinity };
+    const usage = userData.usage || { diagnosticsUsed: 0, freeAnalysisUsed: 0, productsUsed: 0 };
     return {
       isDeveloper: true,
       isSuspended: false,
       isLoading: false,
-      diagnostics: unlimited,
-      freeAnalysis: unlimited,
-      pricing: unlimited,
+      diagnostics: { canGenerate: true, used: Number(usage.diagnosticsUsed || 0), max: Infinity, remaining: Infinity },
+      freeAnalysis: { canGenerate: true, used: Number(usage.freeAnalysisUsed || 0), max: Infinity, remaining: Infinity },
+      pricing: { canGenerate: true, used: Number(usage.productsUsed || 0), max: Infinity, remaining: Infinity },
       subscriptionDetail: { daysRemaining: Infinity, status: 'active', isExpired: false },
     };
   }
