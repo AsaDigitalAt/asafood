@@ -199,7 +199,7 @@ export function RestaurantView({ onBack, onNavigate }: RestaurantViewProps) {
               </Button>
 
               <Button
-                onClick={() => alert("Em breve: Página de planos!")}
+                onClick={() => window.open('/planos', '_blank')}
                 className="w-full h-16 rounded-[2rem] bg-transparent border-2 border-white/20 text-white hover:bg-white/10 font-bold text-base gap-3 transition-all hover:scale-[1.02] active:scale-95"
               >
                 <Rocket className="w-5 h-5" />

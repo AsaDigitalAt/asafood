@@ -43,8 +43,8 @@ const ToolCard = ({ title, description, icon, onClick, locked, delay }: ToolCard
       onMouseMove={handleMouseMove}
       onClick={!locked ? onClick : undefined}
       className={cn(
-        "group relative overflow-hidden bg-white/5 border border-white/10 rounded-[2rem] p-8 transition-all duration-500 backdrop-blur-sm",
-        locked ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-white/30 hover:-translate-y-1",
+        "group relative overflow-hidden bg-white/5 border border-white/10 rounded-[2rem] p-8 transition-all duration-500 backdrop-blur-sm shadow-[0_0_15px_rgba(255,255,255,0.07)]",
+        locked ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-white/30 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(255,255,255,0.15)]",
         "animate-fade-up",
         delay
       )}
@@ -106,7 +106,7 @@ export function HubView({ onNavigate }: { onNavigate: (view: any) => void }) {
                 </div>
               </div>
               <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-none">
-                Olá, <span className="text-white/40">{user?.email?.split('@')[0]}</span>
+                Olá, <span className="text-white/40">{userProfile?.name || user?.email?.split('@')[0]}</span>
               </h1>
             </div>
             

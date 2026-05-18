@@ -93,21 +93,26 @@ export default function MarketIntelligenceDashboard({ onBack }: MarketIntelligen
                 </header>
 
                 <div className="space-y-6">
-                     <div className="flex gap-4 mb-6">
-                        <select 
-                            className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white/80 outline-none focus:border-primary/50 transition-colors"
-                            value={stateFilter} 
-                            onChange={e => setStateFilter(e.target.value)}
-                        >
-                            {states.map((s: any) => <option key={s} value={s}>{s === "Todos" ? "Todos os Estados" : s}</option>)}
-                        </select>
-                        <select 
-                            className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white/80 outline-none focus:border-primary/50 transition-colors"
-                            value={foodFilter} 
-                            onChange={e => setFoodFilter(e.target.value)}
-                        >
-                            {foods.map((f: any) => <option key={f} value={f}>{f === "Todos" ? "Todas as Categorias" : f}</option>)}
-                        </select>
+                     <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                         <div className="flex gap-4 flex-wrap">
+                            <select 
+                                className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white/80 outline-none focus:border-primary/50 transition-colors"
+                                value={stateFilter} 
+                                onChange={e => setStateFilter(e.target.value)}
+                            >
+                                {states.map((s: any) => <option key={s} value={s}>{s === "Todos" ? "Todos os Estados" : s}</option>)}
+                            </select>
+                            <select 
+                                className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white/80 outline-none focus:border-primary/50 transition-colors"
+                                value={foodFilter} 
+                                onChange={e => setFoodFilter(e.target.value)}
+                            >
+                                {foods.map((f: any) => <option key={f} value={f}>{f === "Todos" ? "Todas as Categorias" : f}</option>)}
+                            </select>
+                         </div>
+                         <div className="text-sm font-medium text-muted-foreground bg-white/5 px-4 py-2 rounded-xl border border-white/10 shrink-0">
+                            <span className="font-bold text-foreground">{filteredAnalyses.length}</span> {filteredAnalyses.length === 1 ? 'restaurante encontrado' : 'restaurantes encontrados'}
+                         </div>
                      </div>
 
                      {filteredAnalyses.length === 0 ? (

@@ -20,10 +20,10 @@ export default function MyAnalysesView({ onBack }: MyAnalysesViewProps) {
                     <Button
                         onClick={() => setSelectedReport(null)}
                         variant="outline"
-                        className="rounded-full bg-black/20 border-white/20 hover:bg-primary/10 hover:border-primary hover:text-primary h-12 px-6 uppercase font-bold tracking-wider text-white"
+                        size="icon"
+                        className="h-12 w-12 rounded-2xl bg-black/5 border-black/10 text-primary hover:bg-black/10 transition-all backdrop-blur-md shadow-sm"
                     >
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Voltar para a Lista
+                        <ArrowLeft className="h-5 w-5" />
                     </Button>
                 </div>
                 <ReportView report={selectedReport} showReset={false} />

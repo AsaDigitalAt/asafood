@@ -339,6 +339,29 @@ function ReportView({ report, onReset }: { report: AnalysisReport; onReset: () =
             </button>
           </div>
         )}
+
+        {/* CTA Planos */}
+        <div className="bg-gradient-to-br from-background to-accent/5 border border-primary/20 rounded-3xl p-10 text-center relative overflow-hidden shadow-2xl shadow-primary/5">
+          <div className="absolute inset-0 bg-[url('https://firebasestorage.googleapis.com/v0/b/base-arquivos.firebasestorage.app/o/pattern-grid.svg?alt=media')] opacity-5" />
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-[0.2em] mb-6">
+              <Sparkles className="w-3 h-3" />
+              Evolua sua Gestão
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-foreground mb-4">
+              Quer ir mais fundo nos dados do seu restaurante?
+            </h2>
+            <p className="text-muted-foreground text-base max-w-2xl mx-auto mb-8 leading-relaxed">
+              Assine um de nossos planos e desbloqueie calculadoras de precificação, diagnósticos ilimitados de funil de vendas, análises de cardápio e muito mais ferramentas exclusivas para escalar seu lucro.
+            </p>
+            <a
+              href="/planos"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-primary text-primary-foreground font-bold uppercase tracking-widest text-sm hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02] shadow-xl shadow-primary/20"
+            >
+              Ver Planos e Vantagens <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );
