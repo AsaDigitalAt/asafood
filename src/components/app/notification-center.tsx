@@ -62,7 +62,7 @@ export function NotificationCenter() {
     }
 
     setNotifications(newNotifications);
-  }, [subscriptionDetail, isDeveloper, isLoading]);
+  }, [subscriptionDetail?.daysRemaining, subscriptionDetail?.isExpired, isDeveloper, isLoading]);
 
   // Click outside to close
   useEffect(() => {

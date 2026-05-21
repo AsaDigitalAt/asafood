@@ -90,8 +90,13 @@ export function HubView({ onNavigate }: { onNavigate: (view: any) => void }) {
 
   const { data: userProfile } = useDoc<any>(userDocRef);
 
-  const planName = userProfile?.plan === 'plano_acelerador' ? 'Plano Acelerador' : 
-                   userProfile?.plan === 'desenvolvedor' ? 'Modo Desenvolvedor' : 'Plano AsaFood';
+  const planLabels: Record<string, string> = {
+    plano_unico: "Plano Essencial",
+    plano_duplo: "Plano Performance",
+    plano_acelerador: "Plano Acelerador",
+    desenvolvedor: "Modo Desenvolvedor"
+  };
+  const planName = userProfile?.plan ? planLabels[userProfile.plan] || 'Plano AsaFood' : 'Plano AsaFood';
 
   return (
     <div className="min-h-screen bg-primary pt-32 pb-20 px-6 md:px-12">
