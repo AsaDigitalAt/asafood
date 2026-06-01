@@ -795,7 +795,153 @@ export default function AnalisePage() {
         </div>
       </section>
 
-      {/* ─── SEÇÃO 7: CTA FINAL ────────────────────────────────────────────── */}
+      {/* ─── SEÇÃO 7: PLANOS ───────────────────────────────────────────────── */}
+      <section className="bg-background py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground mb-4">
+              Inteligência de dados para <br className="hidden md:block" />
+              <span className="text-red-600">escalar o seu lucro.</span>
+            </h2>
+            <p className="text-muted-foreground text-base max-w-2xl mx-auto">
+              Selecione o plano ideal para a sua necessidade e comece a transformar as métricas do seu restaurante em dinheiro hoje mesmo.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mt-8">
+            {/* Card 1: Essencial */}
+            <div className="bg-card border border-border rounded-[2.5rem] p-8 flex flex-col relative">
+              <div className="mb-6">
+                <h3 className="text-2xl font-black text-[#2B3B60] mb-1">Essencial</h3>
+                <p className="text-muted-foreground text-sm">Para começar com inteligência.</p>
+              </div>
+              <div className="mb-8 flex flex-col">
+                <span className="text-muted-foreground text-sm line-through">De R$ 99,00/mês</span>
+                <div>
+                  <span className="text-4xl font-black text-[#2B3B60]">R$ 67,70</span>
+                  <span className="text-muted-foreground text-sm font-semibold">/mês*</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground mt-1">*nos três primeiros meses</span>
+              </div>
+              <a href="https://checkout4.xgrow.com/pt/727d6c86-f33e-406e-9154-77efc7829088/MTAxNzE2" className="w-full py-4 rounded-xl border-2 border-[#2B3B60] text-[#2B3B60] font-bold text-xs uppercase tracking-widest hover:bg-[#2B3B60]/5 transition-colors mb-10 flex items-center justify-center gap-2">
+                Começar com o Essencial <ArrowRight className="w-4 h-4" />
+              </a>
+              
+              <div className="mb-6">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">O que inclui:</span>
+              </div>
+              <div className="flex flex-col gap-4 mb-10 flex-1">
+                {[
+                  "2 Diagnósticos de Performance",
+                  "10 Diagnósticos Gerais",
+                  "25 Precificações"
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-[#2B3B60]/10 flex items-center justify-center shrink-0">
+                      <CheckCheck className="w-3 h-3 text-[#2B3B60]" />
+                    </div>
+                    <span className="text-foreground text-sm font-bold">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-auto">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <span className="font-bold text-foreground">Recomendação:</span> Ideal para restaurantes em fase de melhoria, gestores que acompanham poucas operações ou consultores que desejam testar a metodologia Asa Food com seus primeiros clientes.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 2: Performance */}
+            <div className="bg-card border border-border rounded-[2.5rem] p-8 flex flex-col relative shadow-xl shadow-[#48B5C9]/5">
+              <div className="mb-6">
+                <h3 className="text-2xl font-black text-[#48B5C9] mb-1">Performance</h3>
+                <p className="text-muted-foreground text-sm">Mais análises, mais consistência.</p>
+              </div>
+              <div className="mb-8 flex flex-col">
+                <span className="text-muted-foreground text-sm line-through">De R$ 149,00/mês</span>
+                <div>
+                  <span className="text-4xl font-black text-[#48B5C9]">R$ 97,70</span>
+                  <span className="text-muted-foreground text-sm font-semibold">/mês*</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground mt-1">*nos três primeiros meses</span>
+              </div>
+              <a href="https://checkout4.xgrow.com/pt/727d6c86-f33e-406e-9154-77efc7829088/MTA0NTA2" className="w-full py-4 rounded-xl bg-[#48B5C9] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#48B5C9]/90 transition-colors mb-10 flex items-center justify-center gap-2 shadow-lg shadow-[#48B5C9]/20">
+                Escalar minhas análises <ArrowRight className="w-4 h-4" />
+              </a>
+              
+              <div className="mb-6">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">O que inclui:</span>
+              </div>
+              <div className="flex flex-col gap-4 mb-10 flex-1">
+                {[
+                  "4 Diagnósticos de Performance",
+                  "25 Diagnósticos Gerais",
+                  "100 Precificações"
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-[#48B5C9]/10 flex items-center justify-center shrink-0">
+                      <CheckCheck className="w-3 h-3 text-[#48B5C9]" />
+                    </div>
+                    <span className="text-foreground text-sm font-bold">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-auto">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <span className="font-bold text-foreground">Recomendação:</span> Ideal para quem precisa acompanhar restaurantes com mais frequência, comparar cenários, revisar cardápios e gerar recomendações com mais volume ao longo do mês.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3: Acelerador */}
+            <div className="bg-card border border-red-500/30 rounded-[2.5rem] p-8 flex flex-col relative shadow-2xl shadow-red-900/10 md:scale-[1.02] bg-white">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg whitespace-nowrap">
+                Mais completo
+              </div>
+              <div className="mb-6 mt-2">
+                <h3 className="text-2xl font-black text-red-600 mb-1">Acelerador</h3>
+                <p className="text-muted-foreground text-sm">Gestão e consultoria em escala.</p>
+              </div>
+              <div className="mb-8 flex flex-col">
+                <span className="text-muted-foreground text-sm line-through">De R$ 247,00/mês</span>
+                <div>
+                  <span className="text-4xl font-black text-red-600">R$ 177,70</span>
+                  <span className="text-muted-foreground text-sm font-semibold">/mês*</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground mt-1">*nos três primeiros meses</span>
+              </div>
+              <a href="https://checkout4.xgrow.com/pt/727d6c86-f33e-406e-9154-77efc7829088/MTA0NTA4" className="w-full py-4 rounded-xl bg-red-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-red-700 transition-colors mb-10 flex items-center justify-center gap-2 shadow-lg shadow-red-900/20">
+                Quero acelerar <ArrowRight className="w-4 h-4" />
+              </a>
+              
+              <div className="mb-6">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">O que inclui:</span>
+              </div>
+              <div className="flex flex-col gap-4 mb-10 flex-1">
+                {[
+                  "10 Diagnósticos de Performance",
+                  "50 Diagnósticos Gerais",
+                  "200 Precificações"
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-red-600/10 flex items-center justify-center shrink-0">
+                      <CheckCheck className="w-3 h-3 text-red-600" />
+                    </div>
+                    <span className="text-foreground text-sm font-bold">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-auto">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <span className="font-bold text-foreground">Recomendação:</span> Ideal para consultores, assessorias, gestores de múltiplas operações e profissionais que precisam transformar análise de restaurantes em rotina estratégica de crescimento.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SEÇÃO 8: CTA FINAL ────────────────────────────────────────────── */}
       <section className="bg-primary py-24 px-6 text-center text-primary-foreground">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-white mb-5">

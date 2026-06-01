@@ -8,8 +8,10 @@ export default function PlanosPage() {
     {
       nome: "Essencial",
       subtitulo: "Para começar com inteligência.",
-      preco: "R$ 99,00",
-      periodo: "/mês",
+      precoAntigo: "De R$ 99,00/mês",
+      preco: "R$ 67,70",
+      periodo: "/mês*",
+      observacao: "*nos três primeiros meses",
       features: [
         "2 Diagnósticos de Performance",
         "10 Diagnósticos Gerais",
@@ -17,7 +19,7 @@ export default function PlanosPage() {
       ],
       ideal: "Ideal para restaurantes em fase de melhoria, gestores que acompanham poucas operações ou consultores que desejam testar a metodologia Asa Food com seus primeiros clientes.",
       cta: "COMEÇAR COM O ESSENCIAL",
-      link: "https://checkout4.xgrow.com/pt/727d6c86-f33e-406e-9154-77efc7829088/MTAxNzE1",
+      link: "https://checkout4.xgrow.com/pt/727d6c86-f33e-406e-9154-77efc7829088/MTAxNzE2",
       cor: "text-[#2e4c8c]",
       bgCor: "bg-[#2e4c8c]",
       borderCor: "border-[#2e4c8c]/20",
@@ -28,8 +30,10 @@ export default function PlanosPage() {
     {
       nome: "Performance",
       subtitulo: "Mais análises, mais consistência.",
-      preco: "R$ 149,00",
-      periodo: "/mês",
+      precoAntigo: "De R$ 149,00/mês",
+      preco: "R$ 97,70",
+      periodo: "/mês*",
+      observacao: "*nos três primeiros meses",
       features: [
         "4 Diagnósticos de Performance",
         "25 Diagnósticos Gerais",
@@ -37,7 +41,7 @@ export default function PlanosPage() {
       ],
       ideal: "Ideal para quem precisa acompanhar restaurantes com mais frequência, comparar cenários, revisar cardápios e gerar recomendações com mais volume ao longo do mês.",
       cta: "ESCALAR MINHAS ANÁLISES",
-      link: "https://checkout4.xgrow.com/pt/727d6c86-f33e-406e-9154-77efc7829088/MTAxNzE3",
+      link: "https://checkout4.xgrow.com/pt/727d6c86-f33e-406e-9154-77efc7829088/MTA0NTA2",
       cor: "text-[#5bbcd6]",
       bgCor: "bg-[#5bbcd6]",
       borderCor: "border-[#5bbcd6]/30",
@@ -48,8 +52,10 @@ export default function PlanosPage() {
     {
       nome: "Acelerador",
       subtitulo: "Gestão e consultoria em escala.",
-      preco: "R$ 247,00",
-      periodo: "/mês",
+      precoAntigo: "De R$ 247,00/mês",
+      preco: "R$ 177,70",
+      periodo: "/mês*",
+      observacao: "*nos três primeiros meses",
       features: [
         "10 Diagnósticos de Performance",
         "50 Diagnósticos Gerais",
@@ -57,7 +63,7 @@ export default function PlanosPage() {
       ],
       ideal: "Ideal para consultores, assessorias, gestores de múltiplas operações e profissionais que precisam transformar análise de restaurantes em rotina estratégica de crescimento.",
       cta: "QUERO ACELERAR",
-      link: "https://checkout4.xgrow.com/pt/727d6c86-f33e-406e-9154-77efc7829088/MTAxNzE5",
+      link: "https://checkout4.xgrow.com/pt/727d6c86-f33e-406e-9154-77efc7829088/MTA0NTA4",
       cor: "text-[#ea1d2c]",
       bgCor: "bg-[#ea1d2c]",
       borderCor: "border-[#ea1d2c]/40",
@@ -117,9 +123,13 @@ export default function PlanosPage() {
                 <p className="text-slate-500 text-sm min-h-[40px] font-medium leading-relaxed">{plano.subtitulo}</p>
               </div>
 
-              <div className="mb-8 flex items-baseline gap-1">
-                <span className={`text-5xl font-black tracking-tighter ${plano.cor}`}>{plano.preco}</span>
-                <span className="text-slate-500 font-bold">{plano.periodo}</span>
+              <div className="mb-8 flex flex-col">
+                <span className="text-slate-400 text-sm font-semibold line-through mb-1">{plano.precoAntigo}</span>
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-5xl font-black tracking-tighter ${plano.cor}`}>{plano.preco}</span>
+                  <span className="text-slate-500 font-bold">{plano.periodo}</span>
+                </div>
+                <span className="text-[10px] text-slate-500 font-semibold mt-2">{plano.observacao}</span>
               </div>
 
               <a

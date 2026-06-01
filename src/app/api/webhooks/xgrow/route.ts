@@ -16,6 +16,10 @@ const PLAN_MAPPING_BY_ID: Record<string, PlanKey> = {
   '102562': 'plano_unico',
   '102564': 'plano_duplo',
   '102566': 'plano_acelerador',
+  // Planos Promocionais
+  '101716': 'plano_unico', // Essencial Promocional
+  '104506': 'plano_duplo', // Performance Promocional
+  '104508': 'plano_acelerador', // Acelerador Promocional
 };
 
 // Ajuste aqui o que cada plano libera (em sintonia com o backend)
@@ -23,22 +27,22 @@ function buildPlanState(plan: PlanKey) {
   if (plan === 'plano_unico') {
     return {
       plan,
-      features: { diagnosticsEnabled: true, pricingEnabled: false },
-      quota: { diagnosticsMax: 1, pricingMax: 0 },
+      features: { diagnosticsEnabled: true, pricingEnabled: true },
+      quota: { diagnosticsMax: 2, pricingMax: 25 },
     };
   }
   if (plan === 'plano_duplo') {
     return {
       plan,
       features: { diagnosticsEnabled: true, pricingEnabled: true },
-      quota: { diagnosticsMax: 2, pricingMax: 20 },
+      quota: { diagnosticsMax: 4, pricingMax: 100 },
     };
   }
   // plano_acelerador
   return {
     plan,
     features: { diagnosticsEnabled: true, pricingEnabled: true },
-    quota: { diagnosticsMax: 4, pricingMax: 100 },
+    quota: { diagnosticsMax: 10, pricingMax: 200 },
   };
 }
 
@@ -65,8 +69,8 @@ function inferPlanFromText(raw: string): PlanKey | null {
   const t = normalizeText(raw);
   if (!t) return null;
 
-  if (t.includes('plano unico') || t.includes('unico')) return 'plano_unico';
-  if (t.includes('plano duplo') || t.includes('duplo')) return 'plano_duplo';
+  if (t.includes('plano unico') || t.includes('unico') || t.includes('essencial')) return 'plano_unico';
+  if (t.includes('plano duplo') || t.includes('duplo') || t.includes('performance')) return 'plano_duplo';
   if (t.includes('plano acelerador') || t.includes('acelerador')) return 'plano_acelerador';
 
   return null;

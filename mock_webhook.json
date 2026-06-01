@@ -1,0 +1,9 @@
+{
+  "event_type": "onapprovepayment",
+  "payment_status": "approved",
+  "subscriber_email": "teste.promocional@asafood.com.br",
+  "subscriber_name": "Teste Promocional Acelerador",
+  "payment_plans_id": "104508",
+  "webhook_id": "mock_test_104508_001",
+  "product_name": "Plano Acelerador | Promocional"
+}
