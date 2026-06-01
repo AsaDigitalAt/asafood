@@ -131,35 +131,35 @@ export function HubView({ onNavigate }: { onNavigate: (view: any) => void }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <ToolCard 
             title="Diagnóstico"
-            description="Analise o funil do seu iFood e identifique gargalos que impedem suas vendas de crescerem."
+            description="Analise o funil de operações no iFood e identifique gargalos que impedem o crescimento das vendas."
             icon={<BarChart3 className="w-8 h-8" />}
             onClick={() => onNavigate("diagnosis")}
             delay="[animation-delay:100ms]"
           />
           <ToolCard 
             title="Plano de Ação"
-            description="Acesse seus relatórios salvos e siga o passo a passo personalizado gerado pelo nosso time."
+            description="Acesse relatórios salvos e siga o passo a passo de recomendações geradas de forma personalizada."
             icon={<Rocket className="w-8 h-8" />}
             onClick={() => onNavigate("action-plan")}
             delay="[animation-delay:200ms]"
           />
           <ToolCard 
             title="Precificação"
-            description="Calcule o preço ideal dos seus pratos com base no custo real de cada insumo e margem desejada."
+            description="Calcule o preço ideal de pratos e produtos com base no custo real de cada insumo e margem desejada."
             icon={<Calculator className="w-8 h-8" />}
             onClick={() => onNavigate("price-calculator")}
             delay="[animation-delay:300ms]"
           />
           <ToolCard 
             title="Análise Geral"
-            description="Receba uma análise personalizada do seu perfil no iFood, sem custos e sem compromisso."
+            description="Gere análises detalhadas de qualquer perfil no iFood, identificando pontos de melhoria e oportunidades."
             icon={<Zap className="w-8 h-8" />}
             onClick={() => onNavigate("free-analysis")}
             delay="[animation-delay:350ms]"
           />
           <ToolCard 
             title="Análise de Cardápio"
-            description="Deixe nosso time avaliar suas fotos e descrições para tornar seu cardápio irresistível."
+            description="Avaliação inteligente de fotos e descrições para tornar qualquer cardápio irresistível."
             icon={<BookOpenCheck className="w-8 h-8" />}
             onClick={() => onNavigate("menu-analysis")}
             locked={true}
@@ -167,7 +167,7 @@ export function HubView({ onNavigate }: { onNavigate: (view: any) => void }) {
           />
           <ToolCard 
             title="Meu Perfil"
-            description="Gerencie as informações básicas do seu estabelecimento e dados de faturamento mensal."
+            description="Gerencie as informações da conta e acompanhe dados e configurações da plataforma."
             icon={<Store className="w-8 h-8" />}
             onClick={() => onNavigate("restaurant")}
             delay="[animation-delay:500ms]"

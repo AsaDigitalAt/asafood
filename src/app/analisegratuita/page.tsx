@@ -472,11 +472,10 @@ export default function AnalisePage() {
               Análise Gratuita
             </div>
             <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-white text-center leading-none mb-3">
-              Descubra o potencial do seu restaurante
+              Analise qualquer restaurante no iFood em segundos.
             </h2>
             <p className="text-primary-foreground/70 text-sm text-center leading-relaxed">
-              Preencha os campos abaixo e receba uma análise personalizada do
-              seu perfil no iFood, sem custos e sem compromisso.
+              Descubra oportunidades ocultas, falhas de precificação e o potencial real de lucro de qualquer operação no iFood, sem custos e sem compromisso.
             </p>
           </div>
 
