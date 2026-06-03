@@ -92,7 +92,11 @@ export function LoginView() {
       }
       
       // 2. Se existe, envia o e-mail de redefinição de senha
-      await sendPasswordResetEmail(auth, values.email);
+      const actionCodeSettings = {
+        url: `${window.location.origin}/auth/action`,
+        handleCodeInApp: true,
+      };
+      await sendPasswordResetEmail(auth, values.email, actionCodeSettings);
       
       toast({
         title: "Link enviado!",
@@ -120,7 +124,11 @@ export function LoginView() {
     setIsLoading(true);
     setError(null);
     try {
-      await sendPasswordResetEmail(auth, email);
+      const actionCodeSettings = {
+        url: `${window.location.origin}/auth/action`,
+        handleCodeInApp: true,
+      };
+      await sendPasswordResetEmail(auth, email, actionCodeSettings);
       toast({
         title: "E-mail enviado!",
         description: "Verifique sua caixa de entrada para redefinir sua senha.",
